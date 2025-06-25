@@ -1,32 +1,76 @@
 <!DOCTYPE html>
-<html lang="ar">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>electro palestine</title>
-  </head>
-  <link rel="stylesheet" href="start.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Rubik:wght@300&display=swap"
-    rel="stylesheet"
-  />
-  <body>
-    <div class="hader">
-      <img src="logoshafaf.png" alt="" id="logo" />
-      <h1>مرحبا في الكترو فلسطين</h1>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>متجر إلكتروني</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- Tailwind CSS (Browser Build) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="bg-gray-100 font-sans">
+  <!-- Navbar -->
+  <nav class="bg_nav shadow-md sticky top-0 z-50">
+    <div class="container mx-auto px-6 py-4 flex items-center justify-between">
+
+      <!-- Logo -->
+      <div class="text-2xl font-extrabold text-blue-600 flex items-center gap-2">
+        <img src="imges/logo.png" class="ml-3" style="width: 100px;height: auto;" alt="">
+      </div>
+
+      <!-- Main Menu (Desktop) -->
+      <ul class="hidden md:flex items-center rtl:space-x-reverse text-white font-medium">
+        <li><a href="#" class="hover:text-blue-600 transition px-5">الرئيسية</a></li>
+        <li><a href="#" class="hover:text-blue-600 transition px-5">المنتجات</a></li>
+        <li><a href="#" class="hover:text-blue-600 transition px-5">من نحن</a></li>
+        <li><a href="#" class="hover:text-blue-600 transition px-5">تواصل معنا</a></li>
+      </ul>
+
+      <!-- Right Side -->
+      <div class="hidden md:flex items-center gap-4 rtl:gap-4">
+        <a href="#" class="text-gray-700 hover:text-blue-600 text-xl relative">
+          <i class="fas fa-shopping-cart text-white"></i>
+          <span class="absolute -top-2 -left-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">2</span>
+        </a>
+        <a href="#" class="bg-blue-600 text-white px-4 py-2 rounded-full text-sm hover:bg-blue-700 transition">
+          <i class="fas fa-sign-in-alt ml-1"></i> تسجيل الدخول
+        </a>
+      </div>
+
+      <!-- Mobile menu button -->
+      <button id="menuToggle" class="md:hidden text-gray-700 text-2xl focus:outline-none">
+        <i id="menuIcon" class="fas fa-bars"></i>
+      </button>
     </div>
-    <div class="nav">
-      <ul>
+    <!-- Mobile Menu (Dropdown) -->
+    <div id="mobileMenu" class="md:hidden bg-white px-6 mobile-menu overflow-hidden max-h-0">
+      <ul class="space-y-5 text-gray-700 font-medium mt-2">
+        <li><a href="#" class="block hover:text-blue-600">الرئيسية</a></li>
+        <li><a href="#" class="block hover:text-blue-600">المنتجات</a></li>
+        <li><a href="#" class="block hover:text-blue-600">من نحن</a></li>
+        <li><a href="#" class="block hover:text-blue-600">تواصل معنا</a></li>
+
+        <!-- 🛒 السلة مع العداد -->
+        <li class="relative">
+          <a href="#" class="block hover:text-blue-600 pr-6">
+            <span class="absolute -top-2 -left-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">2</span>
+            <i class="fas fa-shopping-cart mr-1"></i> السلة
+          </a>
+        </li>
+
+        <!-- 🔐 تسجيل الدخول -->
         <li>
-          <a href="#">تسجيل دخول</a>
-          <a href="#">تسجيل</a>
-          <a href="#">منتجاتنا</a>
-          <a href="#">حسابات</a>
-          <a href="#">عملات رقميه</a>
+          <a href="#" class="block bg-blue-600 text-white px-4 py-2 rounded-full text-center hover:bg-blue-700 transition">
+            <i class="fas fa-sign-in-alt ml-1"></i> تسجيل الدخول
+          </a>
         </li>
       </ul>
     </div>
-  </body>
+  </nav>
+<script src="./js/script.js"></script>
+</body>
 </html>
