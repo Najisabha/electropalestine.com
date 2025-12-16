@@ -129,9 +129,13 @@
         .strip-img{
             height:160px;
             width:100%;
-            object-fit:contain;      /* تجنب قص الصورة */
-            background:#fffffff;      /* خلفية ثابتة للصور الشفافة */
-            padding:8px;             /* مسافة بسيطة حول الصورة */
+            object-fit:contain;             /* تجنب قص الصورة */
+            background:rgba(0,0,0,.0);     /* خلفية شفافة داكنة للصور */
+            padding:8px;                    /* مسافة بسيطة حول الصورة */
+        }
+
+        .bg-black{
+            background-color:rgba(0,0,0,.0) !important;
         }
 
          /* ===== Auth pages ===== */

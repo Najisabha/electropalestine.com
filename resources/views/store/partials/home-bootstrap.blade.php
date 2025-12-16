@@ -79,7 +79,7 @@
 
         <div class="strip-scroll">
             @forelse ($categories as $category)
-                <a href="#featured-{{ $category->id }}" class="strip-card">
+                <a href="{{ route('categories.show', $category) }}" class="strip-card">
                     @if(!empty($category->image))
                         <img src="{{ asset('storage/'.$category->image) }}" class="strip-img" alt="{{ $category->name }}">
                     @else

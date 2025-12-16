@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [StoreController::class, 'home'])->name('home');
 Route::get('/products/{product:slug}', [StoreController::class, 'product'])->name('products.show');
+Route::get('/categories/{category:slug}', [StoreController::class, 'category'])->name('categories.show');
 Route::view('/about', 'store.about')->name('store.about');
 Route::view('/story', 'store.story')->name('store.story');
 Route::view('/contact', 'store.contact')->name('store.contact');

@@ -50,7 +50,7 @@ class StoreController extends Controller
 
     public function product(Product $product): View
     {
-        $product->load(['category', 'company', 'type']);
+        $product->load(['category.types', 'company', 'type']);
 
         $related = Product::where('category_id', $product->category_id)
             ->whereKeyNot($product->getKey())
@@ -58,6 +58,25 @@ class StoreController extends Controller
             ->get();
 
         return view('store.product', compact('product', 'related'));
+    }
+
+    public function category(Category $category): View
+    {
+        $category->load(['types', 'companies', 'products.company']);
+
+        // جميع الأنواع التابعة لهذا الصنف
+        $types = $category->types;
+
+        // الشركات المرتبطة بالصنف عن طريق جدول الربط
+        $companies = $category->companies;
+
+        // المنتجات التابعة للصنف (نستخدمها في الشريط أو الشبكة)
+        $products = $category->products()
+            ->with('company')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('store.category', compact('category', 'types', 'companies', 'products'));
     }
 }
 
