@@ -17,6 +17,7 @@ class Order extends Model
         'unit_price',
         'total',
         'status',
+        'payment_method',
     ];
 
     public function user(): BelongsTo

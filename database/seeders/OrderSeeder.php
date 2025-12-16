@@ -10,8 +10,8 @@ class OrderSeeder extends Seeder
 {
     public function run(): void
     {
-        $admin = User::where('email', 'admin@voltmart.com')->first();
-        $user = User::where('email', 'user@voltmart.com')->first();
+        $admin = User::where('email', 'admin@electropalestine.com')->first();
+        $user = User::where('email', 'user@electropalestine.com')->first();
 
         Order::updateOrCreate(
             ['id' => 1],

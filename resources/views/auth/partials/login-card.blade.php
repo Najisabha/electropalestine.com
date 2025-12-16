@@ -1,4 +1,4 @@
-<x-auth-card title="تسجيل الدخول">
+<x-auth-card title="{{ __('common.login') }}">
 
     @if (session('status'))
         <div class="alert alert-success small text-center glass">
@@ -11,7 +11,7 @@
 
         <!-- Email -->
         <div class="form-group">
-            <label class="form-label small text-secondary">البريد الإلكتروني</label>
+            <label class="form-label small text-secondary">{{ __('common.email') }}</label>
             <input
                 type="email"
                 name="email"
@@ -28,7 +28,7 @@
 
         <!-- Password -->
         <div class="form-group">
-            <label class="form-label small text-secondary">كلمة المرور</label>
+            <label class="form-label small text-secondary">{{ __('common.password') }}</label>
             <input
                 type="password"
                 name="password"
@@ -46,25 +46,25 @@
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" name="remember" id="rememberCheck">
                 <label class="form-check-label text-secondary" for="rememberCheck">
-                    تذكرني
+                    {{ __('common.remember_me') }}
                 </label>
             </div>
 
             <a href="{{ route('password.request') }}" class="link-success text-decoration-none">
-                نسيت كلمة المرور؟
+                {{ __('common.forgot_password') }}
             </a>
         </div>
 
         <!-- Submit -->
         <button class="btn btn-main w-100 py-2 fw-bold">
-            تسجيل الدخول
+            {{ __('common.login') }}
         </button>
 
         <!-- Register -->
         <p class="text-center small text-secondary mb-0">
-            ليس لديك حساب؟
+            {{ __('common.no_account') }}
             <a href="{{ route('register') }}" class="link-success fw-semibold">
-                إنشاء حساب
+                {{ __('common.register') }}
             </a>
         </p>
     </form>

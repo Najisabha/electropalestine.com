@@ -11,10 +11,10 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         User::updateOrCreate(
-            ['email' => 'admin@voltmart.com'],
+            ['email' => 'admin@electropalestine.com'],
             [
-                'name' => 'VoltMart Admin',
-                'first_name' => 'VoltMart',
+                'name' => 'electropalestine Admin',
+                'first_name' => 'electropalestine',
                 'last_name' => 'Admin',
                 'phone' => '+970000000',
                 'whatsapp_prefix' => '+970',
@@ -27,10 +27,10 @@ class UserSeeder extends Seeder
         );
 
         User::updateOrCreate(
-            ['email' => 'user@voltmart.com'],
+            ['email' => 'user@electropalestine.com'],
             [
-                'name' => 'VoltMart User',
-                'first_name' => 'VoltMart',
+                'name' => 'electropalestine User',
+                'first_name' => 'electropalestine',
                 'last_name' => 'User',
                 'phone' => '+970000001',
                 'whatsapp_prefix' => '+970',

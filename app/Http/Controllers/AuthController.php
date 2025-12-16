@@ -31,8 +31,9 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             $user = Auth::user();
+            $user->update(['last_login_at' => now()]);
 
-            if ($user->role === 'admin') {
+            if (strtolower($user->role) === 'admin') {
                 return redirect()->intended('/admin/dashboard');
             }
 
@@ -40,7 +41,7 @@ class AuthController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'بيانات الدخول غير صحيحة.',
+            'email' => __('auth.failed'),
         ])->onlyInput('email');
     }
 

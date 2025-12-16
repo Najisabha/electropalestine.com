@@ -32,10 +32,35 @@
                 <input type="text" name="description" class="form-control form-control-sm auth-input" value="{{ old('description') }}" placeholder="مثال: يمتلك جميع الصلاحيات في المتجر">
             </div>
             <div class="col-12">
-                <label class="form-label small text-secondary">الصلاحيات (اكتبها مفصولة بفاصلة , )</label>
-                <textarea name="permissions" class="form-control form-control-sm auth-input" rows="2" placeholder="مثال: إدارة المستخدمين, إدارة الطلبات, إدارة التصنيفات">{{ old('permissions') }}</textarea>
-                <div class="form-text text-muted small mt-1">
-                    هذه الصلاحيات حالياً وصفية (تستخدم للوضوح في لوحة التحكم)، ويمكن ربطها لاحقاً بنظام تحقق فعلي في الكود.
+                <label class="form-label small text-secondary mb-2">الصلاحيات</label>
+                <div class="row g-2 mb-3">
+                    @php
+                        $availablePermissions = [
+                            'view_data' => 'الاطلاع على البيانات',
+                            'edit_data' => 'التعديل على البيانات',
+                            'purchase_payment' => 'إجراء عمليات الشراء والدفع',
+                            'manage_catalog' => 'الدخول لإدارة التصنيفات',
+                            'manage_campaigns' => 'عمل حملات إعلانية',
+                            'manage_roles' => 'إضافة وحذف صلاحيات',
+                            'view_orders' => 'إظهار طلبيات',
+                            'manage_coupons' => 'عمل كوبونات',
+                        ];
+                        $oldPermissions = old('permissions', []);
+                    @endphp
+                    @foreach($availablePermissions as $key => $label)
+                        <div class="col-md-6 col-lg-4">
+                            <div class="form-check">
+                                <input class="form-check-input permission-checkbox" type="checkbox" name="permissions[]" value="{{ $key }}" id="perm_{{ $key }}" 
+                                       {{ in_array($key, $oldPermissions) ? 'checked' : '' }}>
+                                <label class="form-check-label text-light small" for="perm_{{ $key }}">
+                                    {{ $label }}
+                                </label>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="form-text text-muted small mt-2">
+                    حدد الصلاحيات التي يجب أن يمتلكها هذا الدور.
                 </div>
             </div>
             <div class="col-12 d-flex justify-content-end">
@@ -69,10 +94,27 @@
                             <td><span class="badge bg-secondary">{{ $role->key }}</span></td>
                             <td>{{ $role->description }}</td>
                             <td>
-                                @if (!empty($role->permissions))
+                                @php
+                                    $permissionLabels = [
+                                        'view_data' => 'الاطلاع على البيانات',
+                                        'edit_data' => 'التعديل على البيانات',
+                                        'purchase_payment' => 'إجراء عمليات الشراء والدفع',
+                                        'manage_catalog' => 'الدخول لإدارة التصنيفات',
+                                        'manage_campaigns' => 'عمل حملات إعلانية',
+                                        'manage_roles' => 'إضافة وحذف صلاحيات',
+                                        'view_orders' => 'إظهار طلبيات',
+                                        'manage_coupons' => 'عمل كوبونات',
+                                    ];
+                                    $rolePermissions = is_array($role->permissions) ? $role->permissions : [];
+                                @endphp
+                                @if (!empty($rolePermissions))
                                     <div class="d-flex flex-wrap gap-1">
-                                        @foreach($role->permissions as $perm)
-                                            <span class="badge bg-info text-dark">{{ $perm }}</span>
+                                        @foreach($rolePermissions as $permKey)
+                                            @if(isset($permissionLabels[$permKey]))
+                                                <span class="badge bg-info text-dark">{{ $permissionLabels[$permKey] }}</span>
+                                            @else
+                                                <span class="badge bg-warning text-dark">{{ $permKey }}</span>
+                                            @endif
                                         @endforeach
                                     </div>
                                 @else
@@ -109,10 +151,44 @@
                                         <label class="form-label small text-secondary mb-1">الوصف</label>
                                         <input type="text" name="description" class="form-control form-control-sm auth-input" value="{{ old('description', $role->description) }}">
                                     </div>
-                                    <div class="col-12 col-md-3">
-                                        <label class="form-label small text-secondary mb-1">الصلاحيات (مفصولة بفاصلة)</label>
-                                        <input type="text" name="permissions" class="form-control form-control-sm auth-input"
-                                               value="{{ old('permissions', is_array($role->permissions) ? implode(', ', $role->permissions) : '') }}">
+                                    <div class="col-12">
+                                        <label class="form-label small text-secondary mb-2">الصلاحيات</label>
+                                        <div class="row g-2 mb-3">
+                                            @php
+                                                $availablePermissions = [
+                                                    'view_data' => 'الاطلاع على البيانات',
+                                                    'edit_data' => 'التعديل على البيانات',
+                                                    'purchase_payment' => 'إجراء عمليات الشراء والدفع',
+                                                    'manage_catalog' => 'الدخول لإدارة التصنيفات',
+                                                    'manage_campaigns' => 'عمل حملات إعلانية',
+                                                    'manage_roles' => 'إضافة وحذف صلاحيات',
+                                                    'view_orders' => 'إظهار طلبيات',
+                                                    'manage_coupons' => 'عمل كوبونات',
+                                                ];
+                                                $rolePermissions = is_array($role->permissions) ? $role->permissions : [];
+                                                
+                                                // فصل الصلاحيات المحددة مسبقاً فقط
+                                                $standardPermissions = [];
+                                                foreach($rolePermissions as $perm) {
+                                                    if(isset($availablePermissions[$perm])) {
+                                                        $standardPermissions[] = $perm;
+                                                    }
+                                                }
+                                                
+                                                $oldPermissions = old('permissions', $standardPermissions);
+                                            @endphp
+                                            @foreach($availablePermissions as $key => $label)
+                                                <div class="col-md-6 col-lg-4">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input permission-checkbox" type="checkbox" name="permissions[]" value="{{ $key }}" id="edit_perm_{{ $role->id }}_{{ $key }}" 
+                                                               {{ in_array($key, $oldPermissions) ? 'checked' : '' }}>
+                                                        <label class="form-check-label text-light small" for="edit_perm_{{ $role->id }}_{{ $key }}">
+                                                            {{ $label }}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
                                     </div>
                                     <div class="col-12 d-flex justify-content-end">
                                         <button class="btn btn-sm btn-main px-4">حفظ التعديلات</button>
@@ -128,4 +204,52 @@
     </div>
 </section>
 
+<style>
+    /* تحسين مظهر Checkboxes */
+    .form-check-input {
+        background-color: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        width: 1.2em;
+        height: 1.2em;
+        cursor: pointer;
+        margin-top: 0.15em;
+    }
+    
+    .form-check-input:checked {
+        background-color: var(--primary);
+        border-color: var(--primary);
+    }
+    
+    .form-check-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 0.25rem rgba(13, 183, 119, 0.25);
+    }
+    
+    .form-check-label {
+        cursor: pointer;
+        user-select: none;
+    }
+    
+    .form-check {
+        padding: 0.5rem;
+        border-radius: 8px;
+        transition: background-color 0.2s;
+    }
+    
+    .form-check:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // عند تحديد checkbox، التأكد من حفظها تلقائياً
+    document.querySelectorAll('.permission-checkbox').forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            // الصلاحيات سيتم حفظها تلقائياً عند إرسال النموذج
+            console.log('تم تحديد/إلغاء تحديد صلاحية:', this.value, this.checked);
+        });
+    });
+});
+</script>
 

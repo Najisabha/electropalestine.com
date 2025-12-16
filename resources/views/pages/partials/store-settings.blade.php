@@ -5,11 +5,11 @@
         <form class="row g-3">
             <div class="col-md-6">
                 <label class="form-label small text-secondary">اسم المتجر</label>
-                <input type="text" class="form-control auth-input" value="VoltMart">
+                <input type="text" class="form-control auth-input" value="electropalestine">
             </div>
             <div class="col-md-6">
                 <label class="form-label small text-secondary">البريد الرسمي</label>
-                <input type="email" class="form-control auth-input" value="support@voltmart.com">
+                <input type="email" class="form-control auth-input" value="support@electropalestine.com">
             </div>
             <div class="col-md-6">
                 <label class="form-label small text-secondary">الهاتف</label>

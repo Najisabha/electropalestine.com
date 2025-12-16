@@ -1,4 +1,4 @@
-@php($title = 'متجر إلكتروني أخضر')
+@php($title = __('common.green_electronics_store'))
 @include('layouts.app', [
     'title' => $title,
     'slot' => view('store.partials.home-bootstrap', [

@@ -32,6 +32,7 @@ class User extends Authenticatable
         'points',
         'balance',
         'password',
+        'last_login_at',
     ];
 
     /**
@@ -55,6 +56,12 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'balance' => 'decimal:2',
+            'last_login_at' => 'datetime',
         ];
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
     }
 }

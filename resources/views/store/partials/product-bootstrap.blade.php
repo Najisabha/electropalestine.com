@@ -20,26 +20,26 @@
                         @else
                             <div class="w-100 d-flex align-items-center justify-content-center bg-black text-secondary small"
                                  style="height: 320px;">
-                                لا توجد صورة للمنتج
+                                {{ __('common.no_image_product') }}
                             </div>
                         @endif
                         <span class="badge bg-success position-absolute top-0 start-0 m-3 small">
-                            {{ $product->sales_count ?? 0 }} مبيعة
+                            {{ $product->sales_count ?? 0 }} {{ __('common.sold') }}
                         </span>
                     </div>
                     <div class="p-4">
                         <p class="text-secondary small mb-1">
-                            منتج من {{ $product->company->name ?? 'شركة غير معروفة' }}
+                            {{ __('common.product_from') }} {{ $product->company->name ?? __('common.unknown_company') }}
                         </p>
                         <div class="d-flex flex-wrap gap-2 mb-2">
                             @if($category)
                                 <span class="badge bg-success text-dark">
-                                    {{ $category->name }} • الصنف الرئيسي
+                                    {{ $category->name }} • {{ __('common.main_category') }}
                                 </span>
                             @endif
                             @if($product->type)
                                 <span class="badge bg-warning text-dark">
-                                    {{ $product->type->name }} • النوع
+                                    {{ $product->type->name }} • {{ __('common.type') }}
                                 </span>
                             @endif
                         </div>
@@ -59,7 +59,7 @@
                                 {{ number_format($ratingAverage, 1) }} / 5
                             </span>
                             <span class="small text-secondary">
-                                ({{ $ratingCount }} تقييم)
+                                ({{ $ratingCount }} {{ __('common.rating_label') }})
                             </span>
                         </div>
                     </div>
@@ -75,26 +75,37 @@
                 </div>
                 @if(!empty($product->cost_price))
                     <p class="text-secondary small mb-1">
-                        سعر التكلفة التقريبي: ${{ number_format($product->cost_price, 2) }}
+                        {{ __('common.approximate_cost_price') }}: ${{ number_format($product->cost_price, 2) }}
                     </p>
                 @endif
 
                 <div class="text-secondary small mb-2">
-                    المخزون المتاح: <span class="text-success fw-semibold">{{ $product->stock }}</span>
+                    {{ __('common.available_stock') }}: <span class="text-success fw-semibold">{{ $product->stock }}</span>
                 </div>
 
                 <p class="text-secondary mb-3">
-                    {{ $product->description ?? 'وصف المنتج سيظهر هنا.' }}
+                    {{ $product->description ?? __('common.product_description_placeholder') }}
                 </p>
 
                 <div class="d-flex flex-wrap gap-2 mb-4">
-                    <button class="btn btn-main px-4">أضف للسلة</button>
-                    <button class="btn btn-outline-main px-4">تواصل معنا حول هذا المنتج</button>
+                    <form method="POST" action="{{ route('cart.add', $product) }}" class="d-inline">
+                        @csrf
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="btn btn-main px-4">
+                            <i class="bi bi-cart-plus"></i>
+                            {{ __('common.add_to_cart_button') }}
+                        </button>
+                    </form>
+                    <a href="{{ route('store.checkout', ['product' => $product->id, 'quantity' => 1]) }}" class="btn btn-success px-4">
+                        <i class="bi bi-bag-check"></i>
+                        {{ __('common.buy_now') }}
+                    </a>
+                    <button class="btn btn-outline-main px-4">{{ __('common.contact_about_product') }}</button>
                 </div>
 
                 {{-- قسم تقييمات العملاء --}}
                 <div class="glass rounded-4 p-3">
-                    <h2 class="h6 fw-semibold mb-2">تقييمات العملاء</h2>
+                    <h2 class="h6 fw-semibold mb-2">{{ __('common.customer_ratings') }}</h2>
                     <div class="d-flex align-items-center gap-3 mb-3">
                         <div class="display-6 fw-bold text-warning mb-0">
                             {{ number_format($ratingAverage, 1) }}
@@ -112,17 +123,17 @@
                                 @endfor
                             </div>
                             <div class="small text-secondary">
-                                بناءً على {{ $ratingCount }} تقييم
+                                {{ __('common.based_on_ratings') }} {{ $ratingCount }} {{ __('common.rating_label') }}
                             </div>
                         </div>
                     </div>
 
                     <div class="border-top border-secondary-subtle pt-2">
                         <p class="small text-secondary mb-1">
-                            لا توجد تعليقات مفصلة حتى الآن.
+                            {{ __('common.no_detailed_comments') }}
                         </p>
                         <p class="small text-secondary mb-0">
-                            يمكنك إضافة نظام تعليقات لاحقاً لعرض آراء العملاء حول هذا المنتج.
+                            {{ __('common.add_comment_system_later') }}
                         </p>
                     </div>
                 </div>
@@ -131,7 +142,7 @@
 
         {{-- شريط ذات صلة: منتجات من نفس الأصناف/الأنواع --}}
         <div class="mt-5">
-            <h2 class="h5 fw-semibold mb-3">منتجات ذات صلة</h2>
+            <h2 class="h5 fw-semibold mb-3">{{ __('common.related_products') }}</h2>
 
             <div class="strip-scroll mb-3">
                 @forelse ($related as $item)
@@ -141,18 +152,18 @@
                                 <img src="{{ asset('storage/'.$item->image) }}" class="strip-img" alt="{{ $item->name }}">
                             @else
                                 <div class="strip-img d-flex align-items-center justify-content-center bg-black text-secondary small">
-                                    لا توجد صورة
+                                    {{ __('common.no_image') }}
                                 </div>
                             @endif
                         </div>
                         <div class="p-3">
                             <h6 class="mb-1 text-white">{{ $item->name }}</h6>
                             <div class="text-muted small mb-1">
-                                {{ $item->category->name ?? 'بدون تصنيف' }} • {{ $item->company->name ?? 'شركة غير معروفة' }}
+                                {{ $item->category->name ?? __('common.no_category') }} • {{ $item->company->name ?? __('common.unknown_company') }}
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="text-success fw-bold">${{ number_format($item->price, 2) }}</span>
-                                <span class="badge bg-secondary small">المخزون: {{ $item->stock }}</span>
+                                <span class="badge bg-secondary small">{{ __('common.stock_label') }}: {{ $item->stock }}</span>
                             </div>
                         </div>
                     </a>

@@ -12,7 +12,7 @@ class AdminOrderController extends Controller
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
-            if (!auth()->check() || auth()->user()->role !== 'admin') {
+            if (!auth()->check() || strtolower(auth()->user()->role) !== 'admin') {
                 abort(403);
             }
             return $next($request);

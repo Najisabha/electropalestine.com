@@ -32,9 +32,13 @@
                     <div class="strip-scroll">
                         @forelse($types as $type)
                             <div class="strip-card text-center">
-                                <div class="strip-img d-flex align-items-center justify-content-center bg-black text-secondary small">
-                                    {{ $type->name }}
-                                </div>
+                                @if(!empty($type->image))
+                                    <img src="{{ asset('storage/'.$type->image) }}" class="strip-img" alt="{{ $type->name }}">
+                                @else
+                                    <div class="strip-img d-flex align-items-center justify-content-center bg-black text-secondary small">
+                                        {{ $type->name }}
+                                    </div>
+                                @endif
                                 <div class="p-3">
                                     <h6 class="mb-1 text-white">{{ $type->name }}</h6>
                                     <span class="badge bg-warning text-dark small">نوع ضمن {{ $category->name }}</span>

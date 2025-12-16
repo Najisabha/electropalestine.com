@@ -2,7 +2,7 @@
     <div class="container py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
         <a href="{{ route('home') }}" class="d-flex align-items-center gap-2 text-decoration-none">
             <div class="brand-logo">VM</div>
-            <strong class="text-white">VoltMart Admin</strong>
+            <strong class="text-white">electropalestine Admin</strong>
         </a>
         <nav class="d-flex align-items-center gap-2 flex-wrap">
             <a href="{{ route('admin.dashboard') }}" class="btn btn-sm btn-outline-main">لوحة التحكم</a>

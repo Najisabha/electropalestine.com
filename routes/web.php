@@ -10,13 +10,31 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\StoreController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/language/{locale}', [StoreController::class, 'switchLanguage'])->name('language.switch');
+
 Route::get('/', [StoreController::class, 'home'])->name('home');
 Route::get('/products/{product:slug}', [StoreController::class, 'product'])->name('products.show');
 Route::get('/categories/{category:slug}', [StoreController::class, 'category'])->name('categories.show');
+Route::get('/cart', [StoreController::class, 'cart'])->name('store.cart');
+Route::post('/cart/add/{product}', [StoreController::class, 'addToCart'])->name('cart.add');
+Route::delete('/cart/remove/{product}', [StoreController::class, 'removeFromCart'])->name('cart.remove');
+Route::put('/cart/update/{product}', [StoreController::class, 'updateCart'])->name('cart.update');
+Route::post('/cart/clear', [StoreController::class, 'clearCart'])->name('cart.clear');
+Route::middleware('auth')->group(function () {
+    Route::get('/checkout', [StoreController::class, 'checkout'])->name('store.checkout');
+    Route::post('/checkout/confirm', [StoreController::class, 'confirmOrder'])->name('store.checkout.confirm');
+});
 Route::view('/about', 'store.about')->name('store.about');
 Route::view('/story', 'store.story')->name('store.story');
-Route::view('/contact', 'store.contact')->name('store.contact');
-Route::view('/settings', 'store.settings')->middleware('auth')->name('store.settings');
+Route::get('/contact', [StoreController::class, 'showContact'])->name('store.contact');
+Route::post('/contact', [StoreController::class, 'sendContact'])->name('store.contact.send');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/account-settings', [StoreController::class, 'accountSettings'])->name('store.account-settings');
+    Route::get('/my-orders', [StoreController::class, 'myOrders'])->name('store.my-orders');
+    Route::get('/my-orders/{order}/invoice', [StoreController::class, 'downloadInvoice'])->name('store.order.invoice');
+    Route::get('/my-comments', [StoreController::class, 'myComments'])->name('store.my-comments');
+});
 
 Route::redirect('/dashboard', '/admin/dashboard');
 
@@ -47,6 +65,8 @@ Route::middleware('auth')->prefix('admin')->as('admin.')->group(function () {
     Route::post('/add-campaign', [AdminCampaignController::class, 'store'])->name('campaign.store');
     Route::get('/users', [AdminUserController::class, 'index'])->name('users');
     Route::put('/users/{user}/role', [AdminUserController::class, 'updateRole'])->name('users.role');
+    Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
     Route::get('/roles', [AdminRoleController::class, 'index'])->name('roles');
     Route::post('/roles', [AdminRoleController::class, 'store'])->name('roles.store');
     Route::put('/roles/{role}', [AdminRoleController::class, 'update'])->name('roles.update');

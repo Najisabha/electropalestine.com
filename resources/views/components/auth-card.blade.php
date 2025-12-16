@@ -8,7 +8,7 @@
             <div class="auth-logo mb-3">VM</div>
             <h5 class="fw-bold mb-1">{{ $title }}</h5>
             <p class="small text-secondary mb-0">
-                أهلاً بك في VoltMart 👋 الرجاء إدخال بياناتك
+                أهلاً بك في electropalestine 👋 الرجاء إدخال بياناتك
             </p>
         </div>
 

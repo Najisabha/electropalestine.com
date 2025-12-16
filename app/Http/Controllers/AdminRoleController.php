@@ -27,16 +27,12 @@ class AdminRoleController extends Controller
             'name' => ['required', 'string', 'max:255', 'unique:roles,name'],
             'key' => ['required', 'string', 'max:255', 'unique:roles,key'],
             'description' => ['nullable', 'string', 'max:500'],
-            'permissions' => ['nullable', 'string'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['string', 'max:255'],
         ]);
 
-        $permissionsArray = collect(explode(',', (string) $data['permissions']))
-            ->map(fn ($item) => trim($item))
-            ->filter()
-            ->values()
-            ->all();
-
-        $data['permissions'] = $permissionsArray;
+        // جمع الصلاحيات المحددة مسبقاً
+        $data['permissions'] = $data['permissions'] ?? [];
 
         Role::create($data);
 
@@ -49,16 +45,12 @@ class AdminRoleController extends Controller
             'name' => ['required', 'string', 'max:255', 'unique:roles,name,' . $role->id],
             'key' => ['required', 'string', 'max:255', 'unique:roles,key,' . $role->id],
             'description' => ['nullable', 'string', 'max:500'],
-            'permissions' => ['nullable', 'string'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['string', 'max:255'],
         ]);
 
-        $permissionsArray = collect(explode(',', (string) $data['permissions']))
-            ->map(fn ($item) => trim($item))
-            ->filter()
-            ->values()
-            ->all();
-
-        $data['permissions'] = $permissionsArray;
+        // جمع الصلاحيات المحددة مسبقاً
+        $data['permissions'] = $data['permissions'] ?? [];
 
         $role->update($data);
 

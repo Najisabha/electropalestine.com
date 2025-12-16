@@ -18,6 +18,7 @@
                         <th>الكمية</th>
                         <th>سعر الوحدة</th>
                         <th>الإجمالي</th>
+                        <th>طريقة الدفع</th>
                         <th>الحالة</th>
                         <th>إجراءات</th>
                     </tr>
@@ -39,6 +40,19 @@
                             </td>
                             <td>${{ number_format($order->total, 2) }}</td>
                             <td>
+                                @php
+                                    $paymentMethods = [
+                                        'balance_points' => 'الرصيد/النقاط',
+                                        'visa_mastercard' => 'فيزا/ماستر كارد',
+                                        'cash_on_delivery' => 'الدفع عند الاستلام',
+                                        'palestinian_wallet' => 'المحافظ الفلسطينية',
+                                        'agent' => 'الدفع عبر وكيل',
+                                    ];
+                                    $methodLabel = $paymentMethods[$order->payment_method] ?? $order->payment_method ?? 'غير محدد';
+                                @endphp
+                                <span class="badge bg-info text-dark">{{ $methodLabel }}</span>
+                            </td>
+                            <td>
                                     <select name="status" class="form-select form-select-sm bg-dark text-light" style="width:130px;">
                                         <option value="pending" @selected($order->status === 'pending')>قيد المعالجة</option>
                                         <option value="confirmed" @selected($order->status === 'confirmed')>مؤكد</option>
@@ -59,7 +73,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center text-secondary">لا توجد طلبات حالياً.</td>
+                            <td colspan="9" class="text-center text-secondary">لا توجد طلبات حالياً.</td>
                         </tr>
                     @endforelse
                 </tbody>

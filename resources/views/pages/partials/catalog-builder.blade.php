@@ -157,7 +157,7 @@
                                 @if($roles->count() > 0)
                                     <label class="form-label small text-secondary mb-0 mt-1">أسعار خاصة حسب الدور (اختياري)</label>
                                     @foreach($roles as $role)
-                                        @if($role->key !== 'admin')
+                                        @if(strtolower($role->key) !== 'admin')
                                             <div class="input-group input-group-sm mb-1">
                                                 <span class="input-group-text bg-dark text-secondary">{{ $role->name }}</span>
                                                 <input type="number"
