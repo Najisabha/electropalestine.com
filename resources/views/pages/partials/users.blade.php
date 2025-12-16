@@ -5,18 +5,19 @@
             <h1 class="h4 fw-bold mb-0">إظهار المستخدمين</h1>
             <span class="badge bg-success text-dark">{{ $users->total() }} مستخدم</span>
         </div>
-        <p class="text-secondary small mb-3">عرض البيانات الكاملة للمستخدمين.</p>
+        <p class="text-secondary small mb-3">عرض البيانات الكاملة للمستخدمين وإدارة أدوارهم.</p>
         <div class="table-responsive">
             <table class="table table-dark table-striped align-middle">
                 <thead>
                     <tr>
+                        <th>#</th>
                         <th>الاسم الأول</th>
                         <th>الاسم الأخير</th>
                         <th>البريد</th>
                         <th>مقدمة واتساب</th>
                         <th>رقم الجوال</th>
                         <th>تاريخ الميلاد</th>
-                        <th>الدور</th>
+                        <th>الدور الحالي</th>
                         <th>صورة الهوية</th>
                         <th>إجراءات</th>
                     </tr>
@@ -24,6 +25,7 @@
                 <tbody>
                     @forelse ($users as $user)
                         <tr>
+                            <td>{{ $user->id }}</td>
                             <td>{{ $user->first_name }}</td>
                             <td>{{ $user->last_name }}</td>
                             <td>{{ $user->email }}</td>
@@ -39,10 +41,23 @@
                                 @endif
                             </td>
                             <td>
-                                <div class="d-flex gap-1 flex-wrap">
-                                    <button type="button" class="btn btn-sm btn-outline-main">توثيق الهوية</button>
-                                    <button type="button" class="btn btn-sm btn-main">تعديل المستخدم</button>
-                                    <button type="button" class="btn btn-sm btn-danger">حذف المستخدم</button>
+                                <div class="d-flex flex-column gap-1">
+                                    <form method="POST" action="{{ route('admin.users.role', $user) }}" class="d-flex gap-1 flex-wrap">
+                                        @csrf
+                                        @method('PUT')
+                                        <select name="role" class="form-select form-select-sm bg-dark text-light border-secondary w-auto">
+                                            @foreach ($roles as $role)
+                                                <option value="{{ $role->key }}" {{ $user->role === $role->key ? 'selected' : '' }}>
+                                                    {{ $role->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <button class="btn btn-sm btn-main">تحديث الدور</button>
+                                    </form>
+                                    <div class="d-flex gap-1 flex-wrap">
+                                        <button type="button" class="btn btn-sm btn-outline-main">توثيق الهوية</button>
+                                        <button type="button" class="btn btn-sm btn-danger">حذف المستخدم</button>
+                                    </div>
                                 </div>
                             </td>
                         </tr>

@@ -7,7 +7,8 @@
         <nav class="d-flex align-items-center gap-2 flex-wrap">
             <a href="{{ route('admin.dashboard') }}" class="btn btn-sm btn-outline-main">لوحة التحكم</a>
             <a href="{{ route('admin.catalog') }}" class="btn btn-sm btn-outline-main">إدارة التصنيفات</a>
-            <a href="{{ route('admin.add-campaign') }}" class="btn btn-sm btn-outline-main">إضافة حملة إعلانية</a>
+            <a href="{{ route('admin.campaigns') }}" class="btn btn-sm btn-outline-main">الحملات الإعلانية</a>
+            <a href="{{ route('admin.roles') }}" class="btn btn-sm btn-outline-main">الأدوار و الصلاحيات</a>
             <a href="{{ route('admin.users') }}" class="btn btn-sm btn-outline-main">إظهار المستخدمين</a>
             <a href="{{ route('admin.orders') }}" class="btn btn-sm btn-outline-main">إظهار الطلبات</a>
             <a href="{{ route('admin.coupons') }}" class="btn btn-sm btn-outline-main">الكوبونات</a>

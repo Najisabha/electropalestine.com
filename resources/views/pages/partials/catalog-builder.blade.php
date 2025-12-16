@@ -17,6 +17,16 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
+                <button class="nav-link" id="relations-tab" data-bs-toggle="tab" data-bs-target="#relations-pane" type="button" role="tab">
+                    العلاقات
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="add-product-tab" data-bs-toggle="tab" data-bs-target="#add-product-pane" type="button" role="tab">
+                    إضافة منتج
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
                 <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products-pane" type="button" role="tab">
                     آخر 20 منتج
                 </button>
@@ -102,12 +112,19 @@
                             </form>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="col-lg-3">
+            {{-- تبويب مستقل لإضافة منتج بنفس النموذج --}}
+            <div class="tab-pane fade" id="add-product-pane" role="tabpanel" aria-labelledby="add-product-tab">
+                <div class="row justify-content-center">
+                    <div class="col-lg-4 col-md-6">
                         <div class="glass p-3 h-100">
-                            <h6 class="fw-bold">إضافة منتج</h6>
+                            <h6 class="fw-bold mb-2">إضافة منتج جديد</h6>
+                            <p class="text-secondary small mb-3">اختر الصنف والنوع للشجرة الصحيحة، ثم أدخل الأسعار والنقاط.</p>
                             <form method="POST" action="{{ route('admin.catalog.product') }}" class="d-flex flex-column gap-2" enctype="multipart/form-data">
                                 @csrf
+                                {{-- نفس منطق الفلترة القديم: يعتمد على categorySelect / typeSelect مع data-category --}}
                                 <select name="category_id" id="categorySelect" class="form-select auth-input bg-dark text-light" required>
                                     <option value="">اختر الصنف</option>
                                     @foreach ($categories as $cat)
@@ -126,13 +143,37 @@
                                         <option value="{{ $company->id }}">{{ $company->name }}</option>
                                     @endforeach
                                 </select>
+
                                 <input type="text" name="name" class="form-control auth-input" placeholder="اسم المنتج" required>
-                                <input type="number" step="0.01" name="price" class="form-control auth-input" placeholder="السعر" required>
+
+                                <input type="number" step="0.01" name="cost_price" class="form-control auth-input" placeholder="سعر التكلفة (اختياري)">
+                                <input type="number" step="0.01" name="price" class="form-control auth-input" placeholder="سعر البيع الافتراضي" required>
+
                                 <input type="number" name="stock" class="form-control auth-input" placeholder="المخزون" required>
+
+                                <input type="number" name="points_reward" class="form-control auth-input" placeholder="عدد النقاط عند الشراء (اختياري)" min="0">
+
+                                @php($roles = $roles ?? collect())
+                                @if($roles->count() > 0)
+                                    <label class="form-label small text-secondary mb-0 mt-1">أسعار خاصة حسب الدور (اختياري)</label>
+                                    @foreach($roles as $role)
+                                        @if($role->key !== 'admin')
+                                            <div class="input-group input-group-sm mb-1">
+                                                <span class="input-group-text bg-dark text-secondary">{{ $role->name }}</span>
+                                                <input type="number"
+                                                       step="0.01"
+                                                       name="role_prices[{{ $role->key }}]"
+                                                       class="form-control auth-input"
+                                                       placeholder="سعر خاص لدور {{ $role->name }}">
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                @endif
+
                                 <textarea name="description" class="form-control auth-input" rows="2" placeholder="وصف (اختياري)"></textarea>
                                 <label class="form-label small text-secondary mb-0">صورة المنتج (اختياري)</label>
                                 <input type="file" name="image" class="form-control auth-input">
-                                <button class="btn btn-main btn-sm">حفظ المنتج</button>
+                                <button class="btn btn-main btn-sm mt-2">حفظ المنتج</button>
                             </form>
                         </div>
                     </div>
@@ -169,7 +210,7 @@
                                                 <input type="text" name="name" value="{{ $cat->name }}" class="form-control form-control-sm bg-dark text-light">
                                             </div>
                                             <div class="col-12">
-           								        <label class="form-label small text-secondary mb-0">وصف (اختياري)</label>
+                                                <label class="form-label small text-secondary mb-0">وصف (اختياري)</label>
                                                 <input type="text" name="description" value="{{ $cat->description }}" class="form-control form-control-sm bg-dark text-light">
                                             </div>
                                             <div class="col-12">
@@ -177,13 +218,13 @@
                                                 <input type="file" name="image" class="form-control form-control-sm bg-dark text-light">
                                             </div>
                                             <div class="col-12 d-flex gap-2 mt-2">
-                                                <button class="btn btn-sm btn-main">تعديل الصنف</button>
-                                                <form method="POST" action="{{ route('admin.catalog.category.delete', $cat) }}" onsubmit="return confirm('حذف الصنف؟ سيحذف الأنواع والمنتجات التابعة.');" class="d-inline">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button class="btn btn-sm btn-danger">حذف الصنف</button>
-                                                </form>
+                                                <button class="btn btn-sm btn-main" type="submit">تعديل الصنف</button>
                                             </div>
+                                        </form>
+                                        <form method="POST" action="{{ route('admin.catalog.category.delete', $cat) }}" onsubmit="return confirm('حذف الصنف؟ سيحذف الأنواع والمنتجات التابعة.');" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-danger mt-1">حذف الصنف</button>
                                         </form>
                                     </div>
                                 @empty
@@ -224,13 +265,13 @@
                                                         <input type="file" name="image" class="form-control form-control-sm bg-dark text-light">
                                                     </div>
                                                     <div class="col-12 d-flex gap-2 mt-1">
-                                                        <button class="btn btn-sm btn-main">تعديل النوع</button>
-                                                        <form method="POST" action="{{ route('admin.catalog.type.delete', $type) }}" onsubmit="return confirm('حذف النوع؟ سيحذف المنتجات التابعة.');" class="d-inline">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button class="btn btn-sm btn-danger">حذف النوع</button>
-                                                        </form>
+                                                        <button class="btn btn-sm btn-main" type="submit">تعديل النوع</button>
                                                     </div>
+                                                </form>
+                                                <form method="POST" action="{{ route('admin.catalog.type.delete', $type) }}" onsubmit="return confirm('حذف النوع؟ سيحذف المنتجات التابعة.');" class="d-inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button class="btn btn-sm btn-danger">حذف النوع</button>
                                                 </form>
                                             </div>
                                         @endforeach
@@ -269,19 +310,99 @@
                                             <label class="form-label small text-secondary mb-0">صورة (اختياري)</label>
                                             <input type="file" name="image" class="form-control form-control-sm bg-dark text-light">
                                         </div>
-                                        <div class="col-12 d-flex gap-2 mt-2">
-                                            <button class="btn btn-sm btn-main">تعديل الشركة</button>
-                                            <form method="POST" action="{{ route('admin.catalog.company.delete', $company) }}" onsubmit="return confirm('حذف الشركة؟ سيحذف المنتجات المرتبطة.');" class="d-inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="btn btn-sm btn-danger">حذف الشركة</button>
-                                            </form>
+                                        <div class="col-12">
+                                            <button class="btn btn-sm btn-main" type="submit">تعديل الشركة</button>
                                         </div>
+                                    </form>
+                                    <form method="POST" action="{{ route('admin.catalog.company.delete', $company) }}" onsubmit="return confirm('حذف الشركة؟ سيحذف المنتجات المرتبطة.');" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-sm btn-danger mt-1">حذف الشركة</button>
                                     </form>
                                 </div>
                             @empty
                                 <div class="text-secondary small">لا توجد شركات لإدارتها.</div>
                             @endforelse
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- تبويب العلاقات --}}
+            <div class="tab-pane fade" id="relations-pane" role="tabpanel" aria-labelledby="relations-tab">
+                <div class="row g-3">
+                    <div class="col-lg-6">
+                        <div class="glass p-3 h-100">
+                            <h6 class="small fw-bold mb-3 text-success">ربط شركات بصنف رئيسي</h6>
+                            <form method="POST" action="{{ route('admin.catalog.category.companies') }}" class="row g-2">
+                                @csrf
+                                <div class="col-12">
+                                    <label class="form-label small text-secondary mb-0">اختر الصنف الرئيسي</label>
+                                    <select id="relations-category-id" name="category_id" class="form-select form-select-sm bg-dark text-light" required>
+                                        <option value="">اختر الصنف</option>
+                                        @foreach ($categories as $category)
+                                            <option
+                                                value="{{ $category->id }}"
+                                                data-companies="{{ $category->companies->pluck('id')->implode(',') }}"
+                                                {{ old('category_id') == $category->id ? 'selected' : '' }}
+                                            >
+                                                {{ $category->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small text-secondary mb-1">الشركات المرتبطة</label>
+                                    <div class="bg-dark p-2 rounded" style="max-height:220px; overflow:auto;" id="category-companies-checkboxes">
+                                        @foreach ($companies as $company)
+                                            <div class="form-check text-light">
+                                                <input class="form-check-input" type="checkbox" name="companies[]" value="{{ $company->id }}" id="cat-comp-{{ $company->id }}">
+                                                <label class="form-check-label small" for="cat-comp-{{ $company->id }}">{{ $company->name }}</label>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                <div class="col-12 d-flex gap-2">
+                                    <button class="btn btn-sm btn-main w-100">حفظ العلاقة</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="glass p-3 h-100">
+                            <h6 class="small fw-bold mb-3 text-success">ربط أصناف بشركة</h6>
+                            <form method="POST" action="{{ route('admin.catalog.company.categories') }}" class="row g-2">
+                                @csrf
+                                <div class="col-12">
+                                    <label class="form-label small text-secondary mb-0">اختر الشركة</label>
+                                    <select id="relations-company-id" name="company_id" class="form-select form-select-sm bg-dark text-light" required>
+                                        <option value="">اختر الشركة</option>
+                                        @foreach ($companies as $company)
+                                            <option
+                                                value="{{ $company->id }}"
+                                                data-categories="{{ $company->categories->pluck('id')->implode(',') }}"
+                                                {{ old('company_id') == $company->id ? 'selected' : '' }}
+                                            >
+                                                {{ $company->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small text-secondary mb-1">الأصناف المرتبطة</label>
+                                    <div class="bg-dark p-2 rounded" style="max-height:220px; overflow:auto;" id="company-categories-checkboxes">
+                                        @foreach ($categories as $category)
+                                            <div class="form-check text-light">
+                                                <input class="form-check-input" type="checkbox" name="categories[]" value="{{ $category->id }}" id="comp-cat-{{ $category->id }}">
+                                                <label class="form-check-label small" for="comp-cat-{{ $category->id }}">{{ $category->name }}</label>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                <div class="col-12 d-flex gap-2">
+                                    <button class="btn btn-sm btn-main w-100">حفظ العلاقة</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -349,6 +470,14 @@
                                                 <label class="form-label small text-secondary mb-0">صورة (اختياري)</label>
                                                 <input type="file" name="image" class="form-control form-control-sm bg-dark text-light">
                                             </div>
+                                            <div class="col-md-2">
+                                                <div class="form-check mt-4">
+                                                    <input class="form-check-input" type="checkbox" name="is_best_seller" value="1" id="bestSeller-{{ $product->id }}" {{ $product->is_best_seller ? 'checked' : '' }}>
+                                                    <label class="form-check-label small text-secondary" for="bestSeller-{{ $product->id }}">
+                                                        ضمن المنتجات الأكثر مبيعاً
+                                                    </label>
+                                                </div>
+                                            </div>
                                             <div class="col-12 d-flex gap-2 mt-1">
                                                 <button class="btn btn-sm btn-main">حفظ التعديلات</button>
                                                 <button class="btn btn-sm btn-outline-main" type="button" data-bs-toggle="collapse" data-bs-target="#edit-product-{{ $product->id }}">إغلاق</button>
@@ -363,6 +492,7 @@
                     </table>
                 </div>
             </div>
+
         </div>
     </div>
 </section>
@@ -551,5 +681,55 @@
     }
 
     manageCompanySearch?.addEventListener('input', applyCompanyFilter);
+
+    // === ربط الشركات بالصنف الرئيسي: تحديث الـ checkbox مباشرة حسب البيانات الموجودة في الـ option ===
+    const catRelSelect = document.getElementById('relations-category-id');
+    const companyRelSelect = document.getElementById('relations-company-id');
+    const catCompaniesBox = document.getElementById('category-companies-checkboxes');
+    const companyCatsBox = document.getElementById('company-categories-checkboxes');
+
+    if (catRelSelect && catCompaniesBox) {
+        const companyCheckboxes = Array.from(catCompaniesBox.querySelectorAll('input[name="companies[]"]'));
+
+        function updateCompanyCheckboxes() {
+            const opt = catRelSelect.options[catRelSelect.selectedIndex];
+            const ids = (opt && opt.dataset.companies ? opt.dataset.companies.split(',') : []).filter(Boolean);
+            companyCheckboxes.forEach(cb => {
+                cb.checked = ids.includes(cb.value);
+            });
+        }
+
+        catRelSelect.addEventListener('change', updateCompanyCheckboxes);
+        // إذا لم يكن هناك اختيار، جرّب اختيار أول عنصر لديه شركات مرتبطة
+        if (!catRelSelect.value) {
+            const firstWithCompanies = Array.from(catRelSelect.options).find(o => o.dataset.companies);
+            if (firstWithCompanies && firstWithCompanies.value) {
+                catRelSelect.value = firstWithCompanies.value;
+            }
+        }
+        updateCompanyCheckboxes();
+    }
+
+    if (companyRelSelect && companyCatsBox) {
+        const categoryCheckboxes = Array.from(companyCatsBox.querySelectorAll('input[name="categories[]"]'));
+
+        function updateCategoryCheckboxes() {
+            const opt = companyRelSelect.options[companyRelSelect.selectedIndex];
+            const ids = (opt && opt.dataset.categories ? opt.dataset.categories.split(',') : []).filter(Boolean);
+            categoryCheckboxes.forEach(cb => {
+                cb.checked = ids.includes(cb.value);
+            });
+        }
+
+        companyRelSelect.addEventListener('change', updateCategoryCheckboxes);
+        // إذا لم يكن هناك اختيار، جرّب اختيار أول عنصر لديه أصناف مرتبطة
+        if (!companyRelSelect.value) {
+            const firstWithCats = Array.from(companyRelSelect.options).find(o => o.dataset.categories);
+            if (firstWithCats && firstWithCats.value) {
+                companyRelSelect.value = firstWithCats.value;
+            }
+        }
+        updateCategoryCheckboxes();
+    }
 </script>
 

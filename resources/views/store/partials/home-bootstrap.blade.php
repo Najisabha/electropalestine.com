@@ -1,102 +1,189 @@
-<section class="py-5 text-light">
+@php($bestSelling = $bestSelling ?? collect())
+@php($campaigns = $campaigns ?? collect())
+
+<section class="py-4 text-light">
     <div class="container">
-        <div class="row align-items-center g-4">
-            <div class="col-lg-6">
-                <p class="text-success fw-semibold text-uppercase small mb-2">VoltMart</p>
-                <h1 class="fw-black display-5 mb-3">VoltMart متجر إلكتروني احترافي بالأخضر والأسود <span class="accent">ولمسة أصفر</span>.</h1>
-                <p class="text-secondary mb-4">كل ما تحتاجه من منتجات إلكترونية مع تصنيفات واضحة: الصنف الرئيسي، النوع، الشركة والمنتج.</p>
-                <div class="d-flex gap-2 flex-wrap">
-                    <a href="#featured" class="btn btn-ep px-4">استكشف المنتجات</a>
-                    <a href="#categories" class="btn btn-ep-outline px-4">الأصناف والأنواع</a>
+        @if ($campaigns->isNotEmpty())
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <p class="text-success small mb-1">عروض مميزة</p>
+                        <h2 class="h5 fw-bold mb-0">الحملات الإعلانية</h2>
+                    </div>
                 </div>
-                <div class="d-flex gap-4 mt-4 text-secondary small">
-                    <span class="d-flex align-items-center gap-2"><span class="badge rounded-circle bg-success p-2"></span>دعم فوري</span>
-                    <span class="d-flex align-items-center gap-2"><span class="badge rounded-circle bg-warning p-2"></span>تسليم سريع</span>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="glass p-4">
-                    <div class="row g-3">
-                        @foreach ($featured->take(4) as $product)
-                            <div class="col-6">
-                                <div class="card h-100 bg-dark border-0 text-light">
-                                    <div class="card-body text-center">
-                                        <div class="bg-black rounded-3 py-3 mb-3 text-success small">{{ $product->name }}</div>
-                                        <h6 class="mb-1 text-white">{{ $product->name }}</h6>
-                                        <div class="text-muted small">{{ $product->company->name ?? 'شركة' }}</div>
-                                        <div class="text-success fw-bold mt-1">${{ number_format($product->price, 2) }}</div>
+                <div id="campaignCarousel" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-indicators">
+                        @foreach ($campaigns as $index => $campaign)
+                            <button type="button"
+                                    data-bs-target="#campaignCarousel"
+                                    data-bs-slide-to="{{ $index }}"
+                                    @if($index === 0) class="active" aria-current="true" @endif
+                                    aria-label="الحملة {{ $index + 1 }}"></button>
+                        @endforeach
+                    </div>
+                    <div class="carousel-inner rounded-4 overflow-hidden">
+                        @foreach ($campaigns as $index => $campaign)
+                            <div class="carousel-item @if($index === 0) active @endif">
+                                <div class="row g-0 align-items-stretch">
+                                    <div class="col-md-4 d-none d-md-block">
+                                        @if (!empty($campaign->image))
+                                            <img src="{{ asset('storage/'.$campaign->image) }}"
+                                                 class="w-100 h-100 object-fit-cover"
+                                                 alt="{{ $campaign->title }}">
+                                        @else
+                                            <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-black text-secondary">
+                                                لا توجد صورة للحملة
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="p-4 bg-dark h-100 d-flex flex-column justify-content-center">
+                                            <h3 class="h5 fw-bold mb-2 text-success">{{ $campaign->title }}</h3>
+                                            @if($campaign->starts_at || $campaign->ends_at)
+                                                <p class="small text-secondary mb-2">
+                                                    @if($campaign->starts_at)
+                                                        من {{ $campaign->starts_at->format('Y-m-d') }}
+                                                    @endif
+                                                    @if($campaign->ends_at)
+                                                        إلى {{ $campaign->ends_at->format('Y-m-d') }}
+                                                    @endif
+                                                </p>
+                                            @endif
+                                            <p class="mb-0 text-light small">
+                                                {{ \Illuminate\Support\Str::limit($campaign->description, 160) ?: 'عرض خاص من VoltMart على مختارات من المنتجات.' }}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         @endforeach
                     </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#campaignCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">السابق</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#campaignCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">التالي</span>
+                    </button>
                 </div>
             </div>
-        </div>
-    </div>
-</section>
+        @endif
 
-<section id="featured" class="py-5 bg-black text-light">
-    <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
-                <p class="text-success small mb-1">منتجات مختارة</p>
-                <h2 class="h4 fw-bold mb-0">الأحدث في المتجر</h2>
+                <p class="text-success small mb-1">الأصناف الرئيسية</p>
+                <h2 class="h5 fw-bold mb-0">شريط صور الأصناف</h2>
             </div>
-            <a href="#categories" class="text-secondary small">عرض حسب التصنيف</a>
         </div>
-        <div class="row g-3">
-            @forelse ($featured as $product)
-                <div class="col-12 col-sm-6 col-lg-3">
-                    <a href="{{ route('products.show', $product) }}" class="card h-100 bg-dark border-0 text-light">
-                        <div class="card-body">
-                            <div class="bg-black rounded-3 py-3 mb-3 text-success small text-center">{{ $product->name }}</div>
-                            <h6 class="mb-1 text-white">{{ $product->name }}</h6>
-                            <div class="text-muted small">{{ $product->category->name ?? '' }} • {{ $product->company->name ?? '' }}</div>
-                            <div class="text-success fw-bold mt-1">${{ number_format($product->price, 2) }}</div>
-                        </div>
-                    </a>
-                </div>
-            @empty
-                <p class="text-secondary">لا توجد منتجات بعد.</p>
-            @endforelse
-        </div>
-    </div>
-</section>
 
-<section id="categories" class="py-5 text-light">
-    <div class="container">
-        <div class="mb-4">
-            <p class="text-success small mb-1">هيكلة البيانات</p>
-            <h2 class="h4 fw-bold mb-0">الصنف الرئيسي، النوع، الشركة، المنتج</h2>
-        </div>
-        <div class="row g-3">
-            @foreach ($categories as $category)
-                <div class="col-12 col-lg-4">
-                    <div class="glass p-3 h-100">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div class="fw-semibold">{{ $category->name }}</div>
+        <div class="strip-scroll">
+            @forelse ($categories as $category)
+                <a href="#featured-{{ $category->id }}" class="strip-card">
+                    @if(!empty($category->image))
+                        <img src="{{ asset('storage/'.$category->image) }}" class="strip-img" alt="{{ $category->name }}">
+                    @else
+                        <div class="strip-img d-flex align-items-center justify-content-center bg-black text-secondary small">
+                            لا توجد صورة
+                        </div>
+                    @endif
+                    <div class="p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong class="text-white">{{ $category->name }}</strong>
                             <span class="badge bg-success text-dark">الصنف الرئيسي</span>
                         </div>
-                        <p class="text-secondary small">{{ $category->description ?? 'تفاصيل الصنف الرئيسي.' }}</p>
-                        <div class="d-flex flex-column gap-2">
-                            @foreach ($category->types as $type)
-                                <div class="bg-dark rounded-3 p-3">
-                                    <div class="d-flex justify-content-between text-light small">
-                                        <span>{{ $type->name }}</span>
-                                        <span class="text-secondary">النوع</span>
-                                    </div>
-                                    <div class="mt-2 d-flex flex-wrap gap-2">
-                                        @foreach ($type->products as $product)
-                                            <span class="badge bg-secondary text-light">{{ $product->name }}</span>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endforeach
+                        <p class="text-secondary small mb-0">{{ \Illuminate\Support\Str::limit($category->description, 80) }}</p>
+                    </div>
+                </a>
+            @empty
+                <p class="text-secondary">لا توجد أصناف بعد.</p>
+            @endforelse
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+            <div>
+                <p class="text-success small mb-1">الأكثر مبيعاً</p>
+                <h2 class="h5 fw-bold mb-0">شريط المنتجات الأعلى مبيعات</h2>
+            </div>
+        </div>
+        <div class="strip-scroll mb-4">
+            @forelse ($bestSelling as $product)
+                <a href="{{ route('products.show', $product) }}" class="strip-card text-decoration-none">
+                    <div class="position-relative">
+                        @if(!empty($product->image))
+                            <img src="{{ asset('storage/'.$product->image) }}" class="strip-img" alt="{{ $product->name }}">
+                        @else
+                            <div class="strip-img d-flex align-items-center justify-content-center bg-black text-secondary small">
+                                لا توجد صورة
+                            </div>
+                        @endif
+                        <span class="badge bg-success position-absolute top-0 start-0 m-2 small">
+                            {{ $product->sales_count ?? 0 }} مبيعة
+                        </span>
+                        <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2 small">
+                            ★ {{ number_format($product->rating_average ?? 0, 1) }}
+                        </span>
+                    </div>
+                    <div class="p-3">
+                        <h6 class="mb-1 text-white">{{ $product->name }}</h6>
+                        <div class="text-muted small mb-1">
+                            {{ $product->category->name ?? 'بدون تصنيف' }} • {{ $product->company->name ?? 'شركة غير معروفة' }}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-success fw-bold">${{ number_format($product->price, 2) }}</span>
+                            <span class="badge bg-secondary small">المخزون: {{ $product->stock }}</span>
                         </div>
                     </div>
-                </div>
-            @endforeach
+                </a>
+            @empty
+                <p class="text-secondary">لا توجد منتجات.</p>
+            @endforelse
+        </div>
+
+        {{-- جميع المنتجات في قاعدة البيانات --}}
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <p class="text-success small mb-1">كل المنتجات</p>
+                <h2 class="h5 fw-bold mb-0">جميع المنتجات في المتجر</h2>
+            </div>
+        </div>
+
+        <div class="strip-scroll mb-2">
+            @forelse(($allProducts ?? collect()) as $product)
+                <a href="{{ route('products.show', $product) }}" class="strip-card text-decoration-none">
+                    <div class="position-relative">
+                        @if(!empty($product->image))
+                            <img src="{{ asset('storage/'.$product->image) }}" class="strip-img" alt="{{ $product->name }}">
+                        @else
+                            <div class="strip-img d-flex align-items-center justify-content-center bg-black text-secondary small">
+                                لا توجد صورة
+                            </div>
+                        @endif
+                        @if($product->sales_count)
+                            <span class="badge bg-success position-absolute top-0 start-0 m-2 small">
+                                {{ $product->sales_count ?? 0 }} مبيعة
+                            </span>
+                        @endif
+                        @if(!is_null($product->rating_average))
+                            <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2 small">
+                                ★ {{ number_format($product->rating_average ?? 0, 1) }}
+                            </span>
+                        @endif
+                    </div>
+                    <div class="p-3">
+                        <h6 class="mb-1 text-white">{{ $product->name }}</h6>
+                        <div class="text-muted small mb-1">
+                            {{ $product->category->name ?? 'بدون تصنيف' }} • {{ $product->company->name ?? 'شركة غير معروفة' }}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-success fw-bold">${{ number_format($product->price, 2) }}</span>
+                            <span class="badge bg-secondary small">المخزون: {{ $product->stock }}</span>
+                        </div>
+                    </div>
+                </a>
+            @empty
+                <p class="text-secondary">لا توجد منتجات في المتجر حالياً.</p>
+            @endforelse
         </div>
     </div>
 </section>

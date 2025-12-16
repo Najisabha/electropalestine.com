@@ -10,11 +10,21 @@ class Company extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'country', 'website'];
+    protected $fillable = ['name', 'image'];
 
     public function products(): HasMany
     {
         return $this->hasMany(Product::class);
+    }
+
+    public function types()
+    {
+        return $this->belongsToMany(Type::class, 'company_type');
+    }
+
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class, 'category_company');
     }
 }
 

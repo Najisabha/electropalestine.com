@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\Product;
+use App\Models\Role;
 use App\Models\Type;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,17 +17,24 @@ class AdminCatalogController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth');
+        $this->middleware(function ($request, $next) {
+            if (!auth()->check() || auth()->user()->role !== 'admin') {
+                abort(403);
+            }
+            return $next($request);
+        });
     }
 
     public function index(): View
     {
-        $categories = Category::with('types')->orderBy('name')->get();
-        $types = Type::with('category')->orderBy('name')->get();
-        $companies = Company::orderBy('name')->get();
+        $categories = Category::with(['types', 'companies'])->orderBy('name')->get();
+        $types = Type::with(['category', 'companies'])->orderBy('name')->get();
+        $companies = Company::with(['types', 'categories'])->orderBy('name')->get();
         $products = Product::with(['category', 'type', 'company'])->latest()->take(20)->get();
 
-        return view('pages.catalog-builder', compact('categories', 'types', 'companies', 'products'));
+        $roles = Role::orderBy('id')->get();
+
+        return view('pages.catalog-builder', compact('categories', 'types', 'companies', 'products', 'roles'));
     }
 
     /**
@@ -126,13 +134,18 @@ class AdminCatalogController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:companies,name'],
             'image' => ['nullable', 'image', 'max:2048'],
+            'types' => ['nullable', 'array'],
+            'types.*' => ['exists:types,id'],
         ]);
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('companies', 'public');
         }
 
-        Company::create($data);
+        $company = Company::create($data);
+        if (!empty($data['types'])) {
+            $company->types()->sync($data['types']);
+        }
 
         return back()->with('status', 'تم إضافة الشركة.');
     }
@@ -144,8 +157,10 @@ class AdminCatalogController extends Controller
             'type_id' => ['required', 'exists:types,id'],
             'company_id' => ['required', 'exists:companies,id'],
             'name' => ['required', 'string', 'max:255'],
+            'cost_price' => ['nullable', 'numeric', 'min:0'],
             'price' => ['required', 'numeric', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],
+            'points_reward' => ['nullable', 'integer', 'min:0'],
             'description' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'max:2048'],
         ]);
@@ -155,6 +170,14 @@ class AdminCatalogController extends Controller
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('products', 'public');
         }
+
+        $rolePrices = $request->input('role_prices', []);
+        $data['role_prices'] = collect($rolePrices)
+            ->filter(function ($value) {
+                return $value !== null && $value !== '';
+            })
+            ->map(fn ($value) => (float) $value)
+            ->toArray();
 
         Product::create($data);
 
@@ -197,12 +220,50 @@ class AdminCatalogController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('companies', 'name')->ignore($company->id)],
             'image' => ['nullable', 'image', 'max:2048'],
+            'types' => ['nullable', 'array'],
+            'types.*' => ['exists:types,id'],
+            'categories' => ['nullable', 'array'],
+            'categories.*' => ['exists:categories,id'],
         ]);
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('companies', 'public');
         }
         $company->update($data);
+        if ($request->has('types')) {
+            $company->types()->sync($data['types'] ?? []);
+        }
+        if ($request->has('categories')) {
+            $company->categories()->sync($data['categories'] ?? []);
+        }
         return back()->with('status', 'تم تعديل الشركة.');
+    }
+
+    public function syncCategoryCompanies(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'category_id' => ['required', 'exists:categories,id'],
+            'companies' => ['nullable', 'array'],
+            'companies.*' => ['exists:companies,id'],
+        ]);
+
+        $category = Category::findOrFail($data['category_id']);
+        $category->companies()->sync($data['companies'] ?? []);
+
+        return back()->withInput()->with('status', 'تم تحديث شركات الصنف.');
+    }
+
+    public function syncCompanyCategories(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'company_id' => ['required', 'exists:companies,id'],
+            'categories' => ['nullable', 'array'],
+            'categories.*' => ['exists:categories,id'],
+        ]);
+
+        $company = Company::findOrFail($data['company_id']);
+        $company->categories()->sync($data['categories'] ?? []);
+
+        return back()->withInput()->with('status', 'تم تحديث أصناف الشركة.');
     }
 
     public function updateProduct(Request $request, Product $product): RedirectResponse
@@ -213,11 +274,13 @@ class AdminCatalogController extends Controller
             'stock' => ['required', 'integer', 'min:0'],
             'description' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'max:2048'],
+            'is_best_seller' => ['nullable', 'boolean'],
         ]);
         $data['slug'] = Str::slug($data['name']);
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('products', 'public');
         }
+        $data['is_best_seller'] = $request->boolean('is_best_seller');
         $product->update($data);
         return back()->with('status', 'تم تعديل المنتج.');
     }

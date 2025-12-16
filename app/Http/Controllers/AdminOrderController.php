@@ -11,7 +11,12 @@ class AdminOrderController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth');
+        $this->middleware(function ($request, $next) {
+            if (!auth()->check() || auth()->user()->role !== 'admin') {
+                abort(403);
+            }
+            return $next($request);
+        });
     }
 
     public function index(): View
@@ -31,7 +36,18 @@ class AdminOrderController extends Controller
 
         $data['total'] = $data['quantity'] * $data['unit_price'];
 
+        $originalStatus = $order->status;
+        $originalQuantity = $order->quantity;
+
         $order->update($data);
+
+        // زيادة عداد مبيعات المنتج عند تأكيد الطلب (بشكل مبسط بالاعتماد على اسم المنتج)
+        if ($originalStatus !== 'confirmed' && $data['status'] === 'confirmed') {
+            $product = \App\Models\Product::where('name', $order->product_name)->first();
+            if ($product) {
+                $product->increment('sales_count', $order->quantity);
+            }
+        }
 
         return back()->with('status', 'تم تحديث الطلبية بنجاح.');
     }

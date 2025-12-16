@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminCatalogController;
+use App\Http\Controllers\AdminCampaignController;
+use App\Http\Controllers\AdminRoleController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
@@ -10,6 +12,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [StoreController::class, 'home'])->name('home');
 Route::get('/products/{product:slug}', [StoreController::class, 'product'])->name('products.show');
+Route::view('/about', 'store.about')->name('store.about');
+Route::view('/story', 'store.story')->name('store.story');
+Route::view('/contact', 'store.contact')->name('store.contact');
+Route::view('/settings', 'store.settings')->middleware('auth')->name('store.settings');
 
 Route::redirect('/dashboard', '/admin/dashboard');
 
@@ -31,10 +37,19 @@ Route::middleware('auth')->prefix('admin')->as('admin.')->group(function () {
     Route::delete('/catalog/type/{type}', [AdminCatalogController::class, 'destroyType'])->name('catalog.type.delete');
     Route::delete('/catalog/company/{company}', [AdminCatalogController::class, 'destroyCompany'])->name('catalog.company.delete');
     Route::delete('/catalog/product/{product}', [AdminCatalogController::class, 'destroyProduct'])->name('catalog.product.delete');
+    Route::post('/catalog/relations/category-companies', [AdminCatalogController::class, 'syncCategoryCompanies'])->name('catalog.category.companies');
+    Route::post('/catalog/relations/company-categories', [AdminCatalogController::class, 'syncCompanyCategories'])->name('catalog.company.categories');
     Route::view('/add-product', 'pages.add-product')->name('add-product');
     Route::view('/select-product', 'pages.select-product')->name('select-product');
-    Route::view('/add-campaign', 'pages.add-campaign')->name('add-campaign');
+    Route::get('/campaigns', [AdminCampaignController::class, 'index'])->name('campaigns');
+    Route::get('/add-campaign', [AdminCampaignController::class, 'create'])->name('add-campaign');
+    Route::post('/add-campaign', [AdminCampaignController::class, 'store'])->name('campaign.store');
     Route::get('/users', [AdminUserController::class, 'index'])->name('users');
+    Route::put('/users/{user}/role', [AdminUserController::class, 'updateRole'])->name('users.role');
+    Route::get('/roles', [AdminRoleController::class, 'index'])->name('roles');
+    Route::post('/roles', [AdminRoleController::class, 'store'])->name('roles.store');
+    Route::put('/roles/{role}', [AdminRoleController::class, 'update'])->name('roles.update');
+    Route::delete('/roles/{role}', [AdminRoleController::class, 'destroy'])->name('roles.destroy');
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders');
     Route::put('/orders/{order}', [AdminOrderController::class, 'update'])->name('orders.update');
     Route::delete('/orders/{order}', [AdminOrderController::class, 'destroy'])->name('orders.destroy');

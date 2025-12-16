@@ -34,7 +34,10 @@
             backdrop-filter: blur(10px);
             border-radius:18px;
         }
-
+        .font {
+            font-family:'Cairo',sans-serif;
+            color:#ffffff;
+        }
         /* ===== Brand ===== */
         .brand-logo{
             width:46px;height:46px;
@@ -87,6 +90,50 @@
             background:rgba(0,0,0,.5);
         }
 
+        /* ===== Store product cards ===== */
+        .product-card-img{
+            height:180px;
+            object-fit:cover;
+            border-top-left-radius:18px;
+            border-top-right-radius:18px;
+        }
+        .product-card{
+            border-radius:18px;
+            overflow:hidden;
+        }
+
+        /* ===== Horizontal strips ===== */
+        .strip-scroll{
+            display:flex;
+            gap:1rem;
+            overflow-x:auto;
+            padding-bottom:.5rem;
+            scrollbar-width:thin;
+        }
+        .strip-scroll::-webkit-scrollbar{
+            height:6px;
+        }
+        .strip-scroll::-webkit-scrollbar-thumb{
+            background:rgba(255,255,255,.2);
+            border-radius:999px;
+        }
+        .strip-card{
+            min-width:260px;
+            background:var(--glass);
+            border:1px solid var(--border);
+            border-radius:16px;
+            overflow:hidden;
+            color:#eaf6ef;
+            text-decoration:none;
+        }
+        .strip-img{
+            height:160px;
+            width:100%;
+            object-fit:contain;      /* تجنب قص الصورة */
+            background:#fffffff;      /* خلفية ثابتة للصور الشفافة */
+            padding:8px;             /* مسافة بسيطة حول الصورة */
+        }
+
          /* ===== Auth pages ===== */
          .auth-card{
              width:100%;
@@ -132,24 +179,50 @@
         </a>
 
         <nav class="d-flex align-items-center gap-2 flex-wrap">
-            <a href="{{ route('home') }}" class="btn btn-sm btn-outline-main">الرئيسية</a>
+            @php($authUser = auth()->user())
 
-            @auth
-                <a href="{{ route('admin.dashboard') }}" class="btn btn-sm btn-main">لوحة تحكم الإدارة</a>
-                <a href="{{ route('admin.catalog') }}" class="btn btn-sm btn-outline-main">إدارة التصنيفات</a>
-                <a href="{{ route('admin.add-campaign') }}" class="btn btn-sm btn-outline-main">إضافة حملة إعلانية</a>
-                <a href="{{ route('admin.users') }}" class="btn btn-sm btn-outline-main">إظهار المستخدمين</a>
-                <a href="{{ route('admin.orders') }}" class="btn btn-sm btn-outline-main">إظهار الطلبات</a>
-                <a href="{{ route('admin.coupons') }}" class="btn btn-sm btn-outline-main">الكوبونات</a>
-                <a href="{{ route('admin.store-settings') }}" class="btn btn-sm btn-outline-main">إعدادات المتجر</a>
-                <form method="POST" action="{{ route('logout') }}" class="d-inline">
+            {{-- روابط عامة للمستخدم / الزائر --}}
+            <a href="{{ route('home') }}" class="btn btn-sm btn-outline-main">الرئيسية</a>
+            <a href="{{ route('store.about') }}" class="btn btn-sm btn-outline-main">من نحن</a>
+            <a href="{{ route('store.story') }}" class="btn btn-sm btn-outline-main">قصتنا</a>
+            <a href="{{ route('home') }}#products" class="btn btn-sm btn-outline-main">منتجاتنا</a>
+            <a href="{{ route('store.contact') }}" class="btn btn-sm btn-outline-main">تواصل معنا</a>
+
+            {{-- شريط خاص بالأدمن --}}
+            @if($authUser && $authUser->role === 'admin')
+                <a href="{{ route('admin.dashboard') }}" class="btn btn-sm btn-main font">لوحة تحكم الإدارة</a>
+                <a href="{{ route('admin.catalog') }}" class="btn btn-sm btn-outline-main font">إدارة التصنيفات</a>
+                <a href="{{ route('admin.campaigns') }}" class="btn btn-sm btn-outline-main font">الحملات الإعلانية</a>
+                <a href="{{ route('admin.roles') }}" class="btn btn-sm btn-outline-main font">الأدوار و الصلاحيات</a>
+                <a href="{{ route('admin.users') }}" class="btn btn-sm btn-outline-main font">إظهار المستخدمين</a>
+                <a href="{{ route('admin.orders') }}" class="btn btn-sm btn-outline-main font">إظهار الطلبات</a>
+                <a href="{{ route('admin.coupons') }}" class="btn btn-sm btn-outline-main font">الكوبونات</a>
+                <a href="{{ route('admin.store-settings') }}" class="btn btn-sm btn-outline-main font">إعدادات المتجر</a>
+            @endif
+
+            {{-- جزء المستخدم المسجّل (غير الأدمن): صورة + نقاط + رصيد + إعدادات + خروج --}}
+            @if($authUser)
+                <a href="{{ route('store.settings') }}" class="btn btn-sm btn-outline-main">الإعدادات</a>
+                <div class="d-flex align-items-center gap-2 ms-2">
+                    <div class="rounded-circle bg-success d-flex align-items-center justify-content-center"
+                         style="width:34px;height:34px;font-size:0.8rem;">
+                        {{ mb_substr($authUser->first_name,0,1) }}{{ mb_substr($authUser->last_name,0,1) }}
+                    </div>
+                    <span class="badge bg-dark border border-success small">
+                        نقاطك: <strong class="text-success">{{ number_format($authUser->points ?? 0) }}</strong>
+                    </span>
+                    <span class="badge bg-dark border border-info small">
+                        رصيدك: <strong class="text-info">${{ number_format($authUser->balance ?? 0, 2) }}</strong>
+                    </span>
+                </div>
+                <form method="POST" action="{{ route('logout') }}" class="d-inline ms-1">
                     @csrf
                     <button class="btn btn-sm btn-outline-main">تسجيل خروج</button>
                 </form>
             @else
                 <a href="{{ route('login') }}" class="btn btn-sm btn-outline-main">تسجيل دخول</a>
                 <a href="{{ route('register') }}" class="btn btn-sm btn-main">إنشاء حساب</a>
-            @endauth
+            @endif
         </nav>
     </div>
 </header>

@@ -22,5 +22,10 @@ class Type extends Model
     {
         return $this->hasMany(Product::class);
     }
+
+    public function companies()
+    {
+        return $this->belongsToMany(Company::class, 'company_type');
+    }
 }
 
