@@ -56,6 +56,8 @@
         nav a{ color:#d9f2e3; font-size:.9rem; }
         nav a:hover{ color:var(--accent); }
     </style>
+    {{-- Chart.js للرسوم البيانية في لوحة التحكم --}}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="d-flex flex-column min-vh-100">
 @include('admin.header')

@@ -122,7 +122,7 @@ class InvoicePdfService
         $pdf->SetFont('dejavusans', 'B', 13);
         $pdf->SetFillColor(13, 183, 119);
         $pdf->SetTextColor(255, 255, 255);
-        $pdf->Cell(0, 12, '  تفاصيل المنتج  ', 0, 1, 'R', true);
+        $pdf->Cell(0, 12, '  تفاصيل المنتجات  ', 0, 1, 'R', true);
         $pdf->Ln(5);
         
         // رؤوس الجدول
@@ -137,41 +137,65 @@ class InvoicePdfService
         $pdf->Cell(35, 10, '  سعر الوحدة  ', 1, 0, 'C', true);
         $pdf->Cell(25, 10, '  المجموع  ', 1, 1, 'C', true);
         
-        // بيانات المنتج
+        // بيانات المنتجات (قد تكون عنصر واحد أو عدة عناصر في حقل items)
         $pdf->SetTextColor(0, 0, 0);
         $pdf->SetFont('dejavusans', '', 9);
         $pdf->SetFillColor(255, 255, 255);
         $pdf->SetDrawColor(200, 200, 200);
-        
-        $startY = $pdf->GetY();
-        $productName = $order->product_name;
-        
-        // رسم اسم المنتج (العمود الأول من اليمين - أوسع عمود)
-        $pdf->setRTL(true);
-        $pdf->MultiCell(100, 10, '  ' . $productName . '  ', 1, 'R', true, 0);
-        $endY = $pdf->GetY();
-        $rowHeight = max(10, $endY - $startY);
-        
-        // الرجوع للسطر الأول ورسم باقي الأعمدة
-        $pdf->SetY($startY);
-        $pdf->setRTL(false);
-        
-        // رسم الكمية (العمود الثاني)
-        $pdf->Cell(30, $rowHeight, '  ' . $order->quantity . '  ', 1, 0, 'C', true);
-        
-        // رسم سعر الوحدة (العمود الثالث)
-        $pdf->Cell(35, $rowHeight, '  $' . number_format($order->unit_price, 2) . '  ', 1, 0, 'R', true);
-        
-        // رسم المجموع (العمود الرابع والأخير)
-        $pdf->SetFont('dejavusans', 'B', 9);
-        $pdf->SetTextColor(13, 183, 119);
-        $pdf->Cell(25, $rowHeight, '  $' . number_format($order->total, 2) . '  ', 1, 1, 'R', true);
-        
-        // تحديث الموضع للصف التالي
-        $pdf->SetY(max($endY, $startY + $rowHeight));
-        $pdf->setRTL(true);
-        $pdf->SetTextColor(0, 0, 0);
-        $pdf->SetFont('dejavusans', '', 9);
+
+        $items = is_array($order->items ?? null) ? $order->items : [];
+
+        if (!empty($items)) {
+            foreach ($items as $item) {
+                $startY = $pdf->GetY();
+                $name = $item['name'] ?? '';
+                $qty = $item['quantity'] ?? 0;
+                $unitPrice = $item['unit_price'] ?? 0;
+                $lineTotal = $item['total'] ?? ($qty * $unitPrice);
+
+                $pdf->setRTL(true);
+                $pdf->MultiCell(100, 8, '  ' . $name . '  ', 1, 'R', true, 0);
+                $endY = $pdf->GetY();
+                $rowHeight = max(8, $endY - $startY);
+
+                $pdf->SetY($startY);
+                $pdf->setRTL(false);
+                $pdf->Cell(30, $rowHeight, '  ' . $qty . '  ', 1, 0, 'C', true);
+                $pdf->Cell(35, $rowHeight, '  $' . number_format($unitPrice, 2) . '  ', 1, 0, 'R', true);
+
+                $pdf->SetFont('dejavusans', 'B', 9);
+                $pdf->SetTextColor(13, 183, 119);
+                $pdf->Cell(25, $rowHeight, '  $' . number_format($lineTotal, 2) . '  ', 1, 1, 'R', true);
+
+                $pdf->SetY(max($endY, $startY + $rowHeight));
+                $pdf->setRTL(true);
+                $pdf->SetTextColor(0, 0, 0);
+                $pdf->SetFont('dejavusans', '', 9);
+            }
+        } else {
+            // توافقية مع الطلبات القديمة (منتج واحد)
+            $startY = $pdf->GetY();
+            $productName = $order->product_name;
+            $pdf->setRTL(true);
+            $pdf->MultiCell(100, 10, '  ' . $productName . '  ', 1, 'R', true, 0);
+            $endY = $pdf->GetY();
+            $rowHeight = max(10, $endY - $startY);
+
+            $pdf->SetY($startY);
+            $pdf->setRTL(false);
+            $pdf->Cell(30, $rowHeight, '  ' . $order->quantity . '  ', 1, 0, 'C', true);
+            $pdf->Cell(35, $rowHeight, '  $' . number_format($order->unit_price, 2) . '  ', 1, 0, 'R', true);
+
+            $pdf->SetFont('dejavusans', 'B', 9);
+            $pdf->SetTextColor(13, 183, 119);
+            $pdf->Cell(25, $rowHeight, '  $' . number_format($order->total, 2) . '  ', 1, 1, 'R', true);
+
+            $pdf->SetY(max($endY, $startY + $rowHeight));
+            $pdf->setRTL(true);
+            $pdf->SetTextColor(0, 0, 0);
+            $pdf->SetFont('dejavusans', '', 9);
+        }
+
         $pdf->Ln(12);
         
         // الإجمالي المطلوب - في صندوق منفصل

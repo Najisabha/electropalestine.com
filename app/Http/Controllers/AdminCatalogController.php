@@ -95,7 +95,9 @@ class AdminCatalogController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:categories,name'],
+            'name_en' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'description_en' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'max:2048'],
         ]);
 
@@ -115,6 +117,7 @@ class AdminCatalogController extends Controller
         $data = $request->validate([
             'category_id' => ['required', 'exists:categories,id'],
             'name' => ['required', 'string', 'max:255'],
+            'name_en' => ['nullable', 'string', 'max:255'],
             'image' => ['nullable', 'image', 'max:2048'],
         ]);
 
@@ -157,11 +160,13 @@ class AdminCatalogController extends Controller
             'type_id' => ['required', 'exists:types,id'],
             'company_id' => ['required', 'exists:companies,id'],
             'name' => ['required', 'string', 'max:255'],
+            'name_en' => ['nullable', 'string', 'max:255'],
             'cost_price' => ['nullable', 'numeric', 'min:0'],
             'price' => ['required', 'numeric', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],
             'points_reward' => ['nullable', 'integer', 'min:0'],
             'description' => ['nullable', 'string'],
+            'description_en' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'max:2048'],
         ]);
 
@@ -179,6 +184,9 @@ class AdminCatalogController extends Controller
             ->map(fn ($value) => (float) $value)
             ->toArray();
 
+        // المنتجات الجديدة تكون مفعّلة بشكل افتراضي
+        $data['is_active'] = true;
+
         Product::create($data);
 
         return back()->with('status', 'تم إضافة المنتج.');
@@ -188,7 +196,9 @@ class AdminCatalogController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('categories', 'name')->ignore($category->id)],
+            'name_en' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'description_en' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'max:2048'],
         ]);
 
@@ -205,6 +215,7 @@ class AdminCatalogController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'name_en' => ['nullable', 'string', 'max:255'],
             'image' => ['nullable', 'image', 'max:2048'],
         ]);
         $data['slug'] = Str::slug($data['name']);
@@ -270,19 +281,47 @@ class AdminCatalogController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'name_en' => ['nullable', 'string', 'max:255'],
+            'cost_price' => ['nullable', 'numeric', 'min:0'],
             'price' => ['required', 'numeric', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],
             'description' => ['nullable', 'string'],
+            'description_en' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'max:2048'],
             'is_best_seller' => ['nullable', 'boolean'],
+            'is_active' => ['nullable', 'boolean'],
         ]);
         $data['slug'] = Str::slug($data['name']);
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('products', 'public');
         }
         $data['is_best_seller'] = $request->boolean('is_best_seller');
+        if ($request->has('is_active')) {
+            $data['is_active'] = $request->boolean('is_active');
+        }
         $product->update($data);
         return back()->with('status', 'تم تعديل المنتج.');
+    }
+
+    /**
+     * تحديث سريع لحقول محددة في المنتج (السعر، التكلفة، المخزون، الحالة).
+     */
+    public function quickUpdate(Request $request, Product $product): RedirectResponse
+    {
+        $data = $request->validate([
+            'cost_price' => ['nullable', 'numeric', 'min:0'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'stock' => ['required', 'integer', 'min:0'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        if ($request->has('is_active')) {
+            $data['is_active'] = $request->boolean('is_active');
+        }
+
+        $product->update($data);
+
+        return back()->with('status', 'تم حفظ التعديلات السريعة على المنتج.');
     }
 
     public function destroyCategory(Category $category): RedirectResponse

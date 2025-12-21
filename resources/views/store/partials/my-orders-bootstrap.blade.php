@@ -20,8 +20,6 @@
                             <tr>
                                 <th>{{ __('common.order_number') }}</th>
                                 <th>{{ __('common.product') }}</th>
-                                <th>{{ __('common.quantity') }}</th>
-                                <th>{{ __('common.price') }}</th>
                                 <th>{{ __('common.total') }}</th>
                                 <th>{{ __('common.order_status') }}</th>
                                 <th>{{ __('common.order_date_label') }}</th>
@@ -35,10 +33,19 @@
                                         <strong class="text-primary">#{{ $order->id }}</strong>
                                     </td>
                                     <td>
-                                        <strong>{{ $order->product_name }}</strong>
+                                        @php($items = is_array($order->items ?? null) ? $order->items : [])
+                                        @if(!empty($items))
+                                            @php($first = $items[0])
+                                            <strong>{{ $first['name'] ?? $order->product_name }}</strong>
+                                            @if(count($items) > 1)
+                                                <div class="text-secondary small">
+                                                    + {{ count($items) - 1 }} {{ __('common.additional_items') ?? 'منتجات أخرى' }}
+                                                </div>
+                                            @endif
+                                        @else
+                                            <strong>{{ $order->product_name }}</strong>
+                                        @endif
                                     </td>
-                                    <td>{{ $order->quantity }}</td>
-                                    <td class="text-success">${{ number_format($order->unit_price, 2) }}</td>
                                     <td class="text-success fw-bold">${{ number_format($order->total, 2) }}</td>
                                     <td>
                                         @if($order->status === 'pending')
@@ -54,10 +61,15 @@
                                     <td class="text-secondary small">
                                         {{ $order->created_at->format('Y/m/d H:i') }}
                                     </td>
-                                    <td>
+                                    <td class="d-flex flex-wrap gap-2">
                                         <a href="{{ route('store.order.invoice', $order) }}" target="_blank" class="btn btn-sm btn-outline-info">
                                             <i class="bi bi-file-earmark-pdf"></i> {{ __('common.download_invoice') }}
                                         </a>
+                                        @if($order->status === 'confirmed')
+                                            <a href="{{ route('store.order.review', $order) }}" class="btn btn-sm btn-warning">
+                                                {{ $order->review ? 'تعديل التقييم' : 'تقييم الطلبية' }}
+                                            </a>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach

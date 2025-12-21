@@ -8,13 +8,13 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('first_name')->after('id');
-            $table->string('last_name')->after('first_name');
-            $table->string('phone')->after('email');
-            $table->string('whatsapp_prefix')->after('phone');
-            $table->unsignedSmallInteger('birth_year')->after('whatsapp_prefix');
-            $table->unsignedTinyInteger('birth_month')->after('birth_year');
-            $table->unsignedTinyInteger('birth_day')->after('birth_month');
+            $table->string('first_name')->nullable()->after('id');
+            $table->string('last_name')->nullable()->after('first_name');
+            $table->string('phone')->nullable()->after('email');
+            $table->string('whatsapp_prefix')->nullable()->after('phone');
+            $table->unsignedSmallInteger('birth_year')->nullable()->after('whatsapp_prefix');
+            $table->unsignedTinyInteger('birth_month')->nullable()->after('birth_year');
+            $table->unsignedTinyInteger('birth_day')->nullable()->after('birth_month');
             $table->string('role')->default('user')->after('birth_day');
             $table->string('id_image')->nullable()->after('role');
 

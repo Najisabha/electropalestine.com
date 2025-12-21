@@ -16,7 +16,7 @@
                             <img src="{{ asset('storage/'.$product->image) }}"
                                  class="w-100 bg-black"
                                  style="height: 260px; object-fit: contain;"
-                                 alt="{{ $product->name }}">
+                                 alt="{{ $product->translated_name }}">
                         @else
                             <div class="w-100 d-flex align-items-center justify-content-center bg-black text-secondary small"
                                  style="height: 320px;">
@@ -68,23 +68,18 @@
 
             {{-- معلومات المنتج + الأزرار --}}
             <div class="col-lg-6">
-                <h1 class="h3 fw-bold text-white mb-2">{{ $product->name }}</h1>
+                <h1 class="h3 fw-bold text-white mb-2">{{ $product->translated_name }}</h1>
 
                 <div class="fs-2 fw-black text-success mb-2">
                     ${{ number_format($product->price, 2) }}
                 </div>
-                @if(!empty($product->cost_price))
-                    <p class="text-secondary small mb-1">
-                        {{ __('common.approximate_cost_price') }}: ${{ number_format($product->cost_price, 2) }}
-                    </p>
-                @endif
 
                 <div class="text-secondary small mb-2">
                     {{ __('common.available_stock') }}: <span class="text-success fw-semibold">{{ $product->stock }}</span>
                 </div>
 
                 <p class="text-secondary mb-3">
-                    {{ $product->description ?? __('common.product_description_placeholder') }}
+                    {{ $product->translated_description ?? __('common.product_description_placeholder') }}
                 </p>
 
                 <div class="d-flex flex-wrap gap-2 mb-4">
@@ -107,7 +102,7 @@
                 <div class="glass rounded-4 p-3">
                     <h2 class="h6 fw-semibold mb-2">{{ __('common.customer_ratings') }}</h2>
                     <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="display-6 fw-bold text-warning mb-0">
+                        <div class="display-6 fw-bold textWarning mb-0 text-warning">
                             {{ number_format($ratingAverage, 1) }}
                         </div>
                         <div>
@@ -128,14 +123,45 @@
                         </div>
                     </div>
 
-                    <div class="border-top border-secondary-subtle pt-2">
-                        <p class="small text-secondary mb-1">
-                            {{ __('common.no_detailed_comments') }}
-                        </p>
-                        <p class="small text-secondary mb-0">
-                            {{ __('common.add_comment_system_later') }}
-                        </p>
-                    </div>
+                    {{-- التعليقات التفصيلية على هذه الطلبات لهذا المنتج --}}
+                    @php($reviewsList = $reviews ?? collect())
+                    @if($reviewsList->isEmpty())
+                        <div class="border-top border-secondary-subtle pt-2">
+                            <p class="small text-secondary mb-1">
+                                لا توجد تعليقات مكتوبة على هذا المنتج حتى الآن.
+                            </p>
+                        </div>
+                    @else
+                        <div class="border-top border-secondary-subtle pt-2">
+                            @foreach($reviewsList->take(5) as $review)
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="small text-light">
+                                            <strong>{{ $review->user->name ?? 'مستخدم' }}</strong>
+                                            <span class="text-secondary">
+                                                ({{ $review->user->email ?? 'بلا بريد' }})
+                                            </span>
+                                        </div>
+                                        <div class="small">
+                                            @for($i = 1; $i <= 5; $i++)
+                                                @if($i <= $review->rating)
+                                                    <i class="bi bi-star-fill text-warning"></i>
+                                                @else
+                                                    <i class="bi bi-star text-secondary"></i>
+                                                @endif
+                                            @endfor
+                                        </div>
+                                    </div>
+                                    @if($review->comment)
+                                        <p class="small text-light mb-1">{{ $review->comment }}</p>
+                                    @endif
+                                    <div class="small text-secondary">
+                                        {{ $review->created_at?->format('Y/m/d H:i') }}
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -148,8 +174,8 @@
                 @forelse ($related as $item)
                     <a href="{{ route('products.show', $item) }}" class="strip-card text-decoration-none">
                         <div class="position-relative">
-                            @if(!empty($item->image))
-                                <img src="{{ asset('storage/'.$item->image) }}" class="strip-img" alt="{{ $item->name }}">
+                        @if(!empty($item->image))
+                            <img src="{{ asset('storage/'.$item->image) }}" class="strip-img" alt="{{ $item->translated_name }}">
                             @else
                                 <div class="strip-img d-flex align-items-center justify-content-center bg-black text-secondary small">
                                     {{ __('common.no_image') }}
@@ -157,7 +183,7 @@
                             @endif
                         </div>
                         <div class="p-3">
-                            <h6 class="mb-1 text-white">{{ $item->name }}</h6>
+                            <h6 class="mb-1 text-white">{{ $item->translated_name }}</h6>
                             <div class="text-muted small mb-1">
                                 {{ $item->category->name ?? __('common.no_category') }} • {{ $item->company->name ?? __('common.unknown_company') }}
                             </div>

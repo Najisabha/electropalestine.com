@@ -81,18 +81,18 @@
             @forelse ($categories as $category)
                 <a href="{{ route('categories.show', $category) }}" class="strip-card">
                     @if(!empty($category->image))
-                        <img src="{{ asset('storage/'.$category->image) }}" class="strip-img" alt="{{ $category->name }}">
+                        <img src="{{ asset('storage/'.$category->image) }}" class="strip-img" alt="{{ $category->translated_name }}">
                     @else
                         <div class="strip-img d-flex align-items-center justify-content-center bg-black text-secondary small">
                             {{ __('common.no_image') }}
                         </div>
                     @endif
                     <div class="p-3">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <strong class="text-white">{{ $category->name }}</strong>
+                        <div class="d-flex justify-content_between align-items-center mb-1">
+                            <strong class="text-white">{{ $category->translated_name }}</strong>
                             <span class="badge bg-success text-dark">{{ __('common.main_category') }}</span>
                         </div>
-                        <p class="text-secondary small mb-0">{{ \Illuminate\Support\Str::limit($category->description, 80) }}</p>
+                        <p class="text-secondary small mb-0">{{ \Illuminate\Support\Str::limit($category->translated_description, 80) }}</p>
                     </div>
                 </a>
             @empty
@@ -111,7 +111,7 @@
                 <a href="{{ route('products.show', $product) }}" class="strip-card text-decoration-none">
                     <div class="position-relative">
                         @if(!empty($product->image))
-                            <img src="{{ asset('storage/'.$product->image) }}" class="strip-img" alt="{{ $product->name }}">
+                            <img src="{{ asset('storage/'.$product->image) }}" class="strip-img" alt="{{ $product->translated_name }}">
                         @else
                             <div class="strip-img d-flex align-items-center justify-content-center bg-black text-secondary small">
                                 لا توجد صورة
@@ -125,7 +125,7 @@
                         </span>
                     </div>
                     <div class="p-3">
-                        <h6 class="mb-1 text-white">{{ $product->name }}</h6>
+                        <h6 class="mb-1 text-white">{{ $product->translated_name }}</h6>
                         <div class="text-muted small mb-1">
                             {{ $product->category->name ?? 'بدون تصنيف' }} • {{ $product->company->name ?? 'شركة غير معروفة' }}
                         </div>
@@ -153,7 +153,7 @@
                 <a href="{{ route('products.show', $product) }}" class="strip-card text-decoration-none">
                     <div class="position-relative">
                         @if(!empty($product->image))
-                            <img src="{{ asset('storage/'.$product->image) }}" class="strip-img" alt="{{ $product->name }}">
+                            <img src="{{ asset('storage/'.$product->image) }}" class="strip-img" alt="{{ $product->translated_name }}">
                         @else
                             <div class="strip-img d-flex align-items-center justify-content-center bg-black text-secondary small">
                                 لا توجد صورة
@@ -171,7 +171,7 @@
                         @endif
                     </div>
                     <div class="p-3">
-                        <h6 class="mb-1 text-white">{{ $product->name }}</h6>
+                        <h6 class="mb-1 text-white">{{ $product->translated_name }}</h6>
                         <div class="text-muted small mb-1">
                             {{ $product->category->name ?? __('common.no_category') }} • {{ $product->company->name ?? __('common.unknown_company') }}
                         </div>

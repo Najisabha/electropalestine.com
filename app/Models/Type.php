@@ -11,7 +11,17 @@ class Type extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['category_id', 'name', 'slug', 'image'];
+    protected $fillable = ['category_id', 'name', 'name_en', 'slug', 'image'];
+
+    public function getTranslatedNameAttribute(): string
+    {
+        $locale = app()->getLocale();
+        if ($locale === 'en' && $this->name_en) {
+            return $this->name_en;
+        }
+
+        return $this->name ?? '';
+    }
 
     public function category(): BelongsTo
     {
@@ -28,4 +38,3 @@ class Type extends Model
         return $this->belongsToMany(Company::class, 'company_type');
     }
 }
-

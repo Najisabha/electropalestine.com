@@ -10,7 +10,27 @@ class Category extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'slug', 'description', 'image'];
+    protected $fillable = ['name', 'name_en', 'slug', 'description', 'description_en', 'image'];
+
+    public function getTranslatedNameAttribute(): string
+    {
+        $locale = app()->getLocale();
+        if ($locale === 'en' && $this->name_en) {
+            return $this->name_en;
+        }
+
+        return $this->name ?? '';
+    }
+
+    public function getTranslatedDescriptionAttribute(): ?string
+    {
+        $locale = app()->getLocale();
+        if ($locale === 'en' && $this->description_en) {
+            return $this->description_en;
+        }
+
+        return $this->description;
+    }
 
     public function types(): HasMany
     {
@@ -27,4 +47,3 @@ class Category extends Model
         return $this->belongsToMany(Company::class, 'category_company');
     }
 }
-

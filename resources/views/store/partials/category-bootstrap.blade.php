@@ -9,7 +9,7 @@
                             <img src="{{ asset('storage/'.$category->image) }}"
                                  class="w-100 bg-black"
                                  style="height: 260px; object-fit: contain;"
-                                 alt="{{ $category->name }}">
+                                 alt="{{ $category->translated_name }}">
                         @else
                             <div class="w-100 d-flex align-items-center justify-content-center bg-black text-secondary small"
                                  style="height: 260px;">
@@ -18,9 +18,9 @@
                         @endif
                     </div>
                     <div class="p-4">
-                        <h1 class="h4 fw-bold mb-2 text-white">{{ $category->name }}</h1>
+                        <h1 class="h4 fw-bold mb-2 text-white">{{ $category->translated_name }}</h1>
                         <p class="text-secondary mb-0">
-                            {{ $category->description ?: 'اكتشف جميع الأنواع والشركات والمنتجات التابعة لهذا الصنف.' }}
+                            {{ $category->translated_description ?: 'اكتشف جميع الأنواع والشركات والمنتجات التابعة لهذا الصنف.' }}
                         </p>
                     </div>
                 </div>
@@ -33,15 +33,15 @@
                         @forelse($types as $type)
                             <div class="strip-card text-center">
                                 @if(!empty($type->image))
-                                    <img src="{{ asset('storage/'.$type->image) }}" class="strip-img" alt="{{ $type->name }}">
+                                    <img src="{{ asset('storage/'.$type->image) }}" class="strip-img" alt="{{ $type->translated_name }}">
                                 @else
                                     <div class="strip-img d-flex align-items-center justify-content-center bg-black text-secondary small">
-                                        {{ $type->name }}
+                                        {{ $type->translated_name }}
                                     </div>
                                 @endif
                                 <div class="p-3">
-                                    <h6 class="mb-1 text-white">{{ $type->name }}</h6>
-                                    <span class="badge bg-warning text-dark small">نوع ضمن {{ $category->name }}</span>
+                                    <h6 class="mb-1 text-white">{{ $type->translated_name }}</h6>
+                                    <span class="badge bg-warning text-dark small">نوع ضمن {{ $category->translated_name }}</span>
                                 </div>
                             </div>
                         @empty
@@ -77,7 +77,7 @@
 
         {{-- المنتجات التابعة للصنف --}}
         <div class="mt-4">
-            <h2 class="h5 fw-semibold mb-3">المنتجات داخل {{ $category->name }}</h2>
+            <h2 class="h5 fw-semibold mb-3">المنتجات داخل {{ $category->translated_name }}</h2>
             <div class="strip-scroll">
                 @forelse($products as $product)
                     <a href="{{ route('products.show', $product) }}" class="strip-card text-decoration-none">

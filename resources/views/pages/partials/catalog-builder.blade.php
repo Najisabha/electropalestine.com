@@ -28,7 +28,7 @@
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products-pane" type="button" role="tab">
-                    آخر 20 منتج
+                    إدارة المنتجات
                 </button>
             </li>
         </ul>
@@ -41,7 +41,7 @@
                         <div class="btn-group flex-wrap">
                             @forelse ($categories as $cat)
                                 <button type="button" class="btn btn-sm btn-outline-main cat-btn" data-cat="{{ $cat->id }}">
-                                    {{ $cat->name }}
+                                    {{ $cat->translated_name }}
                                 </button>
                             @empty
                                 <span class="text-secondary small">لا توجد أصناف بعد.</span>
@@ -72,8 +72,10 @@
                             <h6 class="fw-bold">إضافة صنف رئيسي</h6>
                             <form method="POST" action="{{ route('admin.catalog.category') }}" class="d-flex flex-column gap-2" enctype="multipart/form-data">
                                 @csrf
-                                <input type="text" name="name" class="form-control auth-input" placeholder="اسم الصنف" required>
-                                <textarea name="description" class="form-control auth-input" rows="2" placeholder="وصف (اختياري)"></textarea>
+                                <input type="text" name="name" class="form-control auth-input" placeholder="اسم الصنف (Arabic)" required>
+                                <input type="text" name="name_en" class="form-control auth-input" placeholder="Category Name (English)">
+                                <textarea name="description" class="form-control auth-input" rows="2" placeholder="وصف بالعربية (اختياري)"></textarea>
+                                <textarea name="description_en" class="form-control auth-input" rows="2" placeholder="Description in English (optional)"></textarea>
                                 <label class="form-label small text-secondary mb-0">صورة الصنف (اختياري)</label>
                                 <input type="file" name="image" class="form-control auth-input">
                                 <button class="btn btn-main btn-sm">حفظ الصنف</button>
@@ -89,10 +91,11 @@
                                 <select name="category_id" class="form-select auth-input bg-dark text-light" required>
                                     <option value="">اختر الصنف</option>
                                     @foreach ($categories as $cat)
-                                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                        <option value="{{ $cat->id }}">{{ $cat->translated_name }}</option>
                                     @endforeach
                                 </select>
-                                <input type="text" name="name" class="form-control auth-input" placeholder="اسم النوع" required>
+                                <input type="text" name="name" class="form-control auth-input" placeholder="اسم النوع (Arabic)" required>
+                                <input type="text" name="name_en" class="form-control auth-input" placeholder="Type Name (English)">
                                 <label class="form-label small text-secondary mb-0">صورة النوع (اختياري)</label>
                                 <input type="file" name="image" class="form-control auth-input">
                                 <button class="btn btn-main btn-sm">حفظ النوع</button>
@@ -128,13 +131,13 @@
                                 <select name="category_id" id="categorySelect" class="form-select auth-input bg-dark text-light" required>
                                     <option value="">اختر الصنف</option>
                                     @foreach ($categories as $cat)
-                                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                    <option value="{{ $cat->id }}">{{ $cat->translated_name }}</option>
                                     @endforeach
                                 </select>
                                 <select name="type_id" id="typeSelect" class="form-select auth-input bg-dark text-light" required>
                                     <option value="">اختر النوع</option>
                                     @foreach ($types as $type)
-                                        <option value="{{ $type->id }}" data-category="{{ $type->category_id }}">{{ $type->name }}</option>
+                                    <option value="{{ $type->id }}" data-category="{{ $type->category_id }}">{{ $type->translated_name }}</option>
                                     @endforeach
                                 </select>
                                 <select name="company_id" class="form-select auth-input bg-dark text-light" required>
@@ -144,7 +147,9 @@
                                     @endforeach
                                 </select>
 
-                                <input type="text" name="name" class="form-control auth-input" placeholder="اسم المنتج" required>
+                                {{-- اسم المنتج بالعربية والإنجليزية --}}
+                                <input type="text" name="name" class="form-control auth-input" placeholder="اسم المنتج (Arabic)" required>
+                                <input type="text" name="name_en" class="form-control auth-input" placeholder="Product Name (English)">
 
                                 <input type="number" step="0.01" name="cost_price" class="form-control auth-input" placeholder="سعر التكلفة (اختياري)">
                                 <input type="number" step="0.01" name="price" class="form-control auth-input" placeholder="سعر البيع الافتراضي" required>
@@ -170,7 +175,8 @@
                                     @endforeach
                                 @endif
 
-                                <textarea name="description" class="form-control auth-input" rows="2" placeholder="وصف (اختياري)"></textarea>
+                                <textarea name="description" class="form-control auth-input" rows="2" placeholder="وصف بالعربية (اختياري)"></textarea>
+                                <textarea name="description_en" class="form-control auth-input" rows="2" placeholder="Description in English (optional)"></textarea>
                                 <label class="form-label small text-secondary mb-0">صورة المنتج (اختياري)</label>
                                 <input type="file" name="image" class="form-control auth-input">
                                 <button class="btn btn-main btn-sm mt-2">حفظ المنتج</button>
@@ -409,7 +415,7 @@
             </div>
 
             <div class="tab-pane fade" id="products-pane" role="tabpanel" aria-labelledby="products-tab">
-                <h6 class="fw-bold mb-3">آخر 20 منتج</h6>
+                <h6 class="fw-bold mb-3">إدارة المنتجات (آخر 20 منتج)</h6>
                 <div class="table-responsive">
                     <table class="table table-dark table-sm align-middle">
                         <thead>
@@ -418,76 +424,130 @@
                                 <th>الصنف</th>
                                 <th>النوع</th>
                                 <th>الشركة</th>
-                                <th>السعر</th>
+                                <th>سعر التكلفة</th>
+                                <th>سعر البيع</th>
+                                <th>صافي الربح</th>
                                 <th>المخزون</th>
+                                <th>الحالة</th>
                                 <th class="text-center">إجراءات</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse ($products as $product)
+                            @foreach ($products as $product)
                                 <tr>
-                                    <td>{{ $product->name }}</td>
+                                    <td>{{ $product->translated_name }}</td>
                                     <td>{{ $product->category->name ?? '-' }}</td>
                                     <td>{{ $product->type->name ?? '-' }}</td>
                                     <td>{{ $product->company->name ?? '-' }}</td>
-                                    <td>${{ number_format($product->price, 2) }}</td>
+                                    <td>{{ $product->cost_price }}</td>
+                                    <td>{{ $product->price }}</td>
+                                    <td>{{ $product->price - ($product->cost_price ?? 0) }}</td>
                                     <td>{{ $product->stock }}</td>
+                                    <td>{{ ($product->is_active ?? true) ? 'مفعّل' : 'مخفي' }}</td>
                                     <td class="text-center">
-                                        <div class="d-flex justify-content-center gap-2">
-                                            <button class="btn btn-sm btn-outline-main" data-bs-toggle="collapse" data-bs-target="#edit-product-{{ $product->id }}">
-                                                تعديل
+                                        <form
+                                            method="POST"
+                                            action="{{ route('admin.catalog.product.quickUpdate', $product) }}"
+                                            class="d-inline"
+                                        >
+                                            @csrf
+                                            {{-- نرسل القيم الحالية كما هي مع عكس حالة التفعيل --}}
+                                            <input type="hidden" name="cost_price" value="{{ $product->cost_price }}">
+                                            <input type="hidden" name="price" value="{{ $product->price }}">
+                                            <input type="hidden" name="stock" value="{{ $product->stock }}">
+                                            <input type="hidden" name="is_active" value="{{ ($product->is_active ?? true) ? 0 : 1 }}">
+                                            <button class="btn btn-sm {{ ($product->is_active ?? true) ? 'btn-warning' : 'btn-success' }}">
+                                                {{ ($product->is_active ?? true) ? 'إخفاء المنتج' : 'إظهار المنتج' }}
                                             </button>
-                                            <form method="POST" action="{{ route('admin.catalog.product.delete', $product) }}" onsubmit="return confirm('حذف المنتج؟');" class="d-inline">
+                                        </form>
+                                        <button
+                                            class="btn btn-sm btn-outline-main"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#product-details-{{ $product->id }}"
+                                        >
+                                            تفاصيل / تعديل
+                                        </button>
+                                        <form
+                                            method="POST"
+                                            action="{{ route('admin.catalog.product.delete', $product) }}"
+                                            class="d-inline"
+                                            onsubmit="return confirm('حذف المنتج؟');"
+                                        >
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-danger">حذف</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr class="collapse bg-dark" id="product-details-{{ $product->id }}">
+                                    <td colspan="10">
+                                        <div class="p-3">
+                                            <h6 class="fw-bold mb-3">تفاصيل وتعديل المنتج</h6>
+                                            <div class="row g-3 mb-2">
+                                                <div class="col-md-4">
+                                                    <label class="form-label small text-secondary mb-0">عدد وحدات المبيع (sales_count)</label>
+                                                    <input type="text" class="form-control form-control-sm bg-dark text-light" value="{{ $product->sales_count }}" readonly>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label small text-secondary mb-0">نقاط المكافأة</label>
+                                                    <input type="text" class="form-control form-control-sm bg-dark text-light" value="{{ $product->points_reward }}" readonly>
+                                                </div>
+                                            </div>
+
+                                            <h6 class="fw-bold mb-2">تعديل أساسي</h6>
+                                            <form method="POST" action="{{ route('admin.catalog.product.update', $product) }}" class="row g-2 align-items-end" enctype="multipart/form-data">
                                                 @csrf
-                                                @method('DELETE')
-                                                <button class="btn btn-sm btn-danger">حذف</button>
+                                                @method('PUT')
+                                                <div class="col-md-3">
+                                                    <label class="form-label small text-secondary mb-0">اسم المنتج (Arabic)</label>
+                                                    <input type="text" name="name" value="{{ $product->name }}" class="form-control form-control-sm bg-dark text-light">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label small text-secondary mb-0">Product Name (English)</label>
+                                                    <input type="text" name="name_en" value="{{ $product->name_en }}" class="form-control form-control-sm bg-dark text-light">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label small text-secondary mb-0">سعر التكلفة</label>
+                                                    <input type="number" step="0.01" name="cost_price" value="{{ $product->cost_price }}" class="form-control form-control-sm bg-dark text-light">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label small text-secondary mb-0">سعر البيع</label>
+                                                    <input type="number" step="0.01" name="price" value="{{ $product->price }}" class="form-control form-control-sm bg-dark text-light">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label small text-secondary mb-0">المخزون</label>
+                                                    <input type="number" name="stock" value="{{ $product->stock }}" class="form-control form-control-sm bg-dark text-light">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label small text-secondary mb-0">وصف بالعربية (اختياري)</label>
+                                                    <input type="text" name="description" value="{{ $product->description }}" class="form-control form-control-sm bg-dark text-light">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label small text-secondary mb-0">Description in English (optional)</label>
+                                                    <input type="text" name="description_en" value="{{ $product->description_en }}" class="form-control form-control-sm bg-dark text-light">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label small text-secondary mb-0">صورة (اختياري)</label>
+                                                    <input type="file" name="image" class="form-control form-control-sm bg-dark text-light">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <div class="form-check mt-4">
+                                                        <input class="form-check-input" type="checkbox" name="is_best_seller" value="1" id="bestSeller-{{ $product->id }}" {{ $product->is_best_seller ? 'checked' : '' }}>
+                                                        <label class="form-check-label small text-secondary" for="bestSeller-{{ $product->id }}">
+                                                            ضمن المنتجات الأكثر مبيعاً
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-12 d-flex gap-2 mt-1">
+                                                    <button class="btn btn-sm btn-main">حفظ التعديلات</button>
+                                                    <button class="btn btn-sm btn-outline-main" type="button" data-bs-toggle="collapse" data-bs-target="#product-details-{{ $product->id }}">إغلاق</button>
+                                                </div>
                                             </form>
                                         </div>
                                     </td>
                                 </tr>
-                                <tr class="collapse" id="edit-product-{{ $product->id }}">
-                                    <td colspan="7">
-                                        <form method="POST" action="{{ route('admin.catalog.product.update', $product) }}" class="row g-2 align-items-end" enctype="multipart/form-data">
-                                            @csrf
-                                            @method('PUT')
-                                            <div class="col-md-3">
-                                                <label class="form-label small text-secondary mb-0">اسم المنتج</label>
-                                                <input type="text" name="name" value="{{ $product->name }}" class="form-control form-control-sm bg-dark text-light">
-                                            </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label small text-secondary mb-0">السعر</label>
-                                                <input type="number" step="0.01" name="price" value="{{ $product->price }}" class="form-control form-control-sm bg-dark text-light">
-                                            </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label small text-secondary mb-0">المخزون</label>
-                                                <input type="number" name="stock" value="{{ $product->stock }}" class="form-control form-control-sm bg-dark text-light">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label small text-secondary mb-0">وصف (اختياري)</label>
-                                                <input type="text" name="description" value="{{ $product->description }}" class="form-control form-control-sm bg-dark text-light">
-                                            </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label small text-secondary mb-0">صورة (اختياري)</label>
-                                                <input type="file" name="image" class="form-control form-control-sm bg-dark text-light">
-                                            </div>
-                                            <div class="col-md-2">
-                                                <div class="form-check mt-4">
-                                                    <input class="form-check-input" type="checkbox" name="is_best_seller" value="1" id="bestSeller-{{ $product->id }}" {{ $product->is_best_seller ? 'checked' : '' }}>
-                                                    <label class="form-check-label small text-secondary" for="bestSeller-{{ $product->id }}">
-                                                        ضمن المنتجات الأكثر مبيعاً
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="col-12 d-flex gap-2 mt-1">
-                                                <button class="btn btn-sm btn-main">حفظ التعديلات</button>
-                                                <button class="btn btn-sm btn-outline-main" type="button" data-bs-toggle="collapse" data-bs-target="#edit-product-{{ $product->id }}">إغلاق</button>
-                                            </div>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr><td colspan="7" class="text-center text-secondary">لا توجد منتجات بعد.</td></tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
                     </table>
                 </div>

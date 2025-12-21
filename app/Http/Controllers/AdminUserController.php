@@ -23,14 +23,54 @@ class AdminUserController extends Controller
     public function index(): View
     {
         $users = User::withCount('orders')
-            ->with(['orders' => function($query) {
+            ->withSum('orders', 'total')
+            ->with(['orders' => function ($query) {
                 $query->latest()->take(5);
             }])
             ->latest()
-            ->get();
+            ->paginate(20);
         $roles = Role::orderBy('id')->get();
 
         return view('pages.users', compact('users', 'roles'));
+    }
+
+    /**
+     * صفحة العملاء مع إحصائيات الإنفاق والطلبات.
+     */
+    public function customers(Request $request): View
+    {
+        $filter = $request->query('filter'); // top_spenders, inactive
+        $days = (int) $request->query('days', 90);
+        $limit = (int) $request->query('limit', 20);
+
+        $baseQuery = User::customerStatsQuery();
+
+        if ($filter === 'top_spenders') {
+            $baseQuery->orderByDesc('total_spent');
+        } elseif ($filter === 'top_orders') {
+            $baseQuery->orderByDesc('orders_count');
+        } elseif ($filter === 'inactive') {
+            // استخدم الميثود المخصص للعملاء غير النشطين
+            $customers = User::inactiveCustomers($days);
+
+            return view('pages.customers', [
+                'customers' => $customers,
+                'filter' => $filter,
+                'days' => $days,
+                'limit' => $limit,
+            ]);
+        } else {
+            $baseQuery->orderByDesc('last_order_at');
+        }
+
+        $customers = $baseQuery->limit($limit)->get();
+
+        return view('pages.customers', [
+            'customers' => $customers,
+            'filter' => $filter,
+            'days' => $days,
+            'limit' => $limit,
+        ]);
     }
 
     public function updateRole(Request $request, User $user): RedirectResponse

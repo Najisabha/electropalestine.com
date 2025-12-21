@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -19,9 +20,15 @@ class AdminOrderController extends Controller
         });
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $orders = Order::with('user')->latest()->paginate(20);
+        $query = Order::with('user')->latest();
+
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->query('user_id'));
+        }
+
+        $orders = $query->paginate(20)->withQueryString();
 
         return view('pages.orders', compact('orders'));
     }
@@ -37,16 +44,14 @@ class AdminOrderController extends Controller
         $data['total'] = $data['quantity'] * $data['unit_price'];
 
         $originalStatus = $order->status;
-        $originalQuantity = $order->quantity;
-
         $order->update($data);
 
-        // زيادة عداد مبيعات المنتج عند تأكيد الطلب (بشكل مبسط بالاعتماد على اسم المنتج)
+        // عند تغيير حالة الطلب إلى confirmed لأول مرة، نقوم بتحديث المخزون وعدّاد المبيعات والنقاط
         if ($originalStatus !== 'confirmed' && $data['status'] === 'confirmed') {
-            $product = \App\Models\Product::where('name', $order->product_name)->first();
-            if ($product) {
-                $product->increment('sales_count', $order->quantity);
-            }
+            // تأكد من تحميل العناصر من قاعدة البيانات
+            $order->refresh();
+            Order::applyInventoryForOrder($order);
+            Order::awardPointsForOrder($order);
         }
 
         return back()->with('status', 'تم تحديث الطلبية بنجاح.');

@@ -318,10 +318,23 @@
     </div>
 </header>
 
- <!-- ===== Main ===== -->
- <main class="flex-grow-1">
-     {!! $slot !!}
- </main>
+<!-- ===== Main ===== -->
+<main class="flex-grow-1">
+    {{-- رسائل الحالة / الأخطاء بشكل تنبيه Bootstrap جميل --}}
+    @if (session('status') || $errors->has('error'))
+        <div class="container mt-3">
+            <div class="alert alert-{{ $errors->has('error') ? 'danger' : 'success' }} alert-dismissible fade show glass" role="alert">
+                <i class="bi {{ $errors->has('error') ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill' }} me-2"></i>
+                <span class="font">
+                    {{ $errors->has('error') ? $errors->first('error') : session('status') }}
+                </span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    @endif
+
+    {!! $slot !!}
+</main>
 
 <!-- ===== Footer ===== -->
 <footer class="mt-5">
@@ -338,5 +351,6 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>

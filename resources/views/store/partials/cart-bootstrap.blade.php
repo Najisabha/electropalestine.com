@@ -119,21 +119,20 @@
                             <strong class="text-white">{{ array_sum(array_column($cartItems, 'quantity')) }}</strong>
                         </div>
 
-                        <div class="border-top border-secondary-subtle pt-3 mt-3">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <span class="h6 mb-0">{{ __('common.grand_total') }}:</span>
-                                <span class="h5 fw-bold text-success mb-0">${{ number_format($total, 2) }}</span>
-                            </div>
+                        <div class="d-flex justify-content-between align-items-center pt-3 mt-3 border-top border-secondary-subtle mb-3">
+                            <span class="h6 mb-0">{{ __('common.grand_total') }}:</span>
+                            <span class="h5 fw-bold text-success mb-0">${{ number_format($total, 2) }}</span>
+                        </div>
 
-                            <button class="btn btn-main w-100 mb-2" disabled>
-                                <i class="bi bi-credit-card"></i>
-                                {{ __('common.complete_order') }}
-                            </button>
+                        <a href="{{ route('store.cart.checkout') }}" class="btn btn-main w-100 mb-2">
+                            <i class="bi bi-credit-card"></i>
+                            {{ __('common.confirm_order') }}
+                        </a>
 
-                            <a href="{{ route('home') }}" class="btn btn-outline-main w-100">
-                                <i class="bi bi-arrow-left"></i>
-                                {{ __('common.continue_shopping') }}
-                            </a>
+                        <a href="{{ route('home') }}" class="btn btn-outline-main w-100">
+                            <i class="bi bi-arrow-left"></i>
+                            {{ __('common.continue_shopping') }}
+                        </a>
                         </div>
                     </div>
                 </div>
