@@ -149,6 +149,160 @@
             background-color:rgba(0,0,0,.0) !important;
         }
 
+        /* ===== NEW Unified Product Card ===== */
+        .product-card-new{
+            display:block;
+            width:200px;
+            min-width:200px;
+            background:#111318;
+            border-radius:18px;
+            overflow:hidden;
+            transition:transform 0.25s ease, box-shadow 0.25s ease;
+            border:1px solid rgba(255,255,255,0.08);
+        }
+        .product-card-new:hover{
+            transform:translateY(-6px) scale(1.02);
+            box-shadow:0 12px 32px rgba(0,0,0,0.5);
+            border-color:rgba(13,183,119,0.3);
+        }
+        
+        .product-card-image-wrapper{
+            position:relative;
+            padding:16px;
+            background:#080a0d;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            min-height:180px;
+        }
+        
+        .product-badge-rating{
+            position:absolute;
+            top:12px;
+            left:12px;
+            background:#f5d10c;
+            color:#000;
+            font-size:0.7rem;
+            font-weight:700;
+            padding:4px 10px;
+            border-radius:8px;
+            z-index:2;
+            display:flex;
+            align-items:center;
+            gap:4px;
+        }
+        .product-badge-rating i{
+            font-size:0.65rem;
+        }
+        
+        .product-badge-sold{
+            position:absolute;
+            top:12px;
+            right:12px;
+            background:#0db777;
+            color:#fff;
+            font-size:0.65rem;
+            font-weight:700;
+            padding:4px 10px;
+            border-radius:8px;
+            z-index:2;
+        }
+        
+        .product-card-image-container{
+            width:140px;
+            height:140px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            border-radius:50%;
+            overflow:hidden;
+            background:#0d0f13;
+            box-shadow:0 4px 20px rgba(0,0,0,0.4);
+        }
+        
+        .product-card-image{
+            max-width:90%;
+            max-height:90%;
+            object-fit:contain;
+            border-radius:8px;
+        }
+        
+        .product-card-no-image{
+            width:100%;
+            height:100%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:#0d0f13;
+            border-radius:50%;
+        }
+        
+        .product-card-info{
+            padding:14px 16px 18px;
+            text-align:center;
+        }
+        
+        .product-card-title{
+            color:#fff;
+            font-size:0.85rem;
+            font-weight:600;
+            margin-bottom:2px;
+            line-height:1.4;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
+        
+        .product-card-category{
+            color:#5a5e66;
+            font-size:0.7rem;
+            margin-bottom:10px;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
+        
+        .product-card-footer{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-top:8px;
+        }
+        
+        .product-card-price{
+            color:#0db777;
+            font-size:1rem;
+            font-weight:700;
+        }
+        
+        .product-card-stock{
+            color:#5a5e66;
+            font-size:0.7rem;
+            font-weight:500;
+            background:rgba(90,94,102,0.2);
+            padding:4px 8px;
+            border-radius:6px;
+        }
+        
+        /* Horizontal scroll for product cards */
+        .products-scroll{
+            display:flex;
+            gap:16px;
+            overflow-x:auto;
+            padding-bottom:10px;
+            scrollbar-width:thin;
+        }
+        .products-scroll::-webkit-scrollbar{
+            height:6px;
+        }
+        .products-scroll::-webkit-scrollbar-thumb{
+            background:rgba(255,255,255,.15);
+            border-radius:999px;
+        }
+        .products-scroll::-webkit-scrollbar-thumb:hover{
+            background:rgba(255,255,255,.25);
+        }
+
          /* ===== Auth pages ===== */
          .auth-card{
              width:100%;

@@ -106,35 +106,9 @@
                 <h2 class="h5 fw-bold mb-0">{{ __('common.best_selling_strip') }}</h2>
             </div>
         </div>
-        <div class="strip-scroll mb-4">
+        <div class="products-scroll mb-4">
             @forelse ($bestSelling as $product)
-                <a href="{{ route('products.show', $product) }}" class="strip-card text-decoration-none">
-                    <div class="position-relative">
-                        @if(!empty($product->image))
-                            <img src="{{ asset('storage/'.$product->image) }}" class="strip-img" alt="{{ $product->translated_name }}">
-                        @else
-                            <div class="strip-img d-flex align-items-center justify-content-center bg-black text-secondary small">
-                                لا توجد صورة
-                            </div>
-                        @endif
-                        <span class="badge bg-success position-absolute top-0 start-0 m-2 small">
-                            {{ $product->sales_count ?? 0 }} {{ __('common.sold') }}
-                        </span>
-                        <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2 small">
-                            ★ {{ number_format($product->rating_average ?? 0, 1) }}
-                        </span>
-                    </div>
-                    <div class="p-3">
-                        <h6 class="mb-1 text-white">{{ $product->translated_name }}</h6>
-                        <div class="text-muted small mb-1">
-                            {{ $product->category->name ?? 'بدون تصنيف' }} • {{ $product->company->name ?? 'شركة غير معروفة' }}
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-success fw-bold">${{ number_format($product->price, 2) }}</span>
-                            <span class="badge bg-secondary small">المخزون: {{ $product->stock }}</span>
-                        </div>
-                    </div>
-                </a>
+                <x-product-card :product="$product" />
             @empty
                 <p class="text-secondary">{{ __('common.no_products_message') }}</p>
             @endforelse
@@ -148,39 +122,9 @@
             </div>
         </div>
 
-        <div class="strip-scroll mb-2">
+        <div class="products-scroll mb-2">
             @forelse(($allProducts ?? collect()) as $product)
-                <a href="{{ route('products.show', $product) }}" class="strip-card text-decoration-none">
-                    <div class="position-relative">
-                        @if(!empty($product->image))
-                            <img src="{{ asset('storage/'.$product->image) }}" class="strip-img" alt="{{ $product->translated_name }}">
-                        @else
-                            <div class="strip-img d-flex align-items-center justify-content-center bg-black text-secondary small">
-                                لا توجد صورة
-                            </div>
-                        @endif
-                        @if($product->sales_count)
-                            <span class="badge bg-success position-absolute top-0 start-0 m-2 small">
-                                {{ $product->sales_count ?? 0 }} {{ __('common.sold') }}
-                            </span>
-                        @endif
-                        @if(!is_null($product->rating_average))
-                            <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2 small">
-                                ★ {{ number_format($product->rating_average ?? 0, 1) }}
-                            </span>
-                        @endif
-                    </div>
-                    <div class="p-3">
-                        <h6 class="mb-1 text-white">{{ $product->translated_name }}</h6>
-                        <div class="text-muted small mb-1">
-                            {{ $product->category->name ?? __('common.no_category') }} • {{ $product->company->name ?? __('common.unknown_company') }}
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-success fw-bold">${{ number_format($product->price, 2) }}</span>
-                            <span class="badge bg-secondary small">{{ __('common.stock_label') }}: {{ $product->stock }}</span>
-                        </div>
-                    </div>
-                </a>
+                <x-product-card :product="$product" />
             @empty
                 <p class="text-secondary">{{ __('common.no_products_in_store') }}</p>
             @endforelse

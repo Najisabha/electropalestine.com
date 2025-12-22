@@ -170,29 +170,9 @@
         <div class="mt-5">
             <h2 class="h5 fw-semibold mb-3">{{ __('common.related_products') }}</h2>
 
-            <div class="strip-scroll mb-3">
+            <div class="products-scroll mb-3">
                 @forelse ($related as $item)
-                    <a href="{{ route('products.show', $item) }}" class="strip-card text-decoration-none">
-                        <div class="position-relative">
-                        @if(!empty($item->image))
-                            <img src="{{ asset('storage/'.$item->image) }}" class="strip-img" alt="{{ $item->translated_name }}">
-                            @else
-                                <div class="strip-img d-flex align-items-center justify-content-center bg-black text-secondary small">
-                                    {{ __('common.no_image') }}
-                                </div>
-                            @endif
-                        </div>
-                        <div class="p-3">
-                            <h6 class="mb-1 text-white">{{ $item->translated_name }}</h6>
-                            <div class="text-muted small mb-1">
-                                {{ $item->category->name ?? __('common.no_category') }} • {{ $item->company->name ?? __('common.unknown_company') }}
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-success fw-bold">${{ number_format($item->price, 2) }}</span>
-                                <span class="badge bg-secondary small">{{ __('common.stock_label') }}: {{ $item->stock }}</span>
-                            </div>
-                        </div>
-                    </a>
+                    <x-product-card :product="$item" />
                 @empty
                     {{-- لا شيء --}}
                 @endforelse

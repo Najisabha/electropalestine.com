@@ -78,34 +78,9 @@
         {{-- المنتجات التابعة للصنف --}}
         <div class="mt-4">
             <h2 class="h5 fw-semibold mb-3">المنتجات داخل {{ $category->translated_name }}</h2>
-            <div class="strip-scroll">
+            <div class="products-scroll">
                 @forelse($products as $product)
-                    <a href="{{ route('products.show', $product) }}" class="strip-card text-decoration-none">
-                        <div class="position-relative">
-                            @if(!empty($product->image))
-                                <img src="{{ asset('storage/'.$product->image) }}" class="strip-img" alt="{{ $product->name }}">
-                            @else
-                                <div class="strip-img d-flex align-items-center justify-content-center bg-black text-secondary small">
-                                    لا توجد صورة
-                                </div>
-                            @endif
-                            @if($product->sales_count)
-                                <span class="badge bg-success position-absolute top-0 start-0 m-2 small">
-                                    {{ $product->sales_count ?? 0 }} مبيعة
-                                </span>
-                            @endif
-                        </div>
-                        <div class="p-3">
-                            <h6 class="mb-1 text-white">{{ $product->name }}</h6>
-                            <div class="text-muted small mb-1">
-                                {{ $product->company->name ?? 'شركة غير معروفة' }}
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-success fw-bold">${{ number_format($product->price, 2) }}</span>
-                                <span class="badge bg-secondary small">المخزون: {{ $product->stock }}</span>
-                            </div>
-                        </div>
-                    </a>
+                    <x-product-card :product="$product" :showCategory="false" />
                 @empty
                     <p class="text-secondary">لا توجد منتجات ضمن هذا الصنف حالياً.</p>
                 @endforelse
