@@ -21,6 +21,9 @@
 
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
         :root{
@@ -97,9 +100,22 @@
         }
 
         /* ===== Footer ===== */
-        footer{
-            background:rgba(0,0,0,.5);
+        .hover-link { transition: all 0.3s ease; }
+        .hover-link:hover { color: #fff !important; padding-right: 5px; }
+        .social-icon { 
+            background-color: rgba(255,255,255,0.1) !important; 
+            transition: all 0.3s ease; 
+            display: inline-flex !important;
         }
+        .social-icon:hover { 
+            background-color: #0db777 !important; 
+            color: white !important; 
+            transform: translateY(-3px); 
+            box-shadow: 0 4px 8px rgba(13, 183, 119, 0.3);
+        }
+        .btn-subscribe { background-color: #0db777; border-color: #0db777; color: white; transition: all 0.3s; }
+        .btn-subscribe:hover { background-color: #0a8d5b; border-color: #0a8d5b; color: white; }
+        footer { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; } /* أو خطك العربي المفضل */
 
         /* ===== Store product cards ===== */
         .product-card-img{
@@ -355,6 +371,7 @@
          .dropdown-divider{
              border-color:var(--border);
          }
+
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -491,16 +508,89 @@
 </main>
 
 <!-- ===== Footer ===== -->
-<footer class="mt-5">
-    <div class="container py-4 text-center small text-secondary">
-         <p class="mb-1">
-             electropalestine • {{ __('common.footer_tagline') }}
-             <span class="text-warning">{{ __('common.green') }}</span> {{ __('common.and') }}
-             <span class="text-warning">{{ __('common.black') }}</span>
-         </p>
-         <p class="mb-0">
-             © {{ date('Y') }} electropalestine — All Rights Reserved
-         </p>
+<footer class="bg-dark text-white pt-5 pb-4" dir="{{ $isRTL ? 'rtl' : 'ltr' }}" style="background-color: #1a1c20 !important;">
+    <div class="container text-md-start text-center">
+        
+        <div class="row align-items-center mb-5 pb-4 border-bottom border-secondary">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <h4 class="fw-bold">{{ __('common.newsletter_subscribe') }}</h4>
+                <p class="text-white-50 small mb-0">{{ __('common.newsletter_description') }}</p>
+            </div>
+            <div class="col-md-6">
+                <form action="#" class="d-flex gap-2 justify-content-center justify-content-md-end">
+                    <input type="email" class="form-control bg-dark text-white border-secondary" placeholder="{{ __('common.email_placeholder') }}" style="max-width: 300px;">
+                    <button class="btn btn-subscribe px-4" type="button">{{ __('common.subscribe_button') }}</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            
+            <div class="col-md-3 col-lg-4 col-xl-3 mx-auto mb-4">
+                <h5 class="text-uppercase fw-bold mb-4">
+                    <i class="fas fa-bolt me-2" style="color: #0db777;"></i> ElectroPalestine
+                </h5>
+                <p class="text-white-50 text-justify">
+                    {{ __('common.company_description') }}
+                </p>
+                <div class="mt-3 d-flex gap-2">
+                    <a href="https://www.facebook.com/electropalestine" target="_blank" rel="noopener noreferrer" class="social-icon d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%; background-color: rgba(255,255,255,0.1); color: white; text-decoration: none; font-size: 18px;" title="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="https://twitter.com/electropalestine" target="_blank" rel="noopener noreferrer" class="social-icon d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%; background-color: rgba(255,255,255,0.1); color: white; text-decoration: none; font-size: 18px;" title="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="https://www.instagram.com/electropalestine" target="_blank" rel="noopener noreferrer" class="social-icon d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%; background-color: rgba(255,255,255,0.1); color: white; text-decoration: none; font-size: 18px;" title="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://wa.me/970591234567" target="_blank" rel="noopener noreferrer" class="social-icon d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%; background-color: rgba(255,255,255,0.1); color: white; text-decoration: none; font-size: 18px;" title="WhatsApp">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-2 col-lg-2 col-xl-2 mx-auto mb-4">
+                <h6 class="text-uppercase fw-bold mb-4 d-inline-block pb-1" style="border-bottom: 2px solid #0db777;">{{ __('common.quick_links') }}</h6>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><a href="{{ url('/') }}" class="text-white-50 text-decoration-none hover-link">{{ __('common.home') }}</a></li>
+                    <li class="mb-2"><a href="/login" class="text-white-50 text-decoration-none hover-link">{{ __('common.login') }}</a></li>
+                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-link">{{ __('common.all_products') }}</a></li>
+                    <li class="mb-2"><a href="/contact" class="text-white-50 text-decoration-none hover-link">{{ __('common.contact_us') }}</a></li>
+                </ul>
+            </div>
+
+            <div class="col-md-3 col-lg-2 col-xl-2 mx-auto mb-4">
+                <h6 class="text-uppercase fw-bold mb-4 d-inline-block pb-1" style="border-bottom: 2px solid #0db777;">{{ __('common.customer_service') }}</h6>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-link">{{ __('common.my_account') }}</a></li>
+                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-link">{{ __('common.track_order') }}</a></li>
+                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-link">{{ __('common.return_policy') }}</a></li>
+                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-link">{{ __('common.faq') }}</a></li>
+                </ul>
+            </div>
+
+            <div class="col-md-4 col-lg-3 col-xl-3 mx-auto mb-md-0 mb-4">
+                <h6 class="text-uppercase fw-bold mb-4 d-inline-block pb-1" style="border-bottom: 2px solid #0db777;">{{ __('common.contact_us') }}</h6>
+                <p class="text-white-50"><i class="fas fa-home me-3 text-secondary ms-2"></i> {{ __('common.footer_address') }}</p>
+                <p class="text-white-50"><i class="fas fa-envelope me-3 text-secondary ms-2"></i> info@electropalestine.com</p>
+                <p class="text-white-50" dir="ltr"><i class="fas fa-phone me-3 text-secondary ms-2"></i> +970 59 123 4567</p>
+                <p class="text-white-50" dir="ltr"><i class="fas fa-print me-3 text-secondary ms-2"></i> +970 2 298 7654</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center p-4 mt-3" style="background-color: rgba(0, 0, 0, 0.2); border-top: 1px solid #2c2e33;">
+        <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center">
+            <div class="mb-2 mb-md-0">
+                © {{ date('Y') }} {{ __('common.copyright_text') }}:
+                <a class="text-white fw-bold text-decoration-none" href="https://electropalestine.com/">ElectroPalestine</a>
+            </div>
+            <div>
+                <i class="fab fa-cc-visa fa-lg text-white mx-1"></i>
+                <i class="fab fa-cc-mastercard fa-lg text-white mx-1"></i>
+                <i class="fab fa-cc-paypal fa-lg text-white mx-1"></i>
+            </div>
+        </div>
     </div>
 </footer>
 

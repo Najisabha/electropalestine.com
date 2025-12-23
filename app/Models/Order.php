@@ -238,7 +238,7 @@ class Order extends Model
             return;
         }
 
-        $threshold = (int) config('catalog.low_stock_threshold', 5);
+        $threshold = (int) config('catalog.low_stock_threshold', 10);
 
         foreach ($items as $item) {
             $productId = $item['product_id'] ?? null;

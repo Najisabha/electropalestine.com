@@ -11,7 +11,7 @@ return [
     |
     */
 
-    'low_stock_threshold' => env('CATALOG_LOW_STOCK_THRESHOLD', 5),
+    'low_stock_threshold' => env('CATALOG_LOW_STOCK_THRESHOLD', 10),
 
     /*
     |--------------------------------------------------------------------------

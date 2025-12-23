@@ -10,7 +10,7 @@
     {{-- تنبيه عام في أعلى لوحة التحكم عند وجود منتجات منخفضة المخزون --}}
     @php
         $lowStockCount = $lowStockProducts->count();
-        $lowStockThreshold = (int) config('catalog.low_stock_threshold', 5);
+        $lowStockThreshold = (int) config('catalog.low_stock_threshold', 10);
     @endphp
 
     @if ($lowStockCount > 0)

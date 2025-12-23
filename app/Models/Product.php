@@ -100,7 +100,7 @@ class Product extends Model
      */
     public function scopeLowStock(Builder $query, ?int $threshold = null): Builder
     {
-        $threshold = $threshold ?? (int) config('catalog.low_stock_threshold', 5);
+        $threshold = $threshold ?? (int) config('catalog.low_stock_threshold', 10);
 
         return $query->where('stock', '<=', $threshold);
     }

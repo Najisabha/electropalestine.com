@@ -92,7 +92,7 @@
                             <td>
                                 <strong>{{ $product->translated_name }}</strong>
                                 <div class="small text-secondary">
-                                    المخزون: <span class="{{ $product->stock <= 0 ? 'text-danger' : ($product->stock <= config('catalog.low_stock_threshold', 5) ? 'text-warning' : '') }}">
+                                    المخزون: <span class="{{ $product->stock <= 0 ? 'text-danger' : ($product->stock <= config('catalog.low_stock_threshold', 10) ? 'text-warning' : '') }}">
                                         {{ $product->stock }}
                                     </span>
                                     @if(!($product->is_active ?? true))
