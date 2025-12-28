@@ -286,4 +286,10 @@ return [
     "thanks_for_contacting" => 'شكراً لتواصلك مع electropalestine',
     "message_sent_success" => 'تم إرسال رسالتك بنجاح! سنتواصل معك قريباً.',
     "message_sent_error" => 'حدث خطأ أثناء إرسال الرسالة. يرجى المحاولة مرة أخرى.',
+    
+    // Product Card
+    "view_details" => 'عرض التفاصيل',
+    "in_stock" => 'متوفر',
+    "out_of_stock" => 'غير متوفر',
+    "admin_panel" => 'لوحة التحكم',
 ];

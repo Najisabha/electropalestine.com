@@ -5,29 +5,29 @@
     $types = $category?->types ?? collect();
 @endphp
 
-<section class="py-5 text-light">
+<section class="py-3 py-md-5 text-light">
     <div class="container">
         <div class="row g-4 align-items-start">
             {{-- صورة / كرت المنتج --}}
-            <div class="col-lg-6">
+            <div class="col-12 col-lg-6">
                 <div class="glass rounded-4 overflow-hidden h-100">
                     <div class="position-relative">
                         @if(!empty($product->image))
                             <img src="{{ asset('storage/'.$product->image) }}"
                                  class="w-100 bg-black"
-                                 style="height: 260px; object-fit: contain;"
+                                 style="height: 200px; height: 260px; object-fit: contain;"
                                  alt="{{ $product->translated_name }}">
                         @else
                             <div class="w-100 d-flex align-items-center justify-content-center bg-black text-secondary small"
-                                 style="height: 320px;">
+                                 style="height: 200px; height: 320px;">
                                 {{ __('common.no_image_product') }}
                             </div>
                         @endif
-                        <span class="badge bg-success position-absolute top-0 start-0 m-3 small">
+                        <span class="badge bg-success position-absolute top-0 start-0 m-2 m-md-3 small">
                             {{ $product->sales_count ?? 0 }} {{ __('common.sold') }}
                         </span>
                     </div>
-                    <div class="p-4">
+                    <div class="p-3 p-md-4">
                         <p class="text-secondary small mb-1">
                             {{ __('common.product_from') }} {{ $product->company->name ?? __('common.unknown_company') }}
                         </p>
@@ -67,10 +67,10 @@
             </div>
 
             {{-- معلومات المنتج + الأزرار --}}
-            <div class="col-lg-6">
-                <h1 class="h3 fw-bold text-white mb-2">{{ $product->translated_name }}</h1>
+            <div class="col-12 col-lg-6">
+                <h1 class="h4 h3-md fw-bold text-white mb-2">{{ $product->translated_name }}</h1>
 
-                <div class="fs-2 fw-black text-success mb-2">
+                <div class="fs-3 fs-2-md fw-black text-success mb-2">
                     ${{ number_format($product->price, 2) }}
                 </div>
 
@@ -78,24 +78,24 @@
                     {{ __('common.available_stock') }}: <span class="text-success fw-semibold">{{ $product->stock }}</span>
                 </div>
 
-                <p class="text-secondary mb-3">
+                <p class="text-secondary small mb-3">
                     {{ $product->translated_description ?? __('common.product_description_placeholder') }}
                 </p>
 
-                <div class="d-flex flex-wrap gap-2 mb-4">
+                <div class="d-flex flex-column flex-sm-row flex-wrap gap-2 mb-3 mb-md-4">
                     <form method="POST" action="{{ route('cart.add', $product) }}" class="d-inline">
                         @csrf
                         <input type="hidden" name="quantity" value="1">
-                        <button type="submit" class="btn btn-main px-4">
+                        <button type="submit" class="btn btn-main px-3 px-md-4 w-100 w-sm-auto">
                             <i class="bi bi-cart-plus"></i>
                             {{ __('common.add_to_cart_button') }}
                         </button>
                     </form>
-                    <a href="{{ route('store.checkout', ['product' => $product->id, 'quantity' => 1]) }}" class="btn btn-success px-4">
+                    <a href="{{ route('store.checkout', ['product' => $product->id, 'quantity' => 1]) }}" class="btn btn-success px-3 px-md-4 w-100 w-sm-auto">
                         <i class="bi bi-bag-check"></i>
                         {{ __('common.buy_now') }}
                     </a>
-                    <button class="btn btn-outline-main px-4">{{ __('common.contact_about_product') }}</button>
+                    <button class="btn btn-outline-main px-3 px-md-4 w-100 w-sm-auto">{{ __('common.contact_about_product') }}</button>
                 </div>
 
                 {{-- قسم تقييمات العملاء --}}
@@ -167,8 +167,8 @@
         </div>
 
         {{-- شريط ذات صلة: منتجات من نفس الأصناف/الأنواع --}}
-        <div class="mt-5">
-            <h2 class="h5 fw-semibold mb-3">{{ __('common.related_products') }}</h2>
+        <div class="mt-4 mt-md-5">
+            <h2 class="h5 fw-semibold mb-2 mb-md-3">{{ __('common.related_products') }}</h2>
 
             <div class="products-scroll mb-3">
                 @forelse ($related as $item)

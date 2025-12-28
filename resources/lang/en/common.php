@@ -286,4 +286,10 @@ return [
     'thanks_for_contacting' => 'Thank you for contacting electropalestine',
     'message_sent_success' => 'Your message has been sent successfully! We will contact you soon.',
     'message_sent_error' => 'An error occurred while sending the message. Please try again.',
+    
+    // Product Card
+    'view_details' => 'View Details',
+    'in_stock' => 'In Stock',
+    'out_of_stock' => 'Out of Stock',
+    'admin_panel' => 'Admin Panel',
 ];
