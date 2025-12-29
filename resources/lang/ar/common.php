@@ -292,4 +292,7 @@ return [
     "in_stock" => 'متوفر',
     "out_of_stock" => 'غير متوفر',
     "admin_panel" => 'لوحة التحكم',
+    "view_all_reviews" => 'عرض جميع التعليقات',
+    "back_to_product" => 'العودة إلى المنتج',
+    "all_reviews" => 'جميع التعليقات',
 ];

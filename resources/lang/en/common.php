@@ -292,4 +292,7 @@ return [
     'in_stock' => 'In Stock',
     'out_of_stock' => 'Out of Stock',
     'admin_panel' => 'Admin Panel',
+    'view_all_reviews' => 'View All Reviews',
+    'back_to_product' => 'Back to Product',
+    'all_reviews' => 'All Reviews',
 ];

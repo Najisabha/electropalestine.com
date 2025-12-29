@@ -76,12 +76,18 @@
         }
 
         .btn-outline-main{
-            border:1px solid var(--primary);
-            color:var(--primary);
+            border:1px solid rgba(255,255,255,0.35);
+            color:#ffffff;
+            background:rgba(255,255,255,0.06);
+            box-shadow:0 4px 12px rgba(0,0,0,0.08);
+            transition:all 0.25s ease;
         }
         .btn-outline-main:hover{
-            background:var(--primary);
-            color:#0b0d11;
+            background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+            color:#ffffff;
+            border-color:transparent;
+            box-shadow:0 8px 20px rgba(13,183,119,0.25);
+            transform:translateY(-1px);
         }
 
         /* ===== Header ===== */
@@ -89,14 +95,68 @@
             position:sticky;
             top:0;
             z-index:1000;
+            background:linear-gradient(120deg, rgba(13,183,119,0.9), rgba(11,13,17,0.65));
+            box-shadow:0 10px 30px rgba(0,0,0,0.15);
+            border-bottom:1px solid rgba(255,255,255,0.08);
+        }
+        header .container{
+            gap:0.75rem;
         }
 
         nav a{
-            color:#d9f2e3;
+            color:#ffffff;
             font-size:.9rem;
+            font-weight:500;
         }
         nav a:hover{
             color:var(--accent);
+        }
+        
+        /* ===== User Points Badge ===== */
+        .badge.border-warning {
+            border-color: var(--accent) !important;
+            background: rgba(245, 209, 12, 0.2) !important;
+            color: #ffffff !important;
+            transition: all 0.3s ease;
+        }
+        
+        .badge.border-warning:hover {
+            border-color: var(--accent) !important;
+            background: rgba(245, 209, 12, 0.3) !important;
+            box-shadow: 0 0 10px rgba(245, 209, 12, 0.3);
+        }
+        
+        .badge.border-warning strong {
+            color: var(--accent) !important;
+            font-weight: 700;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .badge.border-info {
+            background: rgba(13, 202, 240, 0.2) !important;
+            color: #ffffff !important;
+        }
+        
+        .badge.border-info strong {
+            color: #0dcaf0 !important;
+            font-weight: 700;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* ضمان أن text-warning يستخدم اللون الأصفر المخصص */
+        .text-warning,
+        .badge.border-warning .text-warning,
+        .badge.border-warning strong {
+            color: var(--accent) !important;
+        }
+        
+        /* تحسين شكل الـ badge على الشاشات الصغيرة */
+        @media (max-width: 768px) {
+            .badge.border-warning,
+            .badge.border-info {
+                font-size: 0.7rem;
+                padding: 0.25rem 0.5rem;
+            }
         }
 
         /* ===== Footer ===== */
@@ -127,6 +187,498 @@
         .product-card{
             border-radius:18px;
             overflow:hidden;
+        }
+
+        /* ===== Product Page Professional Design ===== */
+        /* Product Card Container */
+        .product-page-card {
+            background: linear-gradient(135deg, rgba(26, 29, 36, 0.95), rgba(21, 24, 32, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .product-page-card:hover {
+            box-shadow: 0 12px 48px rgba(13, 183, 119, 0.2);
+            border-color: rgba(13, 183, 119, 0.3);
+        }
+        
+        /* Product Image Container */
+        .product-page-image-container {
+            position: relative;
+            background: linear-gradient(135deg, #0a0c10 0%, #0f1115 100%);
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 320px;
+        }
+        
+        .product-page-image-container img {
+            max-width: 100%;
+            max-height: 280px;
+            object-fit: contain;
+            border-radius: 12px;
+            transition: transform 0.3s ease;
+        }
+        
+        .product-page-image-container:hover img {
+            transform: scale(1.05);
+        }
+        
+        /* Sales Badge */
+        .product-page-sales-badge {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #fff;
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(13, 183, 119, 0.4);
+            font-size: 0.85rem;
+            z-index: 2;
+        }
+        
+        /* Product Info Section */
+        .product-page-info {
+            padding: 1.5rem;
+        }
+        
+        .product-page-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 1rem;
+            line-height: 1.3;
+            background: linear-gradient(135deg, #ffffff, #eaf6ef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .product-page-price {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            line-height: 1;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3),
+                         0 0 20px rgba(255, 255, 255, 0.1);
+            position: relative;
+            display: inline-block;
+            letter-spacing: -1px;
+        }
+        
+        .product-page-price::before {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+            border-radius: 2px;
+            opacity: 0.7;
+        }
+        
+        .product-page-stock {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, rgba(13, 183, 119, 0.2), rgba(10, 141, 91, 0.15));
+            border: 2px solid rgba(13, 183, 119, 0.4);
+            border-radius: 16px;
+            color: #ffffff;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 16px rgba(13, 183, 119, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .product-page-stock::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .product-page-stock:hover::before {
+            left: 100%;
+        }
+        
+        .product-page-stock:hover {
+            border-color: var(--primary);
+            box-shadow: 0 6px 24px rgba(13, 183, 119, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .product-page-stock i {
+            font-size: 1.2rem;
+            color: var(--primary);
+            filter: drop-shadow(0 0 4px rgba(13, 183, 119, 0.5));
+            animation: pulse-check 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-check {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+        }
+        
+        .product-page-stock strong {
+            color: #ffffff;
+            font-size: 1.1rem;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            font-weight: 800;
+        }
+        
+        .product-page-description {
+            color: #ffffff;
+            line-height: 2;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(13, 183, 119, 0.08), rgba(10, 141, 91, 0.05));
+            border-left: 4px solid var(--primary);
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+            font-weight: 400;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .product-page-description::before {
+            content: '"';
+            position: absolute;
+            top: 0.5rem;
+            right: 1rem;
+            font-size: 4rem;
+            color: rgba(255, 255, 255, 0.15);
+            font-family: Georgia, serif;
+            line-height: 1;
+        }
+        
+        /* Action Buttons */
+        .product-page-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .product-page-actions .btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+        
+        .product-page-actions .btn-main {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            box-shadow: 0 4px 16px rgba(13, 183, 119, 0.3);
+        }
+        
+        .product-page-actions .btn-main:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(13, 183, 119, 0.4);
+        }
+        
+        .product-page-actions .btn-success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            box-shadow: 0 4px 16px rgba(40, 167, 69, 0.3);
+        }
+        
+        .product-page-actions .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(40, 167, 69, 0.4);
+        }
+        
+        /* Reviews Section */
+        .product-page-reviews {
+            background: linear-gradient(135deg, rgba(26, 29, 36, 0.95), rgba(21, 24, 32, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        
+        .product-page-reviews h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(13, 183, 119, 0.3);
+        }
+        
+        .product-page-rating-summary {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: rgba(13, 183, 119, 0.1);
+            border-radius: 16px;
+            border: 1px solid rgba(13, 183, 119, 0.2);
+        }
+        
+        .product-page-rating-number {
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent), #f0c908);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+        
+        .product-page-rating-stars {
+            font-size: 1.5rem;
+            color: var(--accent);
+        }
+        
+        /* Individual Review Item */
+        .product-page-review-item {
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .product-page-review-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(13, 183, 119, 0.3);
+            transform: translateX(5px);
+        }
+        
+        .product-page-review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        
+        .product-page-review-author {
+            font-weight: 700;
+            color: #ffffff;
+            font-size: 1rem;
+        }
+        
+        .product-page-review-email {
+            color: #9fb4a4;
+            font-size: 0.85rem;
+        }
+        
+        .product-page-review-comment {
+            color: #d9f2e3;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+        
+        .product-page-review-date {
+            color: #9fb4a4;
+            font-size: 0.85rem;
+        }
+        
+        /* Category Badges */
+        .product-page-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        
+        .product-page-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border: 1px solid;
+        }
+        
+        .product-page-badge-success {
+            background: rgba(13, 183, 119, 0.2);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        
+        .product-page-badge-warning {
+            background: rgba(245, 209, 12, 0.2);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        /* Related Products Section */
+        .product-page-related {
+            margin-top: 3rem;
+        }
+        
+        .product-page-related h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(13, 183, 119, 0.3);
+        }
+        
+        /* View All Reviews Link */
+        .product-page-view-all-reviews {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .product-page-view-all-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, rgba(13, 183, 119, 0.15), rgba(10, 141, 91, 0.15));
+            border: 1px solid rgba(13, 183, 119, 0.3);
+            border-radius: 12px;
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+        
+        .product-page-view-all-link:hover {
+            background: linear-gradient(135deg, rgba(13, 183, 119, 0.25), rgba(10, 141, 91, 0.25));
+            border-color: var(--primary);
+            transform: translateX(-5px);
+            box-shadow: 0 4px 16px rgba(13, 183, 119, 0.2);
+            color: var(--primary);
+        }
+        
+        .product-page-view-all-link i {
+            font-size: 1.1rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .product-page-view-all-link:hover i {
+            transform: translateX(-3px);
+        }
+        
+        /* Product Reviews Page */
+        .product-reviews-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background: rgba(13, 183, 119, 0.1);
+            border: 1px solid rgba(13, 183, 119, 0.2);
+        }
+        
+        .product-reviews-back-link:hover {
+            background: rgba(13, 183, 119, 0.2);
+            border-color: var(--primary);
+            transform: translateX(5px);
+            color: var(--primary);
+        }
+        
+        .product-reviews-back-link i {
+            transition: transform 0.3s ease;
+        }
+        
+        .product-reviews-back-link:hover i {
+            transform: translateX(3px);
+        }
+        
+        .product-reviews-page-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.3;
+            background: linear-gradient(135deg, #ffffff, #eaf6ef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Responsive Design for Product Page */
+        @media (max-width: 768px) {
+            .product-page-title {
+                font-size: 1.5rem;
+            }
+            
+            .product-page-price {
+                font-size: 2.2rem;
+                letter-spacing: 0;
+            }
+            
+            .product-page-stock {
+                padding: 0.65rem 1.25rem;
+                font-size: 0.95rem;
+            }
+            
+            .product-page-stock i {
+                font-size: 1.1rem;
+            }
+            
+            .product-page-stock strong {
+                font-size: 1rem;
+            }
+            
+            .product-page-description {
+                font-size: 1rem;
+                padding: 1.25rem;
+                line-height: 1.8;
+            }
+            
+            .product-page-description::before {
+                font-size: 3rem;
+                top: 0.25rem;
+                right: 0.75rem;
+            }
+            
+            .product-page-image-container {
+                min-height: 240px;
+                padding: 1.5rem;
+            }
+            
+            .product-page-actions .btn {
+                min-width: 100%;
+            }
+            
+            .product-page-rating-summary {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .product-page-rating-number {
+                font-size: 3rem;
+            }
         }
 
         /* ===== Horizontal strips ===== */
@@ -489,26 +1041,64 @@
              box-shadow:0 0 0 .15rem rgba(13,183,119,.25);
          }
 
-         /* ===== Dropdown Menu ===== */
-         .dropdown-menu{
-             background:var(--glass);
-             border:1px solid var(--border);
-             backdrop-filter:blur(10px);
-         }
-         .dropdown-item{
-             color:#eaf6ef;
-             transition:all 0.2s ease;
-         }
-         .dropdown-item:hover{
-             background:rgba(13,183,119,.2);
-             color:#fff;
-         }
-         .dropdown-item.text-danger:hover{
-             background:rgba(220,53,69,.2);
-         }
-         .dropdown-divider{
-             border-color:var(--border);
-         }
+        /* ===== Dropdown Menu ===== */
+        .dropdown-menu{
+            background:var(--glass);
+            border:1px solid var(--border);
+            backdrop-filter:blur(10px);
+        }
+        .dropdown-item{
+            color:#eaf6ef;
+            transition:all 0.2s ease;
+        }
+        .dropdown-item:hover{
+            background:rgba(13,183,119,.2);
+            color:#fff;
+        }
+        .dropdown-item.text-danger:hover{
+            background:rgba(220,53,69,.2);
+        }
+        .dropdown-divider{
+            border-color:var(--border);
+        }
+        
+        /* تحسين القائمة المتنقلة للمستخدم - نصوص واضحة */
+        #mobileUserDropdown + .dropdown-menu {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+            backdrop-filter: blur(10px);
+        }
+        
+        #mobileUserDropdown + .dropdown-menu .text-light,
+        #mobileUserDropdown + .dropdown-menu .text-secondary {
+            color: #212529 !important;
+        }
+        
+        #mobileUserDropdown + .dropdown-menu .dropdown-item {
+            color: #212529 !important;
+        }
+        
+        #mobileUserDropdown + .dropdown-menu .dropdown-item:hover {
+            background: rgba(13, 183, 119, 0.1) !important;
+            color: var(--primary) !important;
+        }
+        
+        #mobileUserDropdown + .dropdown-menu .dropdown-item.text-danger {
+            color: #dc3545 !important;
+        }
+        
+        #mobileUserDropdown + .dropdown-menu .dropdown-item.text-danger:hover {
+            background: rgba(220, 53, 69, 0.1) !important;
+            color: #dc3545 !important;
+        }
+        
+        #mobileUserDropdown + .dropdown-menu .dropdown-divider {
+            border-color: rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        #mobileUserDropdown + .dropdown-menu strong {
+            color: #212529 !important;
+        }
 
          /* ===== Mobile Hamburger Menu ===== */
          .mobile-menu-toggle {
@@ -1161,60 +1751,16 @@
                 <a href="{{ route('admin.store-settings') }}" class="btn btn-sm btn-outline-main font">{{ __('common.store_settings') }}</a>
             @endif
 
-            {{-- جزء المستخدم المسجّل (غير الأدمن): صورة + نقاط + رصيد + إعدادات (dropdown) --}}
+            {{-- جزء المستخدم المسجّل (غير الأدمن): نقاط + رصيد --}}
             @if($authUser)
                 <div class="d-flex align-items-center gap-2 ms-2">
-                    <div class="rounded-circle bg-success d-flex align-items-center justify-content-center"
-                         style="width:34px;height:34px;font-size:0.8rem;">
-                        {{ mb_substr($authUser->first_name,0,1) }}{{ mb_substr($authUser->last_name,0,1) }}
-                    </div>
-                    <span class="badge bg-dark border border-success small">
-                        {{ __('common.your_points') }}: <strong class="text-success">{{ number_format($authUser->points ?? 0) }}</strong>
+                    <span class="badge border border-warning small">
+                        {{ __('common.your_points') }}: <strong>{{ number_format($authUser->points ?? 0) }}</strong>
                     </span>
-                    <span class="badge bg-dark border border-info small">
-                        {{ __('common.your_balance') }}: <strong class="text-info">${{ number_format($authUser->balance ?? 0, 2) }}</strong>
+                    <span class="badge border border-info small">
+                        {{ __('common.your_balance') }}: <strong>${{ number_format($authUser->balance ?? 0, 2) }}</strong>
                     </span>
                 </div>
-
-                {{-- قائمة الإعدادات المنسدلة --}}
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-outline-main dropdown-toggle" type="button" id="settingsDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="{{ __('common.settings') }}">
-                        <i class="bi bi-gear fs-5"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end glass border border-secondary-subtle" aria-labelledby="settingsDropdown" style="min-width: 200px;">
-                        <li>
-                            <a class="dropdown-item text-light" href="{{ route('store.account-settings') }}">
-                                <i class="bi bi-person-circle me-2"></i>
-                                {{ __('common.account_settings') }}
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item text-light" href="{{ route('store.my-orders') }}">
-                                <i class="bi bi-bag-check me-2"></i>
-                                {{ __('common.my_orders') }}
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item text-light" href="{{ route('store.my-comments') }}">
-                                <i class="bi bi-chat-left-text me-2"></i>
-                                {{ __('common.my_comments') }}
-                            </a>
-                        </li>
-                        <li><hr class="dropdown-divider border-secondary-subtle"></li>
-                        <li>
-                            <form method="POST" action="{{ route('logout') }}" class="d-inline w-100">
-                                @csrf
-                                <button type="submit" class="dropdown-item text-light text-danger" onclick="return confirm('{{ __('common.logout_confirm') }}');">
-                                    <i class="bi bi-box-arrow-right me-2"></i>
-                                    {{ __('common.logout') }}
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
-                </div>
-            @else
-                <a href="{{ route('login') }}" class="btn btn-sm btn-outline-main">{{ __('common.login') }}</a>
-                <a href="{{ route('register') }}" class="btn btn-sm btn-main">{{ __('common.register') }}</a>
             @endif
         </nav>
 
@@ -1241,13 +1787,13 @@
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end glass border border-secondary-subtle" aria-labelledby="mobileUserDropdown" style="min-width: 200px;">
                         <li class="px-3 py-2">
-                            <div class="small text-light mb-1">
+                            <div class="small mb-1">
                                 <strong>{{ $authUser->first_name }} {{ $authUser->last_name }}</strong>
                             </div>
-                            <div class="small text-secondary">
-                                {{ __('common.your_points') }}: <strong class="text-success">{{ number_format($authUser->points ?? 0) }}</strong>
+                            <div class="small">
+                                {{ __('common.your_points') }}: <strong class="text-warning">{{ number_format($authUser->points ?? 0) }}</strong>
                             </div>
-                            <div class="small text-secondary">
+                            <div class="small">
                                 {{ __('common.your_balance') }}: <strong class="text-info">${{ number_format($authUser->balance ?? 0, 2) }}</strong>
                             </div>
                         </li>

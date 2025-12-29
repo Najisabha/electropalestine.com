@@ -31,7 +31,7 @@
                     <h2 class="h6 fw-semibold mb-2">الأنواع داخل هذا الصنف</h2>
                     <div class="strip-scroll">
                         @forelse($types as $type)
-                            <div class="strip-card text-center">
+                            <a href="{{ route('types.show', $type->slug) }}" class="strip-card text-center text-decoration-none d-block">
                                 @if(!empty($type->image))
                                     <img src="{{ asset('storage/'.$type->image) }}" class="strip-img" alt="{{ $type->translated_name }}">
                                 @else
@@ -43,7 +43,7 @@
                                     <h6 class="mb-1 text-white small">{{ $type->translated_name }}</h6>
                                     <span class="badge bg-warning text-dark small">نوع ضمن {{ $category->translated_name }}</span>
                                 </div>
-                            </div>
+                            </a>
                         @empty
                             <p class="text-secondary small mb-0">لا توجد أنواع مرتبطة بهذا الصنف حالياً.</p>
                         @endforelse
