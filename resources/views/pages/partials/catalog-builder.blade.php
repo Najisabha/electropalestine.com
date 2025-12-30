@@ -111,6 +111,10 @@
                                 <input type="text" name="name" class="form-control auth-input" placeholder="اسم الشركة" required>
                                 <label class="form-label small text-secondary mb-0">صورة الشركة (اختياري)</label>
                                 <input type="file" name="image" class="form-control auth-input">
+                                <label class="form-label small text-secondary mb-0">خلفية الشركة (اختياري)</label>
+                                <input type="file" name="background" class="form-control auth-input">
+                                <textarea name="description" class="form-control auth-input" rows="2" placeholder="وصف بالعربية (اختياري)"></textarea>
+                                <textarea name="description_en" class="form-control auth-input" rows="2" placeholder="Description in English (optional)"></textarea>
                                 <button class="btn btn-main btn-sm">حفظ الشركة</button>
                             </form>
                         </div>
@@ -315,6 +319,18 @@
                                         <div class="col-md-6">
                                             <label class="form-label small text-secondary mb-0">صورة (اختياري)</label>
                                             <input type="file" name="image" class="form-control form-control-sm bg-dark text-light">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small text-secondary mb-0">خلفية (اختياري)</label>
+                                            <input type="file" name="background" class="form-control form-control-sm bg-dark text-light">
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small text-secondary mb-0">وصف بالعربية (اختياري)</label>
+                                            <textarea name="description" class="form-control form-control-sm bg-dark text-light" rows="2">{{ $company->description }}</textarea>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small text-secondary mb-0">Description in English (optional)</label>
+                                            <textarea name="description_en" class="form-control form-control-sm bg-dark text-light" rows="2">{{ $company->description_en }}</textarea>
                                         </div>
                                         <div class="col-12">
                                             <button class="btn btn-sm btn-main" type="submit">تعديل الشركة</button>

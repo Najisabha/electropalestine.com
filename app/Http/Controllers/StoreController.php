@@ -243,6 +243,112 @@ class StoreController extends Controller
         ]);
     }
 
+    public function companyProducts(Company $company): View
+    {
+        $company->load(['categories', 'types', 'products' => fn ($q) => $q->active()->with(['category', 'type'])]);
+
+        // جلب جميع المنتجات التابعة لهذه الشركة
+        $query = Product::where('company_id', $company->id)
+            ->active()
+            ->with(['category', 'type', 'company']);
+
+        // تطبيق الفلاتر من Request
+        $sort = request()->get('sort', 'newest');
+        $minPrice = max(0, min(10000, (int)request()->get('min_price', 0)));
+        $maxPrice = max(0, min(10000, (int)request()->get('max_price', 10000)));
+        $minRating = request()->get('min_rating', 0);
+        $typeId = request()->get('type_id', null);
+        $categoryId = request()->get('category_id', null);
+        $inStock = request()->get('in_stock', null);
+        $perPage = request()->get('per_page', 9);
+
+        // فلتر السعر
+        if ($minPrice > 0 || $maxPrice < 10000) {
+            $query->whereBetween('price', [$minPrice, $maxPrice]);
+        }
+
+        // فلتر التقييم
+        if ($minRating > 0) {
+            $query->where('rating_average', '>=', $minRating);
+        }
+
+        // فلتر النوع
+        if ($typeId) {
+            $query->where('type_id', $typeId);
+        }
+
+        // فلتر الصنف
+        if ($categoryId) {
+            $query->where('category_id', $categoryId);
+        }
+
+        // فلتر المخزون
+        if ($inStock === '1') {
+            $query->where('stock', '>', 0);
+        } elseif ($inStock === '0') {
+            $query->where('stock', '<=', 0);
+        }
+
+        // الترتيب
+        switch ($sort) {
+            case 'price_asc':
+                $query->orderBy('price', 'asc');
+                break;
+            case 'price_desc':
+                $query->orderBy('price', 'desc');
+                break;
+            case 'best_selling':
+                $query->orderBy('sales_count', 'desc');
+                break;
+            case 'most_popular':
+                $query->orderBy('rating_average', 'desc')->orderBy('rating_count', 'desc');
+                break;
+            case 'highest_rated':
+                $query->orderBy('rating_average', 'desc');
+                break;
+            case 'name_asc':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'name_desc':
+                $query->orderBy('name', 'desc');
+                break;
+            case 'newest':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        // تحديد عدد العناصر في الصفحة (9, 15, 30)
+        $perPageOptions = [9, 15, 30];
+        $perPage = in_array((int)$perPage, $perPageOptions) ? (int)$perPage : 9;
+        $products = $query->paginate($perPage);
+
+        // جلب جميع الأنواع المتاحة للفلتر (الأنواع التي لديها منتجات لهذه الشركة)
+        $types = Type::whereHas('products', function ($q) use ($company) {
+            $q->where('company_id', $company->id)->where('is_active', true);
+        })->with('category')->orderBy('name')->get();
+
+        // جلب جميع الأصناف المتاحة للفلتر
+        $categories = Category::whereHas('products', function ($q) use ($company) {
+            $q->where('company_id', $company->id)->where('is_active', true);
+        })->orderBy('name')->get();
+
+        return view('store.company-products', [
+            'company' => $company,
+            'products' => $products,
+            'types' => $types,
+            'categories' => $categories,
+            'sort' => $sort,
+            'minPrice' => $minPrice,
+            'maxPrice' => $maxPrice,
+            'minRating' => $minRating,
+            'typeId' => $typeId,
+            'categoryId' => $categoryId,
+            'inStock' => $inStock,
+            'perPage' => $perPage,
+        ]);
+    }
+
     public function cart(): View
     {
         $cart = session()->get('cart', []);

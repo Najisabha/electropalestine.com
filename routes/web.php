@@ -19,6 +19,7 @@ Route::get('/products/{product}', [StoreController::class, 'product'])->name('pr
 Route::get('/products/{product}/reviews', [StoreController::class, 'productReviews'])->name('products.reviews');
 Route::get('/categories/{category:slug}', [StoreController::class, 'category'])->name('categories.show');
 Route::get('/types/{type:slug}', [StoreController::class, 'typeProducts'])->name('types.show');
+Route::get('/companies/{company}', [StoreController::class, 'companyProducts'])->name('companies.show');
 
 Route::get('/cart', [StoreController::class, 'cart'])->name('store.cart');
 Route::post('/cart/add/{product}', [StoreController::class, 'addToCart'])->name('cart.add');

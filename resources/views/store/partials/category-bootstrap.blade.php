@@ -54,7 +54,7 @@
                     <h2 class="h6 fw-semibold mb-2">الشركات المرتبطة بالصنف</h2>
                     <div class="strip-scroll">
                         @forelse($companies as $company)
-                            <div class="strip-card text-center">
+                            <a href="{{ route('companies.show', $company) }}" class="strip-card text-center text-decoration-none">
                                 @if(!empty($company->image))
                                     <img src="{{ asset('storage/'.$company->image) }}" class="strip-img" alt="{{ $company->name }}">
                                 @else
@@ -66,7 +66,7 @@
                                     <h6 class="mb-1 text-white small">{{ $company->name }}</h6>
                                     <span class="badge bg-success text-dark small">شركة مرتبطة بهذا الصنف</span>
                                 </div>
-                            </div>
+                            </a>
                         @empty
                             <p class="text-secondary small mb-0">لا توجد شركات مرتبطة بهذا الصنف حتى الآن.</p>
                         @endforelse

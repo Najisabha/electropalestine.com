@@ -137,12 +137,19 @@ class AdminCatalogController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:companies,name'],
             'image' => ['nullable', 'image', 'max:2048'],
+            'background' => ['nullable', 'image', 'max:2048'],
+            'description' => ['nullable', 'string'],
+            'description_en' => ['nullable', 'string'],
             'types' => ['nullable', 'array'],
             'types.*' => ['exists:types,id'],
         ]);
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('companies', 'public');
+        }
+
+        if ($request->hasFile('background')) {
+            $data['background'] = $request->file('background')->store('companies', 'public');
         }
 
         $company = Company::create($data);
@@ -231,6 +238,9 @@ class AdminCatalogController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('companies', 'name')->ignore($company->id)],
             'image' => ['nullable', 'image', 'max:2048'],
+            'background' => ['nullable', 'image', 'max:2048'],
+            'description' => ['nullable', 'string'],
+            'description_en' => ['nullable', 'string'],
             'types' => ['nullable', 'array'],
             'types.*' => ['exists:types,id'],
             'categories' => ['nullable', 'array'],
@@ -238,6 +248,9 @@ class AdminCatalogController extends Controller
         ]);
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('companies', 'public');
+        }
+        if ($request->hasFile('background')) {
+            $data['background'] = $request->file('background')->store('companies', 'public');
         }
         $company->update($data);
         if ($request->has('types')) {
