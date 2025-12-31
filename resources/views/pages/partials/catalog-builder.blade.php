@@ -241,6 +241,14 @@
                                     <div class="text-secondary small">لا توجد أصناف لإدارتها.</div>
                                 @endforelse
                             </div>
+                            @if($categories->count() > 2)
+                            <div class="text-center mt-3 show-all-categories-btn d-none">
+                                <a href="{{ route('admin.catalog.categories') }}" class="btn btn-sm btn-outline-main d-inline-flex align-items-center gap-2">
+                                    <i class="bi bi-chevron-down"></i>
+                                    <span>عرض جميع الأصناف ({{ $categories->count() }})</span>
+                                </a>
+                            </div>
+                            @endif
                         </div>
                     </div>
 
@@ -375,9 +383,10 @@
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label small text-secondary mb-1">الشركات المرتبطة</label>
+                                    <input type="text" id="search-category-companies" class="form-control form-control-sm bg-dark text-light mb-2" placeholder="بحث عن شركة...">
                                     <div class="bg-dark p-2 rounded" style="max-height:220px; overflow:auto;" id="category-companies-checkboxes">
                                         @foreach ($companies as $company)
-                                            <div class="form-check text-light">
+                                            <div class="form-check text-light company-relation-item" data-name="{{ strtolower($company->name) }}">
                                                 <input class="form-check-input" type="checkbox" name="companies[]" value="{{ $company->id }}" id="cat-comp-{{ $company->id }}">
                                                 <label class="form-check-label small" for="cat-comp-{{ $company->id }}">{{ $company->name }}</label>
                                             </div>
@@ -412,9 +421,10 @@
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label small text-secondary mb-1">الأصناف المرتبطة</label>
+                                    <input type="text" id="search-company-categories" class="form-control form-control-sm bg-dark text-light mb-2" placeholder="بحث عن صنف...">
                                     <div class="bg-dark p-2 rounded" style="max-height:220px; overflow:auto;" id="company-categories-checkboxes">
                                         @foreach ($categories as $category)
-                                            <div class="form-check text-light">
+                                            <div class="form-check text-light category-relation-item" data-name="{{ strtolower($category->name) }}">
                                                 <input class="form-check-input" type="checkbox" name="categories[]" value="{{ $category->id }}" id="comp-cat-{{ $category->id }}">
                                                 <label class="form-check-label small" for="comp-cat-{{ $category->id }}">{{ $category->name }}</label>
                                             </div>
@@ -589,6 +599,7 @@
     const manageCompanyItems = document.querySelectorAll('.manage-company-item');
     const manageTypesToggle = document.getElementById('manage-types-toggle');
     const typesPageBaseUrl = "{{ route('admin.catalog.types') }}";
+    const showAllCategoriesBtn = document.querySelector('.show-all-categories-btn');
     let showAllCategories = false;
     function filterTypes() {
         const catId = categorySelect.value;
@@ -673,8 +684,10 @@
     function applyCategoryFilter() {
         const term = (manageCategorySearch?.value || '').trim().toLowerCase();
         let visibleCount = 0;
+        let hiddenCount = 0;
+        const totalItems = manageCategoryItems.length;
 
-        manageCategoryItems.forEach((item) => {
+        manageCategoryItems.forEach((item, index) => {
             const name = (item.dataset.name || '').toLowerCase();
             const matches = !term || name.includes(term);
 
@@ -686,18 +699,31 @@
             if (!term && !showAllCategories && visibleCount >= 2) {
                 // بدون بحث وبدون "عرض الكل" نُظهر أول اثنين فقط
                 item.classList.add('d-none');
+                hiddenCount++;
             } else {
                 item.classList.remove('d-none');
                 visibleCount++;
             }
         });
 
+        // إظهار/إخفاء زر السهم بناءً على وجود أصناف مخفية
+        if (showAllCategoriesBtn) {
+            // إظهار الزر إذا كان هناك أكثر من عنصرين وليس هناك بحث نشط
+            if (totalItems > 2 && hiddenCount > 0 && !term) {
+                showAllCategoriesBtn.classList.remove('d-none');
+            } else {
+                showAllCategoriesBtn.classList.add('d-none');
+            }
+        }
     }
 
     manageCategorySearch?.addEventListener('input', applyCategoryFilter);
 
     // تطبيق أولي: إظهار أول صنفين فقط (وإظهار كل النتائج عند البحث)
-    applyCategoryFilter();
+    // تأكد من أن العناصر موجودة قبل التطبيق
+    if (manageCategoryItems.length > 0) {
+        applyCategoryFilter();
+    }
 
     // إظهار أول 5 أنواع فقط في المجموعة الحالية
     function limitTypesToFive() {
@@ -806,6 +832,37 @@
             }
         }
         updateCategoryCheckboxes();
+    }
+
+    // === البحث في العلاقات ===
+    // البحث في الشركات المرتبطة بالصنف
+    const searchCategoryCompanies = document.getElementById('search-category-companies');
+    const companyRelationItems = document.querySelectorAll('.company-relation-item');
+    
+    if (searchCategoryCompanies) {
+        searchCategoryCompanies.addEventListener('input', function() {
+            const term = this.value.trim().toLowerCase();
+            companyRelationItems.forEach(item => {
+                const name = item.dataset.name || '';
+                const matches = !term || name.includes(term);
+                item.style.display = matches ? 'block' : 'none';
+            });
+        });
+    }
+
+    // البحث في الأصناف المرتبطة بالشركة
+    const searchCompanyCategories = document.getElementById('search-company-categories');
+    const categoryRelationItems = document.querySelectorAll('.category-relation-item');
+    
+    if (searchCompanyCategories) {
+        searchCompanyCategories.addEventListener('input', function() {
+            const term = this.value.trim().toLowerCase();
+            categoryRelationItems.forEach(item => {
+                const name = item.dataset.name || '';
+                const matches = !term || name.includes(term);
+                item.style.display = matches ? 'block' : 'none';
+            });
+        });
     }
 </script>
 
