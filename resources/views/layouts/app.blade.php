@@ -8,6 +8,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? config('app.name', 'electropalestine') }}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('images/LOGO-remove background.png') }}">
+    
+    <!-- Meta Tags for Logo -->
+    <meta property="og:image" content="{{ asset('images/LOGO-remove background.png') }}">
+    <meta name="twitter:image" content="{{ asset('images/LOGO-remove background.png') }}">
 
     <!-- Bootstrap -->
     @if($isRTL)
@@ -190,6 +197,48 @@
         }
 
         /* ===== Product Page Professional Design ===== */
+        /* Breadcrumb Styling for Product Page */
+        .product-page-breadcrumb {
+            margin-bottom: 1rem;
+        }
+        .product-breadcrumb-list {
+            font-size: 0.75rem;
+            margin-bottom: 0;
+        }
+        .breadcrumb-link {
+            color: var(--accent) !important;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .breadcrumb-link:hover {
+            color: #fff !important;
+            text-decoration: underline;
+        }
+        .breadcrumb-product-name {
+            color: #fff !important;
+            font-weight: 700;
+        }
+        
+        /* تصغير breadcrumb في الشاشات الصغيرة */
+        @media (max-width: 768px) {
+            .product-breadcrumb-list {
+                font-size: 0.65rem;
+                line-height: 1.4;
+            }
+            .product-page-breadcrumb {
+                margin-bottom: 0.75rem;
+            }
+            .breadcrumb-item {
+                padding: 0.25rem 0;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .product-breadcrumb-list {
+                font-size: 0.6rem;
+            }
+        }
+        
         /* Product Card Container */
         .product-page-card {
             background: linear-gradient(135deg, rgba(26, 29, 36, 0.95), rgba(21, 24, 32, 0.9));
@@ -733,6 +782,16 @@
             box-shadow:0 4px 20px rgba(0,0,0,0.3);
             position:relative;
             height:100%;
+        }
+        
+        /* في Grid Layout (صفحة المنتجات) - البطاقات تأخذ العرض الكامل */
+        .row.g-3 .col-6 .product-card-new,
+        .row.g-3 .col-md-4 .product-card-new,
+        .row.g-3 .col-lg-3 .product-card-new,
+        .row.g-3 .col-xl-3 .product-card-new {
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: 100% !important;
         }
         .product-card-new::before{
             content:'';
@@ -1711,8 +1770,8 @@
     <div class="container py-3 d-flex justify-content-between align-items-center">
         {{-- Logo --}}
         <a href="{{ route('home') }}" class="d-flex align-items-center gap-2 text-decoration-none">
-            <div class="brand-logo">VM</div>
-            <strong class="text-white">electropalestine</strong>
+            <img src="{{ asset('images/LOGO-remove background.png') }}" alt="ElectroPalestine Logo" height="46" class="d-none d-md-block">
+            <img src="{{ asset('images/LOGO-remove background.png') }}" alt="ElectroPalestine Logo" height="40" class="d-md-none">
         </a>
 
         @php($authUser = auth()->user())
@@ -1736,7 +1795,7 @@
             <a href="{{ route('home') }}" class="btn btn-sm btn-outline-main">{{ __('common.home') }}</a>
             <a href="{{ route('store.about') }}" class="btn btn-sm btn-outline-main">{{ __('common.about') }}</a>
             <a href="{{ route('store.story') }}" class="btn btn-sm btn-outline-main">{{ __('common.story') }}</a>
-            <a href="{{ route('home') }}#products" class="btn btn-sm btn-outline-main">{{ __('common.products') }}</a>
+            <a href="{{ route('store.products') }}" class="btn btn-sm btn-outline-main">{{ __('common.products') }}</a>
             <a href="{{ route('store.contact') }}" class="btn btn-sm btn-outline-main">{{ __('common.contact') }}</a>
 
             {{-- شريط خاص بالأدمن فقط --}}
@@ -1880,7 +1939,7 @@
             <i class="bi bi-book me-2"></i>
             {{ __('common.story') }}
         </a>
-        <a href="{{ route('home') }}#products" class="nav-link-mobile">
+        <a href="{{ route('store.products') }}" class="nav-link-mobile">
             <i class="bi bi-box-seam me-2"></i>
             {{ __('common.products') }}
         </a>

@@ -147,6 +147,123 @@ class StoreController extends Controller
         return view('store.category', compact('category', 'types', 'companies', 'products'));
     }
 
+    public function products(Request $request): View
+    {
+        // جلب جميع المنتجات مع الفلترة
+        $query = Product::active()->with(['company', 'category', 'type']);
+
+        // البحث بالاسم
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('name_en', 'like', '%' . $search . '%')
+                  ->orWhere('description', 'like', '%' . $search . '%');
+            });
+        }
+
+        // فلتر حسب الصنف
+        if ($request->has('category_id') && $request->category_id) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        // فلتر حسب النوع
+        if ($request->has('type_id') && $request->type_id) {
+            $query->where('type_id', $request->type_id);
+        }
+
+        // فلتر حسب الشركة
+        if ($request->has('company_id') && $request->company_id) {
+            $query->where('company_id', $request->company_id);
+        }
+
+        // فلتر السعر
+        $minPrice = max(0, min(10000, (int)$request->get('min_price', 0)));
+        $maxPrice = max(0, min(10000, (int)$request->get('max_price', 10000)));
+        if ($minPrice > 0 || $maxPrice < 10000) {
+            $query->whereBetween('price', [$minPrice, $maxPrice]);
+        }
+
+        // فلتر التقييم
+        if ($request->has('min_rating') && $request->min_rating > 0) {
+            $query->where('rating_average', '>=', $request->min_rating);
+        }
+
+        // فلتر المخزون
+        if ($request->has('in_stock')) {
+            if ($request->in_stock === '1') {
+                $query->where('stock', '>', 0);
+            } elseif ($request->in_stock === '0') {
+                $query->where('stock', '<=', 0);
+            }
+        }
+
+        // فلتر المنتجات المميزة
+        if ($request->has('featured') && $request->featured === '1') {
+            $query->where('is_best_seller', true);
+        }
+
+        // الترتيب
+        $sort = $request->get('sort', 'newest');
+        switch ($sort) {
+            case 'price_asc':
+                $query->orderBy('price', 'asc');
+                break;
+            case 'price_desc':
+                $query->orderBy('price', 'desc');
+                break;
+            case 'best_selling':
+                $query->orderBy('sales_count', 'desc');
+                break;
+            case 'most_popular':
+                $query->orderBy('rating_average', 'desc')->orderBy('rating_count', 'desc');
+                break;
+            case 'highest_rated':
+                $query->orderBy('rating_average', 'desc');
+                break;
+            case 'name_asc':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'name_desc':
+                $query->orderBy('name', 'desc');
+                break;
+            case 'newest':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        // تحديد عدد العناصر في الصفحة
+        $perPage = in_array((int)$request->get('per_page', 12), [9, 12, 24, 48]) 
+            ? (int)$request->get('per_page', 12) 
+            : 12;
+        
+        $products = $query->paginate($perPage)->withQueryString();
+
+        // جلب البيانات للفلترة
+        $categories = Category::orderBy('name')->get();
+        $types = Type::with('category')->orderBy('name')->get();
+        $companies = Company::orderBy('name')->get();
+
+        return view('store.products', [
+            'products' => $products,
+            'categories' => $categories,
+            'types' => $types,
+            'companies' => $companies,
+            'search' => $request->get('search', ''),
+            'categoryId' => $request->get('category_id'),
+            'typeId' => $request->get('type_id'),
+            'companyId' => $request->get('company_id'),
+            'minPrice' => $minPrice,
+            'maxPrice' => $maxPrice,
+            'minRating' => $request->get('min_rating', 0),
+            'inStock' => $request->get('in_stock'),
+            'featured' => $request->get('featured'),
+            'sort' => $sort,
+            'perPage' => $perPage,
+        ]);
+    }
+
     public function typeProducts(Type $type): View
     {
         $type->load(['category', 'products' => fn ($q) => $q->active()->with(['company', 'category'])]);

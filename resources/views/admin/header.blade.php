@@ -2,8 +2,8 @@
     <div class="container py-3 d-flex justify-content-between align-items-center">
         {{-- Logo --}}
         <a href="{{ route('home') }}" class="d-flex align-items-center gap-2 text-decoration-none">
-            <div class="brand-logo">VM</div>
-            <strong class="text-white">electropalestine Admin</strong>
+            <img src="{{ asset('images/LOGO-remove background.png') }}" alt="ElectroPalestine Logo" height="46" class="d-none d-md-block">
+            <img src="{{ asset('images/LOGO-remove background.png') }}" alt="ElectroPalestine Logo" height="40" class="d-md-none">
         </a>
 
         {{-- Desktop Navigation --}}

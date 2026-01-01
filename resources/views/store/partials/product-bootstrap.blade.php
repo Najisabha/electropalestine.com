@@ -8,26 +8,26 @@
 <section class="py-3 py-md-5 text-light">
     <div class="container">
         {{-- Breadcrumbs --}}
-        <nav aria-label="breadcrumb" class="mb-4">
-            <ol class="breadcrumb mb-0 small" style="--bs-breadcrumb-divider: '>';">
+        <nav aria-label="breadcrumb" class="mb-3 product-page-breadcrumb">
+            <ol class="breadcrumb mb-0 product-breadcrumb-list" style="--bs-breadcrumb-divider: '<';">
                 <li class="breadcrumb-item">
-                    <a href="/" class="text-secondary text-decoration-none">الرئيسية</a>
+                    <a href="/" class="breadcrumb-link">الرئيسية</a>
                 </li>
                 @if($category)
                     <li class="breadcrumb-item">
-                        <a href="{{ route('categories.show', $category->slug) }}" class="text-secondary text-decoration-none">
+                        <a href="{{ route('categories.show', $category->slug) }}" class="breadcrumb-link">
                             {{ $category->translated_name }}
                         </a>
                     </li>
                 @endif
                 @if($product->type)
                     <li class="breadcrumb-item">
-                        <a href="{{ route('types.show', $product->type->slug) }}" class="text-secondary text-decoration-none">
+                        <a href="{{ route('types.show', $product->type->slug) }}" class="breadcrumb-link">
                             {{ $product->type->translated_name }}
                         </a>
                     </li>
                 @endif
-                <li class="breadcrumb-item active text-white" aria-current="page">
+                <li class="breadcrumb-item active breadcrumb-product-name" aria-current="page">
                     {{ $product->translated_name }}
                 </li>
             </ol>
