@@ -108,7 +108,7 @@ class AuthController extends Controller
     {
         $request->validate(['email' => ['required', 'email']]);
 
-        $status = Password::sendResetLink(
+        $status = Password::broker('users')->sendResetLink(
             $request->only('email')
         );
 
@@ -130,7 +130,7 @@ class AuthController extends Controller
             'password' => ['required', 'confirmed', PasswordRule::defaults()],
         ]);
 
-        $status = Password::reset(
+        $status = Password::broker('users')->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user, string $password) {
                 $user->forceFill([
