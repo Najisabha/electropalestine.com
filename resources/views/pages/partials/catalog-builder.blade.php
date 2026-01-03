@@ -225,7 +225,14 @@
                                             </div>
                                             <div class="col-12">
                                                 <label class="form-label small text-secondary mb-0">صورة (اختياري)</label>
-                                                <input type="file" name="image" class="form-control form-control-sm bg-dark text-light">
+                                                <input type="file" name="image" class="form-control form-control-sm bg-dark text-light category-image-input" data-cat-id="{{ $cat->id }}">
+                                                <div class="text-secondary small mt-1 category-image-path" data-cat-id="{{ $cat->id }}" style="min-height: 20px;">
+                                                    @if($cat->image)
+                                                        <span class="text-success">{{ $cat->image }}</span>
+                                                    @else
+                                                        <span class="text-muted">لم يتم اختيار أي ملف</span>
+                                                    @endif
+                                                </div>
                                             </div>
                                             <div class="col-12 d-flex gap-2 mt-2">
                                                 <button class="btn btn-sm btn-main" type="submit">تعديل الصنف</button>
@@ -864,5 +871,24 @@
             });
         });
     }
+
+    // عرض مسار الصورة المحددة في إدارة التصنيفات
+    document.querySelectorAll('.category-image-input').forEach(input => {
+        input.addEventListener('change', function() {
+            const catId = this.dataset.catId;
+            const pathDisplay = document.querySelector(`.category-image-path[data-cat-id="${catId}"]`);
+            
+            if (this.files && this.files.length > 0) {
+                const fileName = this.files[0].name;
+                if (pathDisplay) {
+                    pathDisplay.innerHTML = `<span class="text-success">${fileName}</span>`;
+                }
+            } else {
+                if (pathDisplay) {
+                    pathDisplay.innerHTML = '<span class="text-muted">لم يتم اختيار أي ملف</span>';
+                }
+            }
+        });
+    });
 </script>
 
