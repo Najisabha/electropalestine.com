@@ -177,72 +177,138 @@ class ImageHelper
             // حفظ الملف باستخدام طريقة أكثر موثوقية
             $storedPath = null;
             try {
-                // الحصول على المحتوى الفعلي للملف
-                $fileContents = file_get_contents($file->getRealPath());
+                // الحصول على المسار الكامل للمجلد
+                $directoryPath = $storage->path($directory);
                 
-                if ($fileContents === false) {
-                    Log::error('فشل قراءة محتوى الملف', [
-                        'directory' => $directory,
-                        'fileName' => $fileName,
-                        'disk' => $disk,
-                        'realPath' => $file->getRealPath()
-                    ]);
-                    return null;
+                // التأكد من وجود المجلد
+                if (!file_exists($directoryPath)) {
+                    @mkdir($directoryPath, 0755, true);
                 }
                 
-                // حفظ الملف باستخدام Storage::put مباشرة
+                // التأكد من أن المجلد قابل للكتابة
+                if (!is_writable($directoryPath)) {
+                    @chmod($directoryPath, 0755);
+                    if (!is_writable($directoryPath)) {
+                        Log::error('المجلد غير قابل للكتابة', [
+                            'directory' => $directory,
+                            'directoryPath' => $directoryPath,
+                            'permissions' => file_exists($directoryPath) ? substr(sprintf('%o', fileperms($directoryPath)), -4) : 'N/A'
+                        ]);
+                        return null;
+                    }
+                }
+                
+                // المسار الكامل للملف الهدف
+                $fullFilePath = $directoryPath . '/' . $fileName;
                 $storedPath = $filePath;
-                $saved = $storage->put($storedPath, $fileContents);
                 
-                if (!$saved) {
-                    Log::error('فشل حفظ الملف - Storage::put أرجعت false', [
-                        'directory' => $directory,
-                        'fileName' => $fileName,
-                        'filePath' => $storedPath,
-                        'disk' => $disk
-                    ]);
-                    return null;
-                }
-                
-                // التحقق الفعلي من وجود الملف وحجمه
-                if (!$storage->exists($storedPath)) {
-                    $fullStoredPath = $storage->path($storedPath);
-                    Log::error('فشل حفظ الملف - الملف غير موجود بعد Storage::put', [
+                // طريقة 1: استخدام Storage::putFileAs (الأكثر موثوقية مع Laravel)
+                try {
+                    $storedPath = $storage->putFileAs($directory, $file, $fileName);
+                    
+                    if (!$storedPath) {
+                        throw new \Exception('Storage::putFileAs أرجعت null');
+                    }
+                    
+                    // التحقق من وجود الملف
+                    if (!$storage->exists($storedPath)) {
+                        throw new \Exception('الملف غير موجود بعد Storage::putFileAs');
+                    }
+                    
+                    Log::info('تم حفظ الصورة باستخدام Storage::putFileAs', [
                         'directory' => $directory,
                         'fileName' => $fileName,
                         'storedPath' => $storedPath,
-                        'fullStoredPath' => $fullStoredPath,
-                        'disk' => $disk,
-                        'directoryExists' => $storage->exists($directory),
-                        'directoryPath' => $storage->path($directory),
-                        'directoryWritable' => is_writable($storage->path($directory))
+                        'fullPath' => $storage->path($storedPath)
                     ]);
-                    return null;
+                    
+                } catch (\Exception $storageException) {
+                    // إذا فشل Storage::putFileAs، نجرب copy مباشرة
+                    Log::warning('فشل Storage::putFileAs، نجرب copy مباشرة', [
+                        'error' => $storageException->getMessage()
+                    ]);
+                    
+                    $tempPath = $file->getRealPath();
+                    if ($tempPath && file_exists($tempPath)) {
+                        $copied = @copy($tempPath, $fullFilePath);
+                        if ($copied && file_exists($fullFilePath)) {
+                            // نجح الحفظ باستخدام copy
+                            Log::info('تم حفظ الصورة باستخدام copy', [
+                                'directory' => $directory,
+                                'fileName' => $fileName,
+                                'storedPath' => $storedPath,
+                                'fullPath' => $fullFilePath
+                            ]);
+                        } else {
+                            Log::error('فشل حفظ الملف - جميع الطرق فشلت', [
+                                'directory' => $directory,
+                                'fileName' => $fileName,
+                                'disk' => $disk,
+                                'directoryPath' => $directoryPath,
+                                'fullFilePath' => $fullFilePath,
+                                'tempPath' => $tempPath,
+                                'copy_result' => $copied ?? false,
+                                'storage_exception' => $storageException->getMessage()
+                            ]);
+                            return null;
+                        }
+                    } else {
+                        Log::error('فشل حفظ الملف - الملف المؤقت غير موجود', [
+                            'directory' => $directory,
+                            'fileName' => $fileName,
+                            'disk' => $disk,
+                            'tempPath' => $tempPath,
+                            'storage_exception' => $storageException->getMessage()
+                        ]);
+                        return null;
+                    }
+                }
+                
+                // التحقق النهائي من وجود الملف وحجمه
+                if (!$storage->exists($storedPath)) {
+                    $fullStoredPath = $storage->path($storedPath);
+                    if (!file_exists($fullStoredPath)) {
+                        Log::error('فشل حفظ الملف - الملف غير موجود بعد الحفظ', [
+                            'directory' => $directory,
+                            'fileName' => $fileName,
+                            'storedPath' => $storedPath,
+                            'fullStoredPath' => $fullStoredPath,
+                            'disk' => $disk
+                        ]);
+                        return null;
+                    }
                 }
                 
                 // التحقق من أن حجم الملف المحفوظ يتطابق مع الملف الأصلي
-                $savedFileSize = $storage->size($storedPath);
-                $originalFileSize = $file->getSize();
-                
-                if ($savedFileSize !== $originalFileSize) {
-                    Log::warning('حجم الملف المحفوظ لا يتطابق مع الملف الأصلي', [
+                try {
+                    $savedFileSize = $storage->size($storedPath);
+                    $originalFileSize = $file->getSize();
+                    
+                    if ($savedFileSize !== $originalFileSize) {
+                        Log::warning('حجم الملف المحفوظ لا يتطابق مع الملف الأصلي', [
+                            'directory' => $directory,
+                            'fileName' => $fileName,
+                            'storedPath' => $storedPath,
+                            'originalSize' => $originalFileSize,
+                            'savedSize' => $savedFileSize,
+                            'disk' => $disk
+                        ]);
+                    }
+                    
+                    Log::info('تم حفظ الصورة بنجاح - التحقق النهائي', [
                         'directory' => $directory,
                         'fileName' => $fileName,
                         'storedPath' => $storedPath,
-                        'originalSize' => $originalFileSize,
-                        'savedSize' => $savedFileSize,
-                        'disk' => $disk
+                        'fileSize' => $savedFileSize,
+                        'fullPath' => $storage->path($storedPath)
                     ]);
-                    // لا نرجع null هنا لأن الملف موجود لكن حجمه مختلف
+                } catch (\Exception $sizeException) {
+                    // إذا فشل التحقق من الحجم، نكمل على أي حال إذا كان الملف موجود
+                    Log::warning('فشل التحقق من حجم الملف', [
+                        'error' => $sizeException->getMessage(),
+                        'storedPath' => $storedPath
+                    ]);
                 }
-                
-                Log::info('تم حفظ الصورة بنجاح - التحقق النهائي', [
-                    'directory' => $directory,
-                    'fileName' => $fileName,
-                    'storedPath' => $storedPath,
-                    'fileSize' => $savedFileSize,
-                    'fullPath' => $storage->path($storedPath)
-                ]);
                 
             } catch (\Exception $e) {
                 Log::error('استثناء أثناء حفظ الملف', [
