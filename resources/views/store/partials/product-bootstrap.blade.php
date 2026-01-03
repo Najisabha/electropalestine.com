@@ -5,73 +5,46 @@
     $types = $category?->types ?? collect();
 @endphp
 
-<section class="py-3 py-md-5 text-light">
+<section class="py-5 text-light">
     <div class="container">
-        {{-- Breadcrumbs --}}
-        <nav aria-label="breadcrumb" class="mb-3 product-page-breadcrumb">
-            <ol class="breadcrumb mb-0 product-breadcrumb-list" style="--bs-breadcrumb-divider: '<';">
-                <li class="breadcrumb-item">
-                    <a href="/" class="breadcrumb-link">الرئيسية</a>
-                </li>
-                @if($category)
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('categories.show', $category->slug) }}" class="breadcrumb-link">
-                            {{ $category->translated_name }}
-                        </a>
-                    </li>
-                @endif
-                @if($product->type)
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('types.show', $product->type->slug) }}" class="breadcrumb-link">
-                            {{ $product->type->translated_name }}
-                        </a>
-                    </li>
-                @endif
-                <li class="breadcrumb-item active breadcrumb-product-name" aria-current="page">
-                    {{ $product->translated_name }}
-                </li>
-            </ol>
-        </nav>
-
         <div class="row g-4 align-items-start">
             {{-- صورة / كرت المنتج --}}
-            <div class="col-12 col-lg-6">
-                <div class="product-page-card h-100">
-                    <div class="product-page-image-container">
+            <div class="col-lg-6">
+                <div class="glass rounded-4 overflow-hidden h-100">
+                    <div class="position-relative">
                         @if(!empty($product->image))
                             <img src="{{ asset('storage/'.$product->image) }}"
+                                 class="w-100 bg-black"
+                                 style="height: 260px; object-fit: contain;"
                                  alt="{{ $product->translated_name }}">
                         @else
-                            <div class="w-100 d-flex align-items-center justify-content-center text-secondary">
-                                <div class="text-center">
-                                    <i class="bi bi-image" style="font-size: 4rem; opacity: 0.3;"></i>
-                                    <p class="mt-2 small">{{ __('common.no_image_product') }}</p>
-                                </div>
+                            <div class="w-100 d-flex align-items-center justify-content-center bg-black text-secondary small"
+                                 style="height: 320px;">
+                                {{ __('common.no_image_product') }}
                             </div>
                         @endif
-                        <span class="product-page-sales-badge">
-                            <i class="bi bi-cart-check me-1"></i>
+                        <span class="badge bg-success position-absolute top-0 start-0 m-3 small">
                             {{ $product->sales_count ?? 0 }} {{ __('common.sold') }}
                         </span>
                     </div>
-                    <div class="product-page-info">
-                        <p class="text-secondary small mb-2">
-                            {{ __('common.product_from') }} <strong class="text-primary">{{ $product->company->name ?? __('common.unknown_company') }}</strong>
+                    <div class="p-4">
+                        <p class="text-secondary small mb-1">
+                            {{ __('common.product_from') }} {{ $product->company->name ?? __('common.unknown_company') }}
                         </p>
-                        <div class="product-page-badges">
+                        <div class="d-flex flex-wrap gap-2 mb-2">
                             @if($category)
-                                <span class="product-page-badge product-page-badge-success">
+                                <span class="badge bg-success text-dark">
                                     {{ $category->name }} • {{ __('common.main_category') }}
                                 </span>
                             @endif
                             @if($product->type)
-                                <span class="product-page-badge product-page-badge-warning">
+                                <span class="badge bg-warning text-dark">
                                     {{ $product->type->name }} • {{ __('common.type') }}
                                 </span>
                             @endif
                         </div>
-                        <div class="d-flex align-items-center gap-2 mt-3">
-                            <div class="product-page-rating-stars">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="text-warning">
                                 @for($i = 1; $i <= 5; $i++)
                                     @if($ratingAverage >= $i)
                                         <i class="bi bi-star-fill"></i>
@@ -82,10 +55,10 @@
                                     @endif
                                 @endfor
                             </div>
-                            <span class="text-light fw-semibold">
+                            <span class="small text-light fw-semibold">
                                 {{ number_format($ratingAverage, 1) }} / 5
                             </span>
-                            <span class="text-secondary small">
+                            <span class="small text-secondary">
                                 ({{ $ratingCount }} {{ __('common.rating_label') }})
                             </span>
                         </div>
@@ -94,50 +67,46 @@
             </div>
 
             {{-- معلومات المنتج + الأزرار --}}
-            <div class="col-12 col-lg-6">
-                <h1 class="product-page-title">{{ $product->translated_name }}</h1>
+            <div class="col-lg-6">
+                <h1 class="h3 fw-bold text-white mb-2">{{ $product->translated_name }}</h1>
 
-                <div class="product-page-price mb-3">
+                <div class="fs-2 fw-black text-success mb-2">
                     ${{ number_format($product->price, 2) }}
                 </div>
 
-                <div class="product-page-stock mb-4">
-                    <i class="bi bi-check-circle-fill"></i>
-                    <span>{{ __('common.available_stock') }}: <strong>{{ $product->stock }}</strong></span>
+                <div class="text-secondary small mb-2">
+                    {{ __('common.available_stock') }}: <span class="text-success fw-semibold">{{ $product->stock }}</span>
                 </div>
 
-                <p class="product-page-description">
+                <p class="text-secondary mb-3">
                     {{ $product->translated_description ?? __('common.product_description_placeholder') }}
                 </p>
 
-                <div class="product-page-actions">
-                    <form method="POST" action="{{ route('cart.add', $product) }}" class="d-inline flex-grow-1">
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <form method="POST" action="{{ route('cart.add', $product) }}" class="d-inline">
                         @csrf
                         <input type="hidden" name="quantity" value="1">
-                        <button type="submit" class="btn btn-main w-100">
-                            <i class="bi bi-cart-plus me-2"></i>
+                        <button type="submit" class="btn btn-main px-4">
+                            <i class="bi bi-cart-plus"></i>
                             {{ __('common.add_to_cart_button') }}
                         </button>
                     </form>
-                    <a href="{{ route('store.checkout', ['product' => $product->id, 'quantity' => 1]) }}" class="btn btn-success flex-grow-1">
-                        <i class="bi bi-bag-check me-2"></i>
+                    <a href="{{ route('store.checkout', ['product' => $product->id, 'quantity' => 1]) }}" class="btn btn-success px-4">
+                        <i class="bi bi-bag-check"></i>
                         {{ __('common.buy_now') }}
                     </a>
-                    <button class="btn btn-outline-main flex-grow-1">
-                        <i class="bi bi-envelope me-2"></i>
-                        {{ __('common.contact_about_product') }}
-                    </button>
+                    <button class="btn btn-outline-main px-4">{{ __('common.contact_about_product') }}</button>
                 </div>
 
                 {{-- قسم تقييمات العملاء --}}
-                <div class="product-page-reviews">
-                    <h2>{{ __('common.customer_ratings') }}</h2>
-                    <div class="product-page-rating-summary">
-                        <div class="product-page-rating-number">
+                <div class="glass rounded-4 p-3">
+                    <h2 class="h6 fw-semibold mb-2">{{ __('common.customer_ratings') }}</h2>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="display-6 fw-bold textWarning mb-0 text-warning">
                             {{ number_format($ratingAverage, 1) }}
                         </div>
                         <div>
-                            <div class="product-page-rating-stars mb-2">
+                            <div class="text-warning mb-1">
                                 @for($i = 1; $i <= 5; $i++)
                                     @if($ratingAverage >= $i)
                                         <i class="bi bi-star-fill"></i>
@@ -148,8 +117,8 @@
                                     @endif
                                 @endfor
                             </div>
-                            <div class="text-secondary">
-                                {{ __('common.based_on_ratings') }} <strong class="text-light">{{ $ratingCount }}</strong> {{ __('common.rating_label') }}
+                            <div class="small text-secondary">
+                                {{ __('common.based_on_ratings') }} {{ $ratingCount }} {{ __('common.rating_label') }}
                             </div>
                         </div>
                     </div>
@@ -157,61 +126,49 @@
                     {{-- التعليقات التفصيلية على هذه الطلبات لهذا المنتج --}}
                     @php($reviewsList = $reviews ?? collect())
                     @if($reviewsList->isEmpty())
-                        <div class="product-page-review-item">
-                            <p class="text-secondary mb-0 text-center py-3">
-                                <i class="bi bi-chat-left-text me-2"></i>
+                        <div class="border-top border-secondary-subtle pt-2">
+                            <p class="small text-secondary mb-1">
                                 لا توجد تعليقات مكتوبة على هذا المنتج حتى الآن.
                             </p>
                         </div>
                     @else
-                        @foreach($reviewsList->take(3) as $review)
-                            <div class="product-page-review-item">
-                                <div class="product-page-review-header">
-                                    <div>
-                                        <div class="product-page-review-author">
-                                            {{ $review->user->name ?? 'مستخدم' }}
+                        <div class="border-top border-secondary-subtle pt-2">
+                            @foreach($reviewsList->take(5) as $review)
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="small text-light">
+                                            <strong>{{ $review->user->name ?? 'مستخدم' }}</strong>
+                                            <span class="text-secondary">
+                                                ({{ $review->user->email ?? 'بلا بريد' }})
+                                            </span>
                                         </div>
-                                        <div class="product-page-review-email">
-                                            {{ $review->user->email ?? 'بلا بريد' }}
+                                        <div class="small">
+                                            @for($i = 1; $i <= 5; $i++)
+                                                @if($i <= $review->rating)
+                                                    <i class="bi bi-star-fill text-warning"></i>
+                                                @else
+                                                    <i class="bi bi-star text-secondary"></i>
+                                                @endif
+                                            @endfor
                                         </div>
                                     </div>
-                                    <div class="product-page-rating-stars" style="font-size: 1rem;">
-                                        @for($i = 1; $i <= 5; $i++)
-                                            @if($i <= $review->rating)
-                                                <i class="bi bi-star-fill"></i>
-                                            @else
-                                                <i class="bi bi-star"></i>
-                                            @endif
-                                        @endfor
+                                    @if($review->comment)
+                                        <p class="small text-light mb-1">{{ $review->comment }}</p>
+                                    @endif
+                                    <div class="small text-secondary">
+                                        {{ $review->created_at?->format('Y/m/d H:i') }}
                                     </div>
                                 </div>
-                                @if($review->comment)
-                                    <p class="product-page-review-comment">{{ $review->comment }}</p>
-                                @endif
-                                <div class="product-page-review-date">
-                                    <i class="bi bi-clock me-1"></i>
-                                    {{ $review->created_at?->format('Y/m/d H:i') }}
-                                </div>
-                            </div>
-                        @endforeach
-                        
-                        {{-- رابط عرض جميع التعليقات --}}
-                        @if($reviewsList->count() > 3)
-                            <div class="product-page-view-all-reviews">
-                                <a href="{{ route('products.reviews', $product->id) }}" class="product-page-view-all-link">
-                                    <span>{{ __('common.view_all_reviews') }} ({{ $reviewsList->count() }})</span>
-                                    <i class="bi bi-arrow-left"></i>
-                                </a>
-                            </div>
-                        @endif
+                            @endforeach
+                        </div>
                     @endif
                 </div>
             </div>
         </div>
 
         {{-- شريط ذات صلة: منتجات من نفس الأصناف/الأنواع --}}
-        <div class="product-page-related">
-            <h2>{{ __('common.related_products') }}</h2>
+        <div class="mt-5">
+            <h2 class="h5 fw-semibold mb-3">{{ __('common.related_products') }}</h2>
 
             <div class="products-scroll mb-3">
                 @forelse ($related as $item)
