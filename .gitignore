@@ -12,13 +12,13 @@
 .env.testing
 .phpactor.json
 .phpunit.result.cache
-/.fleet
-/.idea
-/.nova
-/.phpunit.cache
-/.vscode
-/.zed
-/auth.json
+# /.fleet
+# /.idea
+# /.nova
+# /.phpunit.cache
+# /.vscode
+# /.zed
+# /auth.json
 /node_modules
 # /public/build
 # /public/hot
@@ -26,8 +26,3 @@
 # /storage/*.key
 # /storage/pail
 /vendor
-
-# Temporary deployment files (delete after use)
-generate-key.php
-run-migrations.php
-clear-cache.php
