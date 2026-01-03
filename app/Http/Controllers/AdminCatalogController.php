@@ -297,8 +297,8 @@ class AdminCatalogController extends Controller
         // حذف الصورة القديمة إذا تم رفع صورة جديدة
         if ($request->hasFile('image')) {
             // حذف الصورة القديمة إن وجدت
-            if ($category->image && Storage::disk('public')->exists($category->image)) {
-                Storage::disk('public')->delete($category->image);
+            if ($category->image) {
+                ImageHelper::delete($category->image, 'public');
             }
             $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), 'categories', 'public');
             if (!$data['image']) {
@@ -323,8 +323,8 @@ class AdminCatalogController extends Controller
         // حذف الصورة القديمة إذا تم رفع صورة جديدة
         if ($request->hasFile('image')) {
             // حذف الصورة القديمة إن وجدت
-            if ($type->image && Storage::disk('public')->exists($type->image)) {
-                Storage::disk('public')->delete($type->image);
+            if ($type->image) {
+                ImageHelper::delete($type->image, 'public');
             }
             $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), 'types', 'public');
             if (!$data['image']) {
@@ -353,8 +353,8 @@ class AdminCatalogController extends Controller
         // حذف الصورة القديمة إذا تم رفع صورة جديدة
         if ($request->hasFile('image')) {
             // حذف الصورة القديمة إن وجدت
-            if ($company->image && Storage::disk('public')->exists($company->image)) {
-                Storage::disk('public')->delete($company->image);
+            if ($company->image) {
+                ImageHelper::delete($company->image, 'public');
             }
             $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), 'companies', 'public');
             if (!$data['image']) {
@@ -366,8 +366,8 @@ class AdminCatalogController extends Controller
         // حذف الصورة الخلفية القديمة إذا تم رفع صورة جديدة
         if ($request->hasFile('background')) {
             // حذف الصورة الخلفية القديمة إن وجدت
-            if ($company->background && Storage::disk('public')->exists($company->background)) {
-                Storage::disk('public')->delete($company->background);
+            if ($company->background) {
+                ImageHelper::delete($company->background, 'public');
             }
             $data['background'] = ImageHelper::storeWithSequentialName($request->file('background'), 'companies', 'public');
             if (!$data['background']) {
@@ -443,14 +443,14 @@ class AdminCatalogController extends Controller
                 }
                 
                 // حذف الصورة القديمة إن وجدت
-                if ($product->image && Storage::disk('public')->exists($product->image)) {
-                    Storage::disk('public')->delete($product->image);
+                if ($product->image) {
+                    ImageHelper::delete($product->image, 'public');
                     Log::info('تم حذف صورة المنتج القديمة', ['product_id' => $product->id, 'old_image' => $product->image]);
                 }
                 
                 // حذف الصورة المصغرة القديمة إن وجدت
-                if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
-                    Storage::disk('public')->delete($product->thumbnail);
+                if ($product->thumbnail) {
+                    ImageHelper::delete($product->thumbnail, 'public');
                 }
                 
                 $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), $productsPath, 'public');
@@ -522,8 +522,8 @@ class AdminCatalogController extends Controller
     public function destroyCategory(Category $category): RedirectResponse
     {
         // حذف الصورة المرتبطة بالصنف
-        if ($category->image && Storage::disk('public')->exists($category->image)) {
-            Storage::disk('public')->delete($category->image);
+        if ($category->image) {
+            ImageHelper::delete($category->image, 'public');
         }
         
         $category->delete();
@@ -533,8 +533,8 @@ class AdminCatalogController extends Controller
     public function destroyType(Type $type): RedirectResponse
     {
         // حذف الصورة المرتبطة بالنوع
-        if ($type->image && Storage::disk('public')->exists($type->image)) {
-            Storage::disk('public')->delete($type->image);
+        if ($type->image) {
+            ImageHelper::delete($type->image, 'public');
         }
         
         $type->delete();
@@ -544,13 +544,13 @@ class AdminCatalogController extends Controller
     public function destroyCompany(Company $company): RedirectResponse
     {
         // حذف الصورة المرتبطة بالشركة
-        if ($company->image && Storage::disk('public')->exists($company->image)) {
-            Storage::disk('public')->delete($company->image);
+        if ($company->image) {
+            ImageHelper::delete($company->image, 'public');
         }
         
         // حذف الصورة الخلفية المرتبطة بالشركة
-        if ($company->background && Storage::disk('public')->exists($company->background)) {
-            Storage::disk('public')->delete($company->background);
+        if ($company->background) {
+            ImageHelper::delete($company->background, 'public');
         }
         
         $company->delete();
@@ -560,13 +560,13 @@ class AdminCatalogController extends Controller
     public function destroyProduct(Product $product): RedirectResponse
     {
         // حذف الصورة المرتبطة بالمنتج
-        if ($product->image && Storage::disk('public')->exists($product->image)) {
-            Storage::disk('public')->delete($product->image);
+        if ($product->image) {
+            ImageHelper::delete($product->image, 'public');
         }
         
         // حذف الصورة المصغرة المرتبطة بالمنتج
-        if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
-            Storage::disk('public')->delete($product->thumbnail);
+        if ($product->thumbnail) {
+            ImageHelper::delete($product->thumbnail, 'public');
         }
         
         $product->delete();

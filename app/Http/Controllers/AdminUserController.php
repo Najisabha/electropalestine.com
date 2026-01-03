@@ -144,8 +144,8 @@ class AdminUserController extends Controller
     public function destroy(User $user): RedirectResponse
     {
         // حذف صورة الهوية المرتبطة بالمستخدم
-        if ($user->id_image && Storage::disk('public')->exists($user->id_image)) {
-            Storage::disk('public')->delete($user->id_image);
+        if ($user->id_image) {
+            \App\Helpers\ImageHelper::delete($user->id_image, 'public');
         }
         
         $user->delete();

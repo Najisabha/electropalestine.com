@@ -310,6 +310,47 @@ class ImageHelper
                     ]);
                 }
                 
+                // نسخ الملف إلى public/storage/ لضمان الوصول المباشر (بدون symbolic link)
+                if ($disk === 'public' && $storedPath) {
+                    try {
+                        $publicStoragePath = public_path('storage');
+                        $targetPublicPath = $publicStoragePath . '/' . $storedPath;
+                        $sourcePath = $storage->path($storedPath);
+                        
+                        // التأكد من وجود المجلد في public/storage/
+                        $targetDir = dirname($targetPublicPath);
+                        if (!file_exists($targetDir)) {
+                            @mkdir($targetDir, 0755, true);
+                            Log::info('تم إنشاء مجلد جديد في public/storage', ['directory' => dirname($storedPath)]);
+                        }
+                        
+                        // نسخ الملف إذا لم يكن موجوداً أو إذا كان قد تم تحديثه
+                        if (!file_exists($targetPublicPath) || filemtime($sourcePath) > filemtime($targetPublicPath)) {
+                            $copied = @copy($sourcePath, $targetPublicPath);
+                            if ($copied) {
+                                // نسخ صلاحيات الملف أيضاً
+                                @chmod($targetPublicPath, 0644);
+                                Log::info('تم نسخ الملف إلى public/storage', [
+                                    'source' => $sourcePath,
+                                    'target' => $targetPublicPath,
+                                    'path' => $storedPath
+                                ]);
+                            } else {
+                                Log::warning('فشل نسخ الملف إلى public/storage', [
+                                    'source' => $sourcePath,
+                                    'target' => $targetPublicPath
+                                ]);
+                            }
+                        }
+                    } catch (\Exception $copyException) {
+                        // لا نفشل العملية إذا فشل النسخ، فقط نسجل التحذير
+                        Log::warning('خطأ أثناء نسخ الملف إلى public/storage', [
+                            'error' => $copyException->getMessage(),
+                            'path' => $storedPath
+                        ]);
+                    }
+                }
+                
             } catch (\Exception $e) {
                 Log::error('استثناء أثناء حفظ الملف', [
                     'directory' => $directory,
@@ -409,6 +450,134 @@ class ImageHelper
 
         // إرجاع أكبر رقم + 1
         return max($numbers) + 1;
+    }
+
+    /**
+     * ينسخ جميع الملفات من storage/app/public إلى public/storage
+     * مفيد بعد رفع المشروع إلى الاستضافة
+     * 
+     * @param string $directory المجلد الفرعي (مثل 'categories', 'products') - null لنسخ الكل
+     * @return array
+     */
+    public static function syncToPublicStorage(?string $directory = null): array
+    {
+        $results = [
+            'success' => 0,
+            'failed' => 0,
+            'skipped' => 0,
+            'errors' => []
+        ];
+        
+        try {
+            $storage = Storage::disk('public');
+            $publicStoragePath = public_path('storage');
+            
+            // التأكد من وجود المجلد الهدف
+            if (!file_exists($publicStoragePath)) {
+                @mkdir($publicStoragePath, 0755, true);
+            }
+            
+            // تحديد المجلدات المطلوبة
+            $directoriesToSync = $directory ? [$directory] : $storage->directories();
+            
+            foreach ($directoriesToSync as $dir) {
+                // الحصول على جميع الملفات في المجلد
+                $files = $storage->files($dir);
+                
+                foreach ($files as $file) {
+                    try {
+                        $sourcePath = $storage->path($file);
+                        $targetPath = $publicStoragePath . '/' . $file;
+                        $targetDir = dirname($targetPath);
+                        
+                        // التأكد من وجود المجلد الهدف
+                        if (!file_exists($targetDir)) {
+                            @mkdir($targetDir, 0755, true);
+                        }
+                        
+                        // نسخ الملف إذا لم يكن موجوداً أو إذا كان قد تم تحديثه
+                        if (!file_exists($targetPath) || filemtime($sourcePath) > filemtime($targetPath)) {
+                            $copied = @copy($sourcePath, $targetPath);
+                            if ($copied) {
+                                @chmod($targetPath, 0644);
+                                $results['success']++;
+                            } else {
+                                $results['failed']++;
+                                $results['errors'][] = "فشل نسخ: {$file}";
+                            }
+                        } else {
+                            $results['skipped']++;
+                        }
+                    } catch (\Exception $e) {
+                        $results['failed']++;
+                        $results['errors'][] = "خطأ في {$file}: " . $e->getMessage();
+                        Log::error('خطأ في نسخ ملف إلى public/storage', [
+                            'file' => $file,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+            }
+            
+            Log::info('تمت مزامنة الملفات إلى public/storage', $results);
+            
+        } catch (\Exception $e) {
+            Log::error('خطأ في مزامنة الملفات إلى public/storage', [
+                'error' => $e->getMessage(),
+                'directory' => $directory
+            ]);
+            $results['errors'][] = 'خطأ عام: ' . $e->getMessage();
+        }
+        
+        return $results;
+    }
+
+    /**
+     * يحذف الملف من storage/app/public و public/storage
+     * 
+     * @param string|null $path المسار النسبي للملف
+     * @param string $disk
+     * @return bool
+     */
+    public static function delete(?string $path, string $disk = 'public'): bool
+    {
+        if (empty($path)) {
+            return false;
+        }
+        
+        $deleted = false;
+        
+        // حذف من storage/app/public
+        try {
+            $storage = Storage::disk($disk);
+            if ($storage->exists($path)) {
+                $deleted = $storage->delete($path);
+            }
+        } catch (\Exception $e) {
+            Log::warning('فشل حذف الملف من storage', [
+                'path' => $path,
+                'disk' => $disk,
+                'error' => $e->getMessage()
+            ]);
+        }
+        
+        // حذف من public/storage أيضاً
+        if ($disk === 'public') {
+            try {
+                $publicPath = public_path('storage/' . $path);
+                if (file_exists($publicPath)) {
+                    @unlink($publicPath);
+                    Log::info('تم حذف الملف من public/storage', ['path' => $path]);
+                }
+            } catch (\Exception $e) {
+                Log::warning('فشل حذف الملف من public/storage', [
+                    'path' => $path,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+        
+        return $deleted;
     }
 
     /**
