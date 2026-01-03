@@ -298,7 +298,17 @@ npm run build
 npm run dev
 ```
 
-### الخطوة 7: تشغيل الخادم
+### الخطوة 7: إنشاء رابط التخزين (Storage Link)
+
+**مهم جداً**: يجب إنشاء رابط رمزي لعرض الصور:
+
+```bash
+php artisan storage:link
+```
+
+هذا الأمر ينشئ رابط من `public/storage` إلى `storage/app/public` لعرض الصور المحفوظة.
+
+### الخطوة 8: تشغيل الخادم
 
 ```bash
 php artisan serve
@@ -323,6 +333,12 @@ composer run setup
 - تشغيل الترحيلات
 - تثبيت مكتبات npm
 - بناء الملفات الأمامية
+
+**ملاحظة**: بعد تشغيل `composer run setup`، تأكد من تشغيل:
+```bash
+php artisan storage:link
+```
+لعرض الصور بشكل صحيح.
 
 ---
 
@@ -411,7 +427,7 @@ electropalestine.com/
 │
 ├── public/                       # الملفات العامة (الدخول العام)
 │   ├── index.php                 # نقطة الدخول الرئيسية
-│   └── storage/                  # الملفات المخزنة
+│   └── storage/                  # رابط رمزي إلى storage/app/public (يُنشأ بـ php artisan storage:link)
 │
 ├── resources/
 │   ├── css/                      # ملفات CSS
