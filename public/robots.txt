@@ -1,2 +1,44 @@
+# robots.txt for electropalestine.com
+# This file tells search engines which pages they can and cannot access
+
+# Allow all search engines
 User-agent: *
-Disallow:
+Allow: /
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password/
+Disallow: /account-settings
+Disallow: /my-orders
+Disallow: /my-comments
+Disallow: /cart/checkout
+Disallow: /checkout
+
+# Disallow Laravel internal directories (if accessible)
+Disallow: /app/
+Disallow: /bootstrap/
+Disallow: /config/
+Disallow: /database/
+Disallow: /routes/
+Disallow: /storage/
+Disallow: /vendor/
+Disallow: /tests/
+
+# Disallow common non-indexable file types
+Disallow: /*.json$
+
+# Allow sitemap (must be before any .xml disallow rules)
+Allow: /sitemap.xml
+Allow: /sitemap/
+
+# Sitemap location
+Sitemap: https://electropalestine.com/sitemap.xml
+Sitemap: https://electropalestine.com/sitemap/index.xml
+Sitemap: https://electropalestine.com/sitemap/images.xml
+
+# Crawl-delay (optional - helps prevent server overload)
+# Crawl-delay: 1

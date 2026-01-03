@@ -9,8 +9,15 @@ use App\Http\Controllers\AdminReportController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StoreController;
 use Illuminate\Support\Facades\Route;
+
+// Sitemap
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+Route::get('/sitemap/index.xml', [SitemapController::class, 'indexFile'])->name('sitemap.index');
+Route::get('/sitemap/products/{page}.xml', [SitemapController::class, 'products'])->name('sitemap.products');
+Route::get('/sitemap/images.xml', [SitemapController::class, 'images'])->name('sitemap.images');
 
 Route::get('/language/{locale}', [StoreController::class, 'switchLanguage'])->name('language.switch');
 
@@ -41,6 +48,9 @@ Route::view('/about', 'store.about')->name('store.about');
 Route::view('/story', 'store.story')->name('store.story');
 Route::get('/contact', [StoreController::class, 'showContact'])->name('store.contact');
 Route::post('/contact', [StoreController::class, 'sendContact'])->name('store.contact.send');
+Route::get('/track-order', [StoreController::class, 'trackOrder'])->name('store.track-order');
+Route::view('/return-policy', 'store.return-policy')->name('store.return-policy');
+Route::view('/faq', 'store.faq')->name('store.faq');
 
 Route::middleware('auth')->group(function () {
     Route::get('/account-settings', [StoreController::class, 'accountSettings'])->name('store.account-settings');

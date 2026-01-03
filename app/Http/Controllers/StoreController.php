@@ -1034,6 +1034,11 @@ class StoreController extends Controller
     {
         return view('store.contact');
     }
+    
+    public function trackOrder(Request $request): View
+    {
+        return view('store.track-order');
+    }
 
     public function confirmCartOrder(\App\Http\Requests\CartCheckoutRequest $request): RedirectResponse
     {

@@ -7,11 +7,14 @@ use App\Models\Company;
 use App\Models\Product;
 use App\Models\Role;
 use App\Models\Type;
+use App\Helpers\ImageHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class AdminCatalogController extends Controller
 {
@@ -104,7 +107,7 @@ class AdminCatalogController extends Controller
         $data['slug'] = Str::slug($data['name']);
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('categories', 'public');
+            $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), 'categories', 'public');
         }
 
         Category::create($data);
@@ -124,7 +127,7 @@ class AdminCatalogController extends Controller
         $data['slug'] = Str::slug($data['name']);
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('types', 'public');
+            $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), 'types', 'public');
         }
 
         Type::create($data);
@@ -145,11 +148,11 @@ class AdminCatalogController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('companies', 'public');
+            $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), 'companies', 'public');
         }
 
         if ($request->hasFile('background')) {
-            $data['background'] = $request->file('background')->store('companies', 'public');
+            $data['background'] = ImageHelper::storeWithSequentialName($request->file('background'), 'companies', 'public');
         }
 
         $company = Company::create($data);
@@ -162,41 +165,84 @@ class AdminCatalogController extends Controller
 
     public function storeProduct(Request $request): RedirectResponse
     {
-        $data = $request->validate([
-            'category_id' => ['required', 'exists:categories,id'],
-            'type_id' => ['required', 'exists:types,id'],
-            'company_id' => ['required', 'exists:companies,id'],
-            'name' => ['required', 'string', 'max:255'],
-            'name_en' => ['nullable', 'string', 'max:255'],
-            'cost_price' => ['nullable', 'numeric', 'min:0'],
-            'price' => ['required', 'numeric', 'min:0'],
-            'stock' => ['required', 'integer', 'min:0'],
-            'points_reward' => ['nullable', 'integer', 'min:0'],
-            'description' => ['nullable', 'string'],
-            'description_en' => ['nullable', 'string'],
-            'image' => ['nullable', 'image', 'max:2048'],
-        ]);
+        try {
+            $data = $request->validate([
+                'category_id' => ['required', 'exists:categories,id'],
+                'type_id' => ['required', 'exists:types,id'],
+                'company_id' => ['required', 'exists:companies,id'],
+                'name' => ['required', 'string', 'max:255'],
+                'name_en' => ['nullable', 'string', 'max:255'],
+                'cost_price' => ['nullable', 'numeric', 'min:0'],
+                'price' => ['required', 'numeric', 'min:0'],
+                'stock' => ['required', 'integer', 'min:0'],
+                'points_reward' => ['nullable', 'integer', 'min:0'],
+                'description' => ['nullable', 'string'],
+                'description_en' => ['nullable', 'string'],
+                'image' => ['nullable', 'image', 'max:2048'],
+            ]);
 
-        $data['slug'] = Str::slug($data['name']);
+            $data['slug'] = Str::slug($data['name']);
 
-        if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('products', 'public');
+            // التأكد من وجود مجلد التخزين قبل رفع الصورة
+            if ($request->hasFile('image')) {
+                $productsPath = 'products';
+                $publicDisk = Storage::disk('public');
+                
+                // التأكد من وجود المجلد
+                if (!$publicDisk->exists($productsPath)) {
+                    $publicDisk->makeDirectory($productsPath, 0755, true);
+                }
+                
+                $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), $productsPath, 'public');
+                
+                // التحقق من نجاح رفع الصورة
+                if (!$data['image']) {
+                    Log::error('فشل رفع صورة المنتج', ['product_name' => $data['name']]);
+                    return back()->withErrors(['error' => 'فشل رفع صورة المنتج. يرجى التحقق من صلاحيات المجلدات.'])->withInput();
+                }
+            }
+
+            $rolePrices = $request->input('role_prices', []);
+            $data['role_prices'] = collect($rolePrices)
+                ->filter(function ($value) {
+                    return $value !== null && $value !== '';
+                })
+                ->map(fn ($value) => (float) $value)
+                ->toArray();
+
+            // المنتجات الجديدة تكون مفعّلة بشكل افتراضي
+            $data['is_active'] = true;
+
+            $product = Product::create($data);
+            
+            // التحقق من نجاح إنشاء المنتج
+            if (!$product || !$product->id) {
+                Log::error('فشل إنشاء المنتج في قاعدة البيانات', ['data' => $data]);
+                return back()->withErrors(['error' => 'فشل إضافة المنتج. يرجى المحاولة مرة أخرى.'])->withInput();
+            }
+
+            Log::info('تم إضافة منتج بنجاح', ['product_id' => $product->id, 'product_name' => $product->name]);
+
+            return back()->with('status', 'تم إضافة المنتج.');
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // أخطاء التحقق من البيانات
+            return back()->withErrors($e->errors())->withInput();
+            
+        } catch (\Exception $e) {
+            // تسجيل الخطأ بالتفاصيل
+            Log::error('خطأ في إضافة المنتج', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->except(['image']),
+            ]);
+            
+            return back()->withErrors([
+                'error' => 'حدث خطأ أثناء إضافة المنتج: ' . $e->getMessage() . '. يرجى التحقق من سجلات الأخطاء.'
+            ])->withInput();
         }
-
-        $rolePrices = $request->input('role_prices', []);
-        $data['role_prices'] = collect($rolePrices)
-            ->filter(function ($value) {
-                return $value !== null && $value !== '';
-            })
-            ->map(fn ($value) => (float) $value)
-            ->toArray();
-
-        // المنتجات الجديدة تكون مفعّلة بشكل افتراضي
-        $data['is_active'] = true;
-
-        Product::create($data);
-
-        return back()->with('status', 'تم إضافة المنتج.');
     }
 
     public function updateCategory(Request $request, Category $category): RedirectResponse
@@ -210,8 +256,14 @@ class AdminCatalogController extends Controller
         ]);
 
         $data['slug'] = Str::slug($data['name']);
+        
+        // حذف الصورة القديمة إذا تم رفع صورة جديدة
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('categories', 'public');
+            // حذف الصورة القديمة إن وجدت
+            if ($category->image && Storage::disk('public')->exists($category->image)) {
+                Storage::disk('public')->delete($category->image);
+            }
+            $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), 'categories', 'public');
         }
 
         $category->update($data);
@@ -226,8 +278,14 @@ class AdminCatalogController extends Controller
             'image' => ['nullable', 'image', 'max:2048'],
         ]);
         $data['slug'] = Str::slug($data['name']);
+        
+        // حذف الصورة القديمة إذا تم رفع صورة جديدة
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('types', 'public');
+            // حذف الصورة القديمة إن وجدت
+            if ($type->image && Storage::disk('public')->exists($type->image)) {
+                Storage::disk('public')->delete($type->image);
+            }
+            $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), 'types', 'public');
         }
         $type->update($data);
         return back()->with('status', 'تم تعديل النوع.');
@@ -246,12 +304,25 @@ class AdminCatalogController extends Controller
             'categories' => ['nullable', 'array'],
             'categories.*' => ['exists:categories,id'],
         ]);
+        
+        // حذف الصورة القديمة إذا تم رفع صورة جديدة
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('companies', 'public');
+            // حذف الصورة القديمة إن وجدت
+            if ($company->image && Storage::disk('public')->exists($company->image)) {
+                Storage::disk('public')->delete($company->image);
+            }
+            $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), 'companies', 'public');
         }
+        
+        // حذف الصورة الخلفية القديمة إذا تم رفع صورة جديدة
         if ($request->hasFile('background')) {
-            $data['background'] = $request->file('background')->store('companies', 'public');
+            // حذف الصورة الخلفية القديمة إن وجدت
+            if ($company->background && Storage::disk('public')->exists($company->background)) {
+                Storage::disk('public')->delete($company->background);
+            }
+            $data['background'] = ImageHelper::storeWithSequentialName($request->file('background'), 'companies', 'public');
         }
+        
         $company->update($data);
         if ($request->has('types')) {
             $company->types()->sync($data['types'] ?? []);
@@ -305,9 +376,20 @@ class AdminCatalogController extends Controller
             'is_active' => ['nullable', 'boolean'],
         ]);
         $data['slug'] = Str::slug($data['name']);
+        
+        // حذف الصورة القديمة إذا تم رفع صورة جديدة
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('products', 'public');
+            // حذف الصورة القديمة إن وجدت
+            if ($product->image && Storage::disk('public')->exists($product->image)) {
+                Storage::disk('public')->delete($product->image);
+            }
+            // حذف الصورة المصغرة القديمة إن وجدت
+            if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
+                Storage::disk('public')->delete($product->thumbnail);
+            }
+            $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), 'products', 'public');
         }
+        
         $data['is_best_seller'] = $request->boolean('is_best_seller');
         if ($request->has('is_active')) {
             $data['is_active'] = $request->boolean('is_active');
@@ -339,24 +421,54 @@ class AdminCatalogController extends Controller
 
     public function destroyCategory(Category $category): RedirectResponse
     {
+        // حذف الصورة المرتبطة بالصنف
+        if ($category->image && Storage::disk('public')->exists($category->image)) {
+            Storage::disk('public')->delete($category->image);
+        }
+        
         $category->delete();
         return back()->with('status', 'تم حذف الصنف.');
     }
 
     public function destroyType(Type $type): RedirectResponse
     {
+        // حذف الصورة المرتبطة بالنوع
+        if ($type->image && Storage::disk('public')->exists($type->image)) {
+            Storage::disk('public')->delete($type->image);
+        }
+        
         $type->delete();
         return back()->with('status', 'تم حذف النوع.');
     }
 
     public function destroyCompany(Company $company): RedirectResponse
     {
+        // حذف الصورة المرتبطة بالشركة
+        if ($company->image && Storage::disk('public')->exists($company->image)) {
+            Storage::disk('public')->delete($company->image);
+        }
+        
+        // حذف الصورة الخلفية المرتبطة بالشركة
+        if ($company->background && Storage::disk('public')->exists($company->background)) {
+            Storage::disk('public')->delete($company->background);
+        }
+        
         $company->delete();
         return back()->with('status', 'تم حذف الشركة.');
     }
 
     public function destroyProduct(Product $product): RedirectResponse
     {
+        // حذف الصورة المرتبطة بالمنتج
+        if ($product->image && Storage::disk('public')->exists($product->image)) {
+            Storage::disk('public')->delete($product->image);
+        }
+        
+        // حذف الصورة المصغرة المرتبطة بالمنتج
+        if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
+            Storage::disk('public')->delete($product->thumbnail);
+        }
+        
         $product->delete();
         return back()->with('status', 'تم حذف المنتج.');
     }

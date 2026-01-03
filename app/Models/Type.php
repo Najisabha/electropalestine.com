@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Controllers\SitemapController;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -36,5 +37,22 @@ class Type extends Model
     public function companies()
     {
         return $this->belongsToMany(Company::class, 'company_type');
+    }
+    
+    /**
+     * Boot the model and register event listeners
+     */
+    protected static function boot(): void
+    {
+        parent::boot();
+        
+        // Clear sitemap cache when type is saved or deleted
+        static::saved(function () {
+            SitemapController::clearCache();
+        });
+        
+        static::deleted(function () {
+            SitemapController::clearCache();
+        });
     }
 }

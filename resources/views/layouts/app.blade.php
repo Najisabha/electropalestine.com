@@ -2058,7 +2058,7 @@
                     <a href="https://www.instagram.com/electropalestine" target="_blank" rel="noopener noreferrer" class="social-icon d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%; background-color: rgba(255,255,255,0.1); color: white; text-decoration: none; font-size: 18px;" title="Instagram">
                         <i class="fab fa-instagram"></i>
                     </a>
-                    <a href="https://wa.me/970591234567" target="_blank" rel="noopener noreferrer" class="social-icon d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%; background-color: rgba(255,255,255,0.1); color: white; text-decoration: none; font-size: 18px;" title="WhatsApp">
+                    <a href="https://wa.me/970598134332" target="_blank" rel="noopener noreferrer" class="social-icon d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%; background-color: rgba(255,255,255,0.1); color: white; text-decoration: none; font-size: 18px;" title="WhatsApp">
                         <i class="fab fa-whatsapp"></i>
                     </a>
                 </div>
@@ -2077,10 +2077,16 @@
             <div class="col-md-3 col-lg-2 col-xl-2 mx-auto mb-4">
                 <h6 class="text-uppercase fw-bold mb-4 d-inline-block pb-1" style="border-bottom: 2px solid #0db777;">{{ __('common.customer_service') }}</h6>
                 <ul class="list-unstyled">
-                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-link">{{ __('common.my_account') }}</a></li>
-                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-link">{{ __('common.track_order') }}</a></li>
-                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-link">{{ __('common.return_policy') }}</a></li>
-                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-link">{{ __('common.faq') }}</a></li>
+                    <li class="mb-2">
+                        @auth
+                            <a href="{{ route('store.account-settings') }}" class="text-white-50 text-decoration-none hover-link">{{ __('common.my_account') }}</a>
+                        @else
+                            <a href="{{ route('login') }}" class="text-white-50 text-decoration-none hover-link">{{ __('common.my_account') }}</a>
+                        @endauth
+                    </li>
+                    <li class="mb-2"><a href="{{ route('store.track-order') }}" class="text-white-50 text-decoration-none hover-link">{{ __('common.track_order') }}</a></li>
+                    <li class="mb-2"><a href="{{ route('store.return-policy') }}" class="text-white-50 text-decoration-none hover-link">{{ __('common.return_policy') }}</a></li>
+                    <li class="mb-2"><a href="{{ route('store.faq') }}" class="text-white-50 text-decoration-none hover-link">{{ __('common.faq') }}</a></li>
                 </ul>
             </div>
 
@@ -2088,8 +2094,7 @@
                 <h6 class="text-uppercase fw-bold mb-4 d-inline-block pb-1" style="border-bottom: 2px solid #0db777;">{{ __('common.contact_us') }}</h6>
                 <p class="text-white-50"><i class="fas fa-home me-3 text-secondary ms-2"></i> {{ __('common.footer_address') }}</p>
                 <p class="text-white-50"><i class="fas fa-envelope me-3 text-secondary ms-2"></i> info@electropalestine.com</p>
-                <p class="text-white-50" dir="ltr"><i class="fas fa-phone me-3 text-secondary ms-2"></i> +970 59 123 4567</p>
-                <p class="text-white-50" dir="ltr"><i class="fas fa-print me-3 text-secondary ms-2"></i> +970 2 298 7654</p>
+                <p class="text-white-50" dir="ltr"><i class="fas fa-phone me-3 text-secondary ms-2"></i> +970598134332</p>
             </div>
         </div>
     </div>

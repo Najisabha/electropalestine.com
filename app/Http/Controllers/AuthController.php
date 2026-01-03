@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Helpers\ImageHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -67,7 +68,7 @@ class AuthController extends Controller
 
         $idImagePath = null;
         if ($request->hasFile('id_image')) {
-            $idImagePath = $request->file('id_image')->store('ids', 'public');
+            $idImagePath = ImageHelper::storeWithSequentialName($request->file('id_image'), 'ids', 'public');
         }
 
         $user = User::create([
