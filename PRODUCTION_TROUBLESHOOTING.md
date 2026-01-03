@@ -348,6 +348,66 @@ php artisan route:clear
    - استخدم **الحل 3** (نسخ الملفات مباشرة)
    - أو تواصل مع دعم Hostinger لتفعيل symlinks
 
+## مشكلة: تعديل صورة المنتج لا يعمل
+
+إذا حاولت تعديل صورة منتج موجود ولكن التعديل لم يتم تطبيقه:
+
+### الحلول المحتملة:
+
+#### 1. تحقق من صلاحيات مجلد products
+
+في **File Manager**:
+1. اذهب إلى مجلد `storage/app/public/products`
+2. انقر بزر الماوس الأيمن → **Change Permissions**
+3. اضبط على `755` أو `775`
+4. ✅ تأكد من تفعيل **Recursive**
+5. انقر **Apply**
+
+#### 2. تحقق من وجود مجلد products
+
+تأكد من وجود مجلد `storage/app/public/products`. إذا لم يكن موجوداً:
+1. في **File Manager**، اذهب إلى `storage/app/public`
+2. أنشئ مجلد جديد اسمه `products`
+3. اضبط صلاحياته على `755` أو `775`
+
+#### 3. تحقق من سجلات الأخطاء
+
+في **File Manager**، افتح ملف `storage/logs/laravel.log` وابحث عن أخطاء تتعلق بـ:
+- "فشل رفع صورة المنتج"
+- "خطأ غير متوقع عند تعديل المنتج"
+
+#### 4. تحقق من حجم الصورة
+
+تأكد من أن حجم الصورة لا يتجاوز **2MB** (المسموح حالياً).
+
+#### 5. تحقق من نوع الملف
+
+تأكد من أن الملف المُرفق هو صورة بصيغة:
+- `jpg` / `jpeg`
+- `png`
+- `gif`
+- `webp`
+
+#### 6. مسح الكاش
+
+بعد التعديلات، امسح الكاش:
+
+```bash
+php artisan config:clear
+php artisan cache:clear
+php artisan view:clear
+```
+
+أو في Terminal في hPanel:
+```bash
+cd domains/electropalestine.com/public_html
+php artisan config:clear
+php artisan cache:clear
+php artisan view:clear
+```
+
+---
+
 ## اختبار سريع
 
 لاختبار ما إذا كانت المشكلة في رفع الملفات:

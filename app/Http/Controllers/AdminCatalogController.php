@@ -363,39 +363,86 @@ class AdminCatalogController extends Controller
 
     public function updateProduct(Request $request, Product $product): RedirectResponse
     {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'name_en' => ['nullable', 'string', 'max:255'],
-            'cost_price' => ['nullable', 'numeric', 'min:0'],
-            'price' => ['required', 'numeric', 'min:0'],
-            'stock' => ['required', 'integer', 'min:0'],
-            'description' => ['nullable', 'string'],
-            'description_en' => ['nullable', 'string'],
-            'image' => ['nullable', 'image', 'max:2048'],
-            'is_best_seller' => ['nullable', 'boolean'],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
-        $data['slug'] = Str::slug($data['name']);
-        
-        // حذف الصورة القديمة إذا تم رفع صورة جديدة
-        if ($request->hasFile('image')) {
-            // حذف الصورة القديمة إن وجدت
-            if ($product->image && Storage::disk('public')->exists($product->image)) {
-                Storage::disk('public')->delete($product->image);
+        try {
+            $data = $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+                'name_en' => ['nullable', 'string', 'max:255'],
+                'cost_price' => ['nullable', 'numeric', 'min:0'],
+                'price' => ['required', 'numeric', 'min:0'],
+                'stock' => ['required', 'integer', 'min:0'],
+                'description' => ['nullable', 'string'],
+                'description_en' => ['nullable', 'string'],
+                'image' => ['nullable', 'image', 'max:2048'],
+                'is_best_seller' => ['nullable', 'boolean'],
+                'is_active' => ['nullable', 'boolean'],
+            ]);
+            
+            $data['slug'] = Str::slug($data['name']);
+            
+            // حذف الصورة القديمة إذا تم رفع صورة جديدة
+            if ($request->hasFile('image')) {
+                $productsPath = 'products';
+                $publicDisk = Storage::disk('public');
+                
+                // التأكد من وجود المجلد
+                if (!$publicDisk->exists($productsPath)) {
+                    $publicDisk->makeDirectory($productsPath, 0755, true);
+                }
+                
+                // حذف الصورة القديمة إن وجدت
+                if ($product->image && Storage::disk('public')->exists($product->image)) {
+                    Storage::disk('public')->delete($product->image);
+                    Log::info('تم حذف صورة المنتج القديمة', ['product_id' => $product->id, 'old_image' => $product->image]);
+                }
+                
+                // حذف الصورة المصغرة القديمة إن وجدت
+                if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
+                    Storage::disk('public')->delete($product->thumbnail);
+                }
+                
+                $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), $productsPath, 'public');
+                
+                // التحقق من نجاح رفع الصورة
+                if (!$data['image']) {
+                    Log::error('فشل رفع صورة المنتج عند التحديث', [
+                        'product_id' => $product->id,
+                        'product_name' => $product->name,
+                        'file_name' => $request->file('image')->getClientOriginalName()
+                    ]);
+                    return back()->withErrors(['error' => 'فشل رفع صورة المنتج. يرجى التحقق من صلاحيات المجلدات.'])->withInput();
+                }
+                
+                Log::info('تم رفع صورة المنتج بنجاح عند التحديث', [
+                    'product_id' => $product->id,
+                    'new_image' => $data['image']
+                ]);
             }
-            // حذف الصورة المصغرة القديمة إن وجدت
-            if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
-                Storage::disk('public')->delete($product->thumbnail);
+            
+            $data['is_best_seller'] = $request->boolean('is_best_seller');
+            if ($request->has('is_active')) {
+                $data['is_active'] = $request->boolean('is_active');
             }
-            $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), 'products', 'public');
+            
+            $product->update($data);
+            
+            Log::info('تم تعديل المنتج بنجاح', ['product_id' => $product->id, 'product_name' => $product->name]);
+            
+            return back()->with('status', 'تم تعديل المنتج.');
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('خطأ في التحقق من صحة البيانات عند تعديل المنتج', [
+                'product_id' => $product->id,
+                'errors' => $e->errors()
+            ]);
+            return back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            Log::error('خطأ غير متوقع عند تعديل المنتج', [
+                'product_id' => $product->id,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->withErrors(['error' => 'حدث خطأ أثناء تعديل المنتج. يرجى المحاولة مرة أخرى.'])->withInput();
         }
-        
-        $data['is_best_seller'] = $request->boolean('is_best_seller');
-        if ($request->has('is_active')) {
-            $data['is_active'] = $request->boolean('is_active');
-        }
-        $product->update($data);
-        return back()->with('status', 'تم تعديل المنتج.');
     }
 
     /**
