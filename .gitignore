@@ -19,3 +19,8 @@
 /storage/*.key
 /storage/pail
 /vendor
+
+# Temporary deployment files (delete after use)
+generate-key.php
+run-migrations.php
+clear-cache.php
