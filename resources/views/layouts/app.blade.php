@@ -8,6 +8,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? config('app.name', 'electropalestine') }}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('images/LOGO-remove background.png') }}">
+    
+    <!-- Meta Tags for Logo -->
+    <meta property="og:image" content="{{ asset('images/LOGO-remove background.png') }}">
+    <meta name="twitter:image" content="{{ asset('images/LOGO-remove background.png') }}">
 
     <!-- Bootstrap -->
     @if($isRTL)
@@ -76,12 +83,18 @@
         }
 
         .btn-outline-main{
-            border:1px solid var(--primary);
-            color:var(--primary);
+            border:1px solid rgba(255,255,255,0.35);
+            color:#ffffff;
+            background:rgba(255,255,255,0.06);
+            box-shadow:0 4px 12px rgba(0,0,0,0.08);
+            transition:all 0.25s ease;
         }
         .btn-outline-main:hover{
-            background:var(--primary);
-            color:#0b0d11;
+            background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+            color:#ffffff;
+            border-color:transparent;
+            box-shadow:0 8px 20px rgba(13,183,119,0.25);
+            transform:translateY(-1px);
         }
 
         /* ===== Header ===== */
@@ -89,14 +102,68 @@
             position:sticky;
             top:0;
             z-index:1000;
+            background:linear-gradient(120deg, rgba(13,183,119,0.9), rgba(11,13,17,0.65));
+            box-shadow:0 10px 30px rgba(0,0,0,0.15);
+            border-bottom:1px solid rgba(255,255,255,0.08);
+        }
+        header .container{
+            gap:0.75rem;
         }
 
         nav a{
-            color:#d9f2e3;
+            color:#ffffff;
             font-size:.9rem;
+            font-weight:500;
         }
         nav a:hover{
             color:var(--accent);
+        }
+        
+        /* ===== User Points Badge ===== */
+        .badge.border-warning {
+            border-color: var(--accent) !important;
+            background: rgba(245, 209, 12, 0.2) !important;
+            color: #ffffff !important;
+            transition: all 0.3s ease;
+        }
+        
+        .badge.border-warning:hover {
+            border-color: var(--accent) !important;
+            background: rgba(245, 209, 12, 0.3) !important;
+            box-shadow: 0 0 10px rgba(245, 209, 12, 0.3);
+        }
+        
+        .badge.border-warning strong {
+            color: var(--accent) !important;
+            font-weight: 700;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .badge.border-info {
+            background: rgba(13, 202, 240, 0.2) !important;
+            color: #ffffff !important;
+        }
+        
+        .badge.border-info strong {
+            color: #0dcaf0 !important;
+            font-weight: 700;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* ضمان أن text-warning يستخدم اللون الأصفر المخصص */
+        .text-warning,
+        .badge.border-warning .text-warning,
+        .badge.border-warning strong {
+            color: var(--accent) !important;
+        }
+        
+        /* تحسين شكل الـ badge على الشاشات الصغيرة */
+        @media (max-width: 768px) {
+            .badge.border-warning,
+            .badge.border-info {
+                font-size: 0.7rem;
+                padding: 0.25rem 0.5rem;
+            }
         }
 
         /* ===== Footer ===== */
@@ -129,6 +196,540 @@
             overflow:hidden;
         }
 
+        /* ===== Product Page Professional Design ===== */
+        /* Breadcrumb Styling for Product Page */
+        .product-page-breadcrumb {
+            margin-bottom: 1rem;
+        }
+        .product-breadcrumb-list {
+            font-size: 0.75rem;
+            margin-bottom: 0;
+        }
+        .breadcrumb-link {
+            color: var(--accent) !important;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .breadcrumb-link:hover {
+            color: #fff !important;
+            text-decoration: underline;
+        }
+        .breadcrumb-product-name {
+            color: #fff !important;
+            font-weight: 700;
+        }
+        
+        /* تصغير breadcrumb في الشاشات الصغيرة */
+        @media (max-width: 768px) {
+            .product-breadcrumb-list {
+                font-size: 0.65rem;
+                line-height: 1.4;
+            }
+            .product-page-breadcrumb {
+                margin-bottom: 0.75rem;
+            }
+            .breadcrumb-item {
+                padding: 0.25rem 0;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .product-breadcrumb-list {
+                font-size: 0.6rem;
+            }
+        }
+        
+        /* Product Card Container */
+        .product-page-card {
+            background: linear-gradient(135deg, rgba(26, 29, 36, 0.95), rgba(21, 24, 32, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .product-page-card:hover {
+            box-shadow: 0 12px 48px rgba(13, 183, 119, 0.2);
+            border-color: rgba(13, 183, 119, 0.3);
+        }
+        
+        /* Product Image Container */
+        .product-page-image-container {
+            position: relative;
+            background: linear-gradient(135deg, #0a0c10 0%, #0f1115 100%);
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 320px;
+        }
+        
+        .product-page-image-container img {
+            max-width: 100%;
+            max-height: 280px;
+            object-fit: contain;
+            border-radius: 12px;
+            transition: transform 0.3s ease;
+        }
+        
+        .product-page-image-container:hover img {
+            transform: scale(1.05);
+        }
+        
+        /* Sales Badge */
+        .product-page-sales-badge {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #fff;
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(13, 183, 119, 0.4);
+            font-size: 0.85rem;
+            z-index: 2;
+        }
+        
+        /* Product Info Section */
+        .product-page-info {
+            padding: 1.5rem;
+        }
+        
+        .product-page-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 1rem;
+            line-height: 1.3;
+            background: linear-gradient(135deg, #ffffff, #eaf6ef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .product-page-price {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            line-height: 1;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3),
+                         0 0 20px rgba(255, 255, 255, 0.1);
+            position: relative;
+            display: inline-block;
+            letter-spacing: -1px;
+        }
+        
+        .product-page-price::before {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+            border-radius: 2px;
+            opacity: 0.7;
+        }
+        
+        .product-page-stock {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, rgba(13, 183, 119, 0.2), rgba(10, 141, 91, 0.15));
+            border: 2px solid rgba(13, 183, 119, 0.4);
+            border-radius: 16px;
+            color: #ffffff;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 16px rgba(13, 183, 119, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .product-page-stock::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .product-page-stock:hover::before {
+            left: 100%;
+        }
+        
+        .product-page-stock:hover {
+            border-color: var(--primary);
+            box-shadow: 0 6px 24px rgba(13, 183, 119, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .product-page-stock i {
+            font-size: 1.2rem;
+            color: var(--primary);
+            filter: drop-shadow(0 0 4px rgba(13, 183, 119, 0.5));
+            animation: pulse-check 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-check {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+        }
+        
+        .product-page-stock strong {
+            color: #ffffff;
+            font-size: 1.1rem;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            font-weight: 800;
+        }
+        
+        .product-page-description {
+            color: #ffffff;
+            line-height: 2;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(13, 183, 119, 0.08), rgba(10, 141, 91, 0.05));
+            border-left: 4px solid var(--primary);
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+            font-weight: 400;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .product-page-description::before {
+            content: '"';
+            position: absolute;
+            top: 0.5rem;
+            right: 1rem;
+            font-size: 4rem;
+            color: rgba(255, 255, 255, 0.15);
+            font-family: Georgia, serif;
+            line-height: 1;
+        }
+        
+        /* Action Buttons */
+        .product-page-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .product-page-actions .btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+        
+        .product-page-actions .btn-main {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            box-shadow: 0 4px 16px rgba(13, 183, 119, 0.3);
+        }
+        
+        .product-page-actions .btn-main:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(13, 183, 119, 0.4);
+        }
+        
+        .product-page-actions .btn-success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            box-shadow: 0 4px 16px rgba(40, 167, 69, 0.3);
+        }
+        
+        .product-page-actions .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(40, 167, 69, 0.4);
+        }
+        
+        /* Reviews Section */
+        .product-page-reviews {
+            background: linear-gradient(135deg, rgba(26, 29, 36, 0.95), rgba(21, 24, 32, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        
+        .product-page-reviews h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(13, 183, 119, 0.3);
+        }
+        
+        .product-page-rating-summary {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: rgba(13, 183, 119, 0.1);
+            border-radius: 16px;
+            border: 1px solid rgba(13, 183, 119, 0.2);
+        }
+        
+        .product-page-rating-number {
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent), #f0c908);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+        
+        .product-page-rating-stars {
+            font-size: 1.5rem;
+            color: var(--accent);
+        }
+        
+        /* Individual Review Item */
+        .product-page-review-item {
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .product-page-review-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(13, 183, 119, 0.3);
+            transform: translateX(5px);
+        }
+        
+        .product-page-review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        
+        .product-page-review-author {
+            font-weight: 700;
+            color: #ffffff;
+            font-size: 1rem;
+        }
+        
+        .product-page-review-email {
+            color: #9fb4a4;
+            font-size: 0.85rem;
+        }
+        
+        .product-page-review-comment {
+            color: #d9f2e3;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+        
+        .product-page-review-date {
+            color: #9fb4a4;
+            font-size: 0.85rem;
+        }
+        
+        /* Category Badges */
+        .product-page-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        
+        .product-page-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border: 1px solid;
+        }
+        
+        .product-page-badge-success {
+            background: rgba(13, 183, 119, 0.2);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        
+        .product-page-badge-warning {
+            background: rgba(245, 209, 12, 0.2);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        /* Related Products Section */
+        .product-page-related {
+            margin-top: 3rem;
+        }
+        
+        .product-page-related h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(13, 183, 119, 0.3);
+        }
+        
+        /* View All Reviews Link */
+        .product-page-view-all-reviews {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .product-page-view-all-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, rgba(13, 183, 119, 0.15), rgba(10, 141, 91, 0.15));
+            border: 1px solid rgba(13, 183, 119, 0.3);
+            border-radius: 12px;
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+        
+        .product-page-view-all-link:hover {
+            background: linear-gradient(135deg, rgba(13, 183, 119, 0.25), rgba(10, 141, 91, 0.25));
+            border-color: var(--primary);
+            transform: translateX(-5px);
+            box-shadow: 0 4px 16px rgba(13, 183, 119, 0.2);
+            color: var(--primary);
+        }
+        
+        .product-page-view-all-link i {
+            font-size: 1.1rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .product-page-view-all-link:hover i {
+            transform: translateX(-3px);
+        }
+        
+        /* Product Reviews Page */
+        .product-reviews-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background: rgba(13, 183, 119, 0.1);
+            border: 1px solid rgba(13, 183, 119, 0.2);
+        }
+        
+        .product-reviews-back-link:hover {
+            background: rgba(13, 183, 119, 0.2);
+            border-color: var(--primary);
+            transform: translateX(5px);
+            color: var(--primary);
+        }
+        
+        .product-reviews-back-link i {
+            transition: transform 0.3s ease;
+        }
+        
+        .product-reviews-back-link:hover i {
+            transform: translateX(3px);
+        }
+        
+        .product-reviews-page-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.3;
+            background: linear-gradient(135deg, #ffffff, #eaf6ef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Responsive Design for Product Page */
+        @media (max-width: 768px) {
+            .product-page-title {
+                font-size: 1.5rem;
+            }
+            
+            .product-page-price {
+                font-size: 2.2rem;
+                letter-spacing: 0;
+            }
+            
+            .product-page-stock {
+                padding: 0.65rem 1.25rem;
+                font-size: 0.95rem;
+            }
+            
+            .product-page-stock i {
+                font-size: 1.1rem;
+            }
+            
+            .product-page-stock strong {
+                font-size: 1rem;
+            }
+            
+            .product-page-description {
+                font-size: 1rem;
+                padding: 1.25rem;
+                line-height: 1.8;
+            }
+            
+            .product-page-description::before {
+                font-size: 3rem;
+                top: 0.25rem;
+                right: 0.75rem;
+            }
+            
+            .product-page-image-container {
+                min-height: 240px;
+                padding: 1.5rem;
+            }
+            
+            .product-page-actions .btn {
+                min-width: 100%;
+            }
+            
+            .product-page-rating-summary {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .product-page-rating-number {
+                font-size: 3rem;
+            }
+        }
+
         /* ===== Horizontal strips ===== */
         .strip-scroll{
             display:flex;
@@ -136,6 +737,7 @@
             overflow-x:auto;
             padding-bottom:.5rem;
             scrollbar-width:thin;
+            -webkit-overflow-scrolling:touch; /* تحسين التمرير على iOS */
         }
         .strip-scroll::-webkit-scrollbar{
             height:6px;
@@ -152,6 +754,7 @@
             overflow:hidden;
             color:#eaf6ef;
             text-decoration:none;
+            flex-shrink:0;
         }
         .strip-img{
             height:160px;
@@ -165,82 +768,156 @@
             background-color:rgba(0,0,0,.0) !important;
         }
 
-        /* ===== NEW Unified Product Card ===== */
+         /* ===== Professional Product Card Design ===== */
         .product-card-new{
             display:block;
-            width:200px;
-            min-width:200px;
-            background:#111318;
-            border-radius:18px;
+            width:280px;
+            min-width:280px;
+            background:linear-gradient(135deg, #1a1d24 0%, #151820 100%);
+            border-radius:20px;
             overflow:hidden;
-            transition:transform 0.25s ease, box-shadow 0.25s ease;
-            border:1px solid rgba(255,255,255,0.08);
+            transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border:1px solid rgba(255,255,255,0.1);
+            flex-shrink:0;
+            box-shadow:0 4px 20px rgba(0,0,0,0.3);
+            position:relative;
+            height:100%;
+        }
+        
+        /* في Grid Layout (صفحة المنتجات) - البطاقات تأخذ العرض الكامل */
+        .row.g-3 .col-6 .product-card-new,
+        .row.g-3 .col-md-4 .product-card-new,
+        .row.g-3 .col-lg-3 .product-card-new,
+        .row.g-3 .col-xl-3 .product-card-new {
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: 100% !important;
+        }
+        .product-card-new::before{
+            content:'';
+            position:absolute;
+            top:0;
+            left:0;
+            right:0;
+            height:4px;
+            background:linear-gradient(90deg, var(--primary), var(--primary-dark));
+            opacity:0;
+            transition:opacity 0.3s ease;
         }
         .product-card-new:hover{
-            transform:translateY(-6px) scale(1.02);
-            box-shadow:0 12px 32px rgba(0,0,0,0.5);
-            border-color:rgba(13,183,119,0.3);
+            transform:translateY(-8px);
+            box-shadow:0 16px 40px rgba(13,183,119,0.2);
+            border-color:rgba(13,183,119,0.4);
+        }
+        .product-card-new:hover::before{
+            opacity:1;
+        }
+        @media (hover: none) {
+            .product-card-new:hover{
+                transform:none;
+            }
         }
         
         .product-card-image-wrapper{
             position:relative;
-            padding:16px;
-            background:#080a0d;
+            padding:20px;
+            background:linear-gradient(135deg, #0a0c10 0%, #0f1115 100%);
             display:flex;
             align-items:center;
             justify-content:center;
-            min-height:180px;
+            min-height:220px;
+            overflow:hidden;
         }
         
         .product-badge-rating{
             position:absolute;
             top:12px;
             left:12px;
-            background:#f5d10c;
+            background:linear-gradient(135deg, #f5d10c 0%, #f0c908 100%);
             color:#000;
             font-size:0.7rem;
             font-weight:700;
-            padding:4px 10px;
-            border-radius:8px;
-            z-index:2;
+            padding:6px 12px;
+            border-radius:20px;
+            z-index:3;
             display:flex;
             align-items:center;
             gap:4px;
+            box-shadow:0 2px 8px rgba(245,209,12,0.3);
+            backdrop-filter:blur(10px);
         }
         .product-badge-rating i{
-            font-size:0.65rem;
+            font-size:0.7rem;
+            color:#000;
         }
         
         .product-badge-sold{
             position:absolute;
             top:12px;
             right:12px;
-            background:#0db777;
+            background:linear-gradient(135deg, #0db777 0%, #0a8d5b 100%);
             color:#fff;
             font-size:0.65rem;
             font-weight:700;
-            padding:4px 10px;
-            border-radius:8px;
-            z-index:2;
+            padding:6px 12px;
+            border-radius:20px;
+            z-index:3;
+            display:flex;
+            align-items:center;
+            gap:4px;
+            box-shadow:0 2px 8px rgba(13,183,119,0.3);
+            backdrop-filter:blur(10px);
+        }
+        .product-badge-sold i{
+            font-size:0.7rem;
+        }
+        
+        .product-badge-out-of-stock{
+            position:absolute;
+            top:12px;
+            right:12px;
+            background:linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color:#fff;
+            font-size:0.65rem;
+            font-weight:700;
+            padding:6px 12px;
+            border-radius:20px;
+            z-index:3;
+            display:flex;
+            align-items:center;
+            gap:4px;
+            box-shadow:0 2px 8px rgba(220,53,69,0.3);
+        }
+        .product-badge-out-of-stock i{
+            font-size:0.7rem;
         }
         
         .product-card-image-container{
-            width:140px;
-            height:140px;
+            width:160px;
+            height:160px;
             display:flex;
             align-items:center;
             justify-content:center;
-            border-radius:50%;
+            border-radius:16px;
             overflow:hidden;
-            background:#0d0f13;
-            box-shadow:0 4px 20px rgba(0,0,0,0.4);
+            background:linear-gradient(135deg, #0d0f13 0%, #080a0d 100%);
+            box-shadow:0 8px 32px rgba(0,0,0,0.5), inset 0 0 40px rgba(13,183,119,0.05);
+            transition:transform 0.3s ease;
+            position:relative;
+        }
+        .product-card-new:hover .product-card-image-container{
+            transform:scale(1.05);
         }
         
         .product-card-image{
-            max-width:90%;
-            max-height:90%;
+            width:100%;
+            height:100%;
             object-fit:contain;
-            border-radius:8px;
+            border-radius:16px;
+            transition:transform 0.3s ease;
+        }
+        .product-card-new:hover .product-card-image{
+            transform:scale(1.1);
         }
         
         .product-card-no-image{
@@ -249,64 +926,136 @@
             display:flex;
             align-items:center;
             justify-content:center;
-            background:#0d0f13;
-            border-radius:50%;
+            background:linear-gradient(135deg, #0d0f13 0%, #080a0d 100%);
+            border-radius:16px;
+            color:#5a5e66;
+        }
+        .product-card-no-image i{
+            font-size:3rem;
+        }
+        
+        .product-card-overlay{
+            position:absolute;
+            top:0;
+            left:0;
+            right:0;
+            bottom:0;
+            background:linear-gradient(to bottom, rgba(13,183,119,0.9), rgba(10,141,91,0.9));
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            opacity:0;
+            transition:opacity 0.3s ease;
+            z-index:2;
+        }
+        .product-card-new:hover .product-card-overlay{
+            opacity:1;
+        }
+        
+        .product-card-overlay-content{
+            color:#fff;
+            text-align:center;
+            font-weight:600;
+            font-size:0.9rem;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            gap:8px;
+        }
+        .product-card-overlay-content i{
+            font-size:2rem;
         }
         
         .product-card-info{
-            padding:14px 16px 18px;
-            text-align:center;
+            padding:18px 20px 20px;
+            background:linear-gradient(135deg, #1a1d24 0%, #151820 100%);
+        }
+        
+        .product-card-header{
+            margin-bottom:12px;
         }
         
         .product-card-title{
             color:#fff;
-            font-size:0.85rem;
+            font-size:0.95rem;
             font-weight:600;
-            margin-bottom:2px;
-            line-height:1.4;
-            white-space:nowrap;
+            margin-bottom:6px;
+            line-height:1.5;
+            display:-webkit-box;
+            -webkit-line-clamp:2;
+            -webkit-box-orient:vertical;
             overflow:hidden;
             text-overflow:ellipsis;
+            min-height:2.85rem;
         }
         
-        .product-card-category{
-            color:#5a5e66;
+        .product-card-category-badge{
+            display:inline-block;
+            background:rgba(13,183,119,0.15);
+            color:var(--primary);
             font-size:0.7rem;
-            margin-bottom:10px;
-            white-space:nowrap;
-            overflow:hidden;
-            text-overflow:ellipsis;
+            font-weight:500;
+            padding:4px 10px;
+            border-radius:12px;
+            border:1px solid rgba(13,183,119,0.3);
         }
         
         .product-card-footer{
+            margin-top:12px;
+            padding-top:12px;
+            border-top:1px solid rgba(255,255,255,0.08);
+        }
+        
+        .product-card-price-section{
             display:flex;
-            justify-content:space-between;
-            align-items:center;
-            margin-top:8px;
+            flex-direction:column;
+            gap:8px;
         }
         
         .product-card-price{
-            color:#0db777;
-            font-size:1rem;
+            color:var(--primary);
+            font-size:1.3rem;
             font-weight:700;
+            line-height:1;
+            background:linear-gradient(135deg, var(--primary), var(--primary-dark));
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+            background-clip:text;
         }
         
-        .product-card-stock{
+        .product-card-stock-badge{
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
             color:#5a5e66;
-            font-size:0.7rem;
+            font-size:0.75rem;
             font-weight:500;
-            background:rgba(90,94,102,0.2);
-            padding:4px 8px;
-            border-radius:6px;
+            background:rgba(90,94,102,0.15);
+            padding:6px 12px;
+            border-radius:12px;
+            border:1px solid rgba(90,94,102,0.2);
+        }
+        .product-card-stock-badge i{
+            font-size:0.8rem;
+            color:#0db777;
+        }
+        .product-card-stock-badge.out-of-stock{
+            background:rgba(220,53,69,0.15);
+            border-color:rgba(220,53,69,0.2);
+            color:#dc3545;
+        }
+        .product-card-stock-badge.out-of-stock i{
+            color:#dc3545;
         }
         
-        /* Horizontal scroll for product cards */
+        /* Horizontal scroll for product cards - Desktop */
         .products-scroll{
             display:flex;
             gap:16px;
             overflow-x:auto;
             padding-bottom:10px;
             scrollbar-width:thin;
+            -webkit-overflow-scrolling:touch; /* تحسين التمرير على iOS */
         }
         .products-scroll::-webkit-scrollbar{
             height:6px;
@@ -351,25 +1100,665 @@
              box-shadow:0 0 0 .15rem rgba(13,183,119,.25);
          }
 
-         /* ===== Dropdown Menu ===== */
-         .dropdown-menu{
-             background:var(--glass);
-             border:1px solid var(--border);
-             backdrop-filter:blur(10px);
+        /* ===== Dropdown Menu ===== */
+        .dropdown-menu{
+            background:var(--glass);
+            border:1px solid var(--border);
+            backdrop-filter:blur(10px);
+        }
+        .dropdown-item{
+            color:#eaf6ef;
+            transition:all 0.2s ease;
+        }
+        .dropdown-item:hover{
+            background:rgba(13,183,119,.2);
+            color:#fff;
+        }
+        .dropdown-item.text-danger:hover{
+            background:rgba(220,53,69,.2);
+        }
+        .dropdown-divider{
+            border-color:var(--border);
+        }
+        
+        /* تحسين القائمة المتنقلة للمستخدم - نصوص واضحة */
+        #mobileUserDropdown + .dropdown-menu {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+            backdrop-filter: blur(10px);
+        }
+        
+        #mobileUserDropdown + .dropdown-menu .text-light,
+        #mobileUserDropdown + .dropdown-menu .text-secondary {
+            color: #212529 !important;
+        }
+        
+        #mobileUserDropdown + .dropdown-menu .dropdown-item {
+            color: #212529 !important;
+        }
+        
+        #mobileUserDropdown + .dropdown-menu .dropdown-item:hover {
+            background: rgba(13, 183, 119, 0.1) !important;
+            color: var(--primary) !important;
+        }
+        
+        #mobileUserDropdown + .dropdown-menu .dropdown-item.text-danger {
+            color: #dc3545 !important;
+        }
+        
+        #mobileUserDropdown + .dropdown-menu .dropdown-item.text-danger:hover {
+            background: rgba(220, 53, 69, 0.1) !important;
+            color: #dc3545 !important;
+        }
+        
+        #mobileUserDropdown + .dropdown-menu .dropdown-divider {
+            border-color: rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        #mobileUserDropdown + .dropdown-menu strong {
+            color: #212529 !important;
+        }
+
+         /* ===== Mobile Hamburger Menu ===== */
+         .mobile-menu-toggle {
+             display: none;
+             background: transparent;
+             border: 1px solid var(--primary);
+             color: var(--primary);
+             width: 40px;
+             height: 40px;
+             border-radius: 8px;
+             align-items: center;
+             justify-content: center;
+             cursor: pointer;
+             transition: all 0.3s ease;
          }
-         .dropdown-item{
-             color:#eaf6ef;
-             transition:all 0.2s ease;
+         
+         .mobile-menu-toggle:hover {
+             background: var(--primary);
+             color: #fff;
          }
-         .dropdown-item:hover{
-             background:rgba(13,183,119,.2);
-             color:#fff;
+         
+         .mobile-menu-toggle span {
+             display: block;
+             width: 24px;
+             height: 2px;
+             background: currentColor;
+             margin: 4px 0;
+             transition: all 0.3s ease;
+             border-radius: 2px;
          }
-         .dropdown-item.text-danger:hover{
-             background:rgba(220,53,69,.2);
+         
+         .mobile-menu-toggle.active {
+             background: var(--primary);
+             color: #fff;
          }
-         .dropdown-divider{
-             border-color:var(--border);
+         
+         .mobile-menu-toggle.active span:nth-child(1) {
+             transform: rotate(45deg) translate(6px, 6px);
+         }
+         
+         .mobile-menu-toggle.active span:nth-child(2) {
+             opacity: 0;
+         }
+         
+         .mobile-menu-toggle.active span:nth-child(3) {
+             transform: rotate(-45deg) translate(6px, -6px);
+         }
+         
+         .mobile-nav-menu {
+             display: none;
+             position: absolute;
+             top: 100%;
+             left: 0;
+             right: 0;
+             background: var(--bg-dark);
+             border-top: 1px solid var(--border);
+             padding: 0;
+             z-index: 999;
+             max-height: 0;
+             overflow: hidden;
+             transition: max-height 0.4s ease, padding 0.4s ease;
+             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+         }
+         
+         .mobile-nav-menu.active {
+             display: block;
+             max-height: 80vh;
+             overflow-y: auto;
+             padding: 1rem;
+         }
+         
+         .mobile-nav-menu::-webkit-scrollbar {
+             width: 6px;
+         }
+         
+         .mobile-nav-menu::-webkit-scrollbar-thumb {
+             background: rgba(255, 255, 255, 0.2);
+             border-radius: 3px;
+         }
+         
+         .mobile-nav-menu .nav-link-mobile {
+             display: flex;
+             align-items: center;
+             padding: 0.75rem 1rem;
+             color: #eaf6ef;
+             text-decoration: none;
+             border-radius: 8px;
+             margin-bottom: 0.5rem;
+             transition: all 0.2s ease;
+             border: 1px solid transparent;
+         }
+         
+         .mobile-nav-menu .nav-link-mobile:hover,
+         .mobile-nav-menu .nav-link-mobile:active {
+             background: rgba(13, 183, 119, 0.15);
+             border-color: var(--primary);
+             color: var(--primary);
+             transform: translateX(5px);
+         }
+         
+         .mobile-nav-menu .nav-link-mobile i {
+             width: 20px;
+             text-align: center;
+         }
+         
+         .mobile-nav-menu .dropdown-divider {
+             margin: 0.75rem 0;
+             border-color: var(--border);
+         }
+         
+         .mobile-nav-menu .dropdown-item {
+             padding: 0.75rem 1rem;
+             color: #eaf6ef;
+         }
+         
+         .header-actions {
+             display: flex;
+             align-items: center;
+             gap: 0.5rem;
+         }
+         
+         /* Desktop Navigation - إخفاء القائمة المتنقلة على الشاشات الكبيرة */
+         @media (min-width: 769px) {
+             .mobile-menu-toggle {
+                 display: none !important;
+             }
+             
+             .mobile-nav-menu {
+                 display: none !important;
+             }
+             
+             .desktop-nav {
+                 display: flex !important;
+             }
+         }
+
+         /* ===== Responsive Design for Mobile & Tablet ===== */
+         @media (max-width: 768px) {
+             /* تحسين Header على الشاشات الصغيرة */
+             header {
+                 position: relative;
+             }
+             
+             header .container {
+                 flex-direction: row;
+                 gap: 0.75rem;
+                 position: relative;
+                 align-items: center;
+             }
+             
+             .mobile-menu-toggle {
+                 display: flex;
+                 flex-direction: column;
+             }
+             
+             .desktop-nav {
+                 display: none !important;
+             }
+             
+             .mobile-nav-menu {
+                 display: block;
+             }
+             
+             .header-actions {
+                 margin-left: auto;
+                 gap: 0.4rem;
+             }
+             
+             .header-actions .btn-sm {
+                 font-size: 0.75rem;
+                 padding: 0.35rem 0.65rem;
+                 min-width: 40px;
+             }
+             
+             /* تحسين عرض السلة والحساب على الشاشات الصغيرة */
+             .header-actions .position-relative {
+                 min-width: auto;
+             }
+             
+             .header-actions .badge {
+                 font-size: 0.6rem;
+                 padding: 0.2rem 0.4rem;
+             }
+             
+             /* تحسين الأيقونات */
+             .header-actions .bi {
+                 font-size: 1.1rem;
+             }
+             
+             /* تحسين القائمة المتنقلة */
+             .mobile-nav-menu .nav-link-mobile {
+                 font-size: 0.9rem;
+             }
+             
+             .mobile-nav-menu .bi {
+                 font-size: 1rem;
+             }
+             
+             /* تحسين الـ logo على الشاشات الصغيرة */
+             .brand-logo {
+                 width: 40px;
+                 height: 40px;
+                 font-size: 0.9rem;
+             }
+             
+             header .text-white {
+                 font-size: 0.9rem;
+             }
+             
+             /* تحويل strip-scroll إلى Grid لعرض 3 بطاقات */
+             .strip-scroll {
+                 display: grid !important;
+                 grid-template-columns: repeat(3, 1fr);
+                 gap: 8px;
+                 overflow-x: visible;
+                 padding-bottom: 0;
+             }
+             
+             /* تحسين Category Cards على الشاشات الصغيرة - 3 بطاقات */
+             .strip-card {
+                 width: 100% !important;
+                 min-width: 0 !important;
+                 max-width: 100% !important;
+                 height: auto;
+             }
+             
+             .strip-img {
+                 height: 120px;
+             }
+             
+             /* تحويل products-scroll إلى Grid لعرض 3 بطاقات */
+             .products-scroll {
+                 display: grid !important;
+                 grid-template-columns: repeat(3, 1fr);
+                 gap: 8px;
+                 overflow-x: visible;
+                 padding-bottom: 0;
+             }
+             
+             /* تحسين Product Cards على الشاشات الصغيرة - 3 بطاقات */
+             .product-card-new {
+                 width: 100% !important;
+                 min-width: 0 !important;
+                 max-width: 100% !important;
+                 height: auto;
+             }
+             
+             .product-card-image-container {
+                 width: 90px;
+                 height: 90px;
+             }
+             
+             .product-card-image-wrapper {
+                 min-height: 130px;
+                 padding: 14px;
+             }
+             
+             .product-card-info {
+                 padding: 12px 14px 14px;
+             }
+             
+             .product-card-title {
+                 font-size: 0.75rem;
+                 min-height: 2.25rem;
+                 line-height: 1.3;
+                 -webkit-line-clamp: 2;
+             }
+             
+             .product-card-price {
+                 font-size: 0.9rem;
+             }
+             
+             .product-card-stock-badge {
+                 font-size: 0.6rem;
+                 padding: 4px 8px;
+                 gap: 4px;
+             }
+             
+             .product-card-stock-badge i {
+                 font-size: 0.65rem;
+             }
+             
+             .product-card-category-badge {
+                 font-size: 0.55rem;
+                 padding: 2px 6px;
+             }
+             
+             .product-badge-rating,
+             .product-badge-sold,
+             .product-badge-out-of-stock {
+                 font-size: 0.55rem;
+                 padding: 4px 8px;
+                 top: 8px;
+             }
+             
+             .product-badge-rating {
+                 left: 8px;
+             }
+             
+             .product-badge-sold,
+             .product-badge-out-of-stock {
+                 right: 8px;
+             }
+             
+             .product-badge-rating i,
+             .product-badge-sold i,
+             .product-badge-out-of-stock i {
+                 font-size: 0.6rem;
+             }
+             
+             .product-card-overlay-content {
+                 font-size: 0.7rem;
+             }
+             
+             .product-card-overlay-content i {
+                 font-size: 1.5rem;
+             }
+             
+             /* تحسين المسافات */
+             .strip-scroll {
+                 gap: 0.75rem;
+                 padding-bottom: 0.75rem;
+             }
+         }
+             
+             /* تحسين العناوين */
+             .h5 {
+                 font-size: 1.1rem;
+             }
+             
+             .h6 {
+                 font-size: 0.95rem;
+             }
+             
+             /* تحسين الأزرار */
+             .btn-main,
+             .btn-outline-main {
+                 font-size: 0.8rem;
+                 padding: 0.4rem 0.8rem;
+             }
+             
+             /* تحسين الأزرار الكبيرة */
+             .btn {
+                 font-size: 0.85rem;
+             }
+             
+             /* تحسين المسافات الرأسية */
+             section {
+                 padding-top: 1rem !important;
+                 padding-bottom: 1rem !important;
+             }
+             
+             /* تحسين الـ glass cards */
+             .glass {
+                 border-radius: 14px;
+             }
+         }
+         
+         @media (max-width: 576px) {
+             /* تحسينات إضافية للهواتف الصغيرة جداً - 4 بطاقات */
+             .strip-card {
+                 min-width: 90vw;
+                 max-width: 90vw;
+             }
+             
+             .strip-img {
+                 height: 120px;
+             }
+             
+             /* Grid Layout للهواتف الصغيرة - 3 بطاقات */
+             .strip-scroll {
+                 grid-template-columns: repeat(3, 1fr);
+                 gap: 6px;
+             }
+             
+             .products-scroll {
+                 grid-template-columns: repeat(3, 1fr);
+                 gap: 6px;
+             }
+             
+             .strip-card {
+                 width: 100% !important;
+                 min-width: 0 !important;
+                 max-width: 100% !important;
+             }
+             
+             .strip-img {
+                 height: 100px;
+             }
+             
+             .product-card-new {
+                 width: 100% !important;
+                 min-width: 0 !important;
+                 max-width: 100% !important;
+                 height: auto;
+             }
+             
+             .product-card-image-container {
+                 width: 75px;
+                 height: 75px;
+             }
+             
+             .product-card-image-wrapper {
+                 min-height: 115px;
+                 padding: 12px;
+             }
+             
+             .product-card-info {
+                 padding: 10px 12px 12px;
+             }
+             
+             .product-card-title {
+                 font-size: 0.7rem;
+                 min-height: 2.1rem;
+                 line-height: 1.25;
+             }
+             
+             .product-card-price {
+                 font-size: 0.85rem;
+             }
+             
+             .product-card-stock-badge {
+                 font-size: 0.55rem;
+                 padding: 3px 6px;
+             }
+             
+             .product-card-category-badge {
+                 font-size: 0.5rem;
+                 padding: 2px 5px;
+             }
+             
+             .product-badge-rating,
+             .product-badge-sold,
+             .product-badge-out-of-stock {
+                 font-size: 0.5rem;
+                 padding: 3px 6px;
+                 top: 6px;
+             }
+             
+             .product-badge-rating {
+                 left: 6px;
+             }
+             
+             .product-badge-sold,
+             .product-badge-out-of-stock {
+                 right: 6px;
+             }
+             
+             .product-card-new {
+                 border-radius: 12px;
+             }
+             
+             .product-card-image-container {
+                 border-radius: 10px;
+             }
+             
+             .header-actions {
+                 gap: 0.3rem;
+             }
+             
+             .header-actions .btn-sm {
+                 font-size: 0.7rem;
+                 padding: 0.3rem 0.5rem;
+                 min-width: 36px;
+             }
+             
+             .mobile-menu-toggle {
+                 width: 36px;
+                 height: 36px;
+             }
+             
+             .mobile-menu-toggle span {
+                 width: 20px;
+             }
+             
+             .container {
+                 padding-left: 1rem;
+                 padding-right: 1rem;
+             }
+             
+             .brand-logo {
+                 width: 36px;
+                 height: 36px;
+                 font-size: 0.85rem;
+             }
+             
+             header .text-white {
+                 font-size: 0.85rem;
+             }
+             
+             .mobile-nav-menu {
+                 max-height: 75vh;
+             }
+             
+             /* تحسين العناوين على الشاشات الصغيرة جداً */
+             .h3 {
+                 font-size: 1.3rem;
+             }
+             
+             .h4 {
+                 font-size: 1.15rem;
+             }
+             
+             .h5 {
+                 font-size: 1rem;
+             }
+             
+             .h6 {
+                 font-size: 0.9rem;
+             }
+             
+             /* تحسين الأزرار */
+             .btn {
+                 font-size: 0.8rem;
+                 padding: 0.4rem 0.7rem;
+             }
+             
+             /* تحسين الشارات */
+             .badge {
+                 font-size: 0.65rem;
+                 padding: 0.25rem 0.5rem;
+             }
+             
+             /* تحسين المسافات */
+             .mb-4 {
+                 margin-bottom: 1rem !important;
+             }
+             
+             .mb-3 {
+                 margin-bottom: 0.75rem !important;
+             }
+             
+             .mt-4 {
+                 margin-top: 1rem !important;
+             }
+             
+             .mt-5 {
+                 margin-top: 1.25rem !important;
+             }
+         }
+         
+         @media (min-width: 769px) and (max-width: 1024px) {
+             /* تحسينات للأجهزة اللوحية */
+             .strip-card {
+                 min-width: 300px;
+             }
+             
+             .strip-scroll {
+                 gap: 1.25rem;
+             }
+             
+             .products-scroll {
+                 gap: 18px;
+             }
+         }
+         
+         /* على الشاشات الكبيرة - التصميم الأصلي مع التمرير الأفقي */
+         @media (min-width: 1025px) {
+             .strip-scroll {
+                 display: flex !important;
+                 overflow-x: auto;
+             }
+             
+             .strip-card {
+                 min-width: 260px;
+                 width: auto;
+                 max-width: none;
+             }
+             
+             .products-scroll {
+                 display: flex !important;
+                 overflow-x: auto;
+             }
+             
+             .product-card-new {
+                 width: 280px;
+                 min-width: 280px;
+                 max-width: 280px;
+             }
+         }
+         
+         /* تحسين التمرير على الأجهزة المحمولة */
+         @media (max-width: 1024px) {
+             .strip-scroll,
+             .products-scroll {
+                 scroll-snap-type: x mandatory;
+                 -webkit-overflow-scrolling: touch;
+             }
+             
+             .strip-card,
+             .product-card-new {
+                 scroll-snap-align: start;
+             }
+         }
+         
+         /* إخفاء scrollbar على بعض المتصفحات المحمولة */
+         @media (max-width: 768px) {
+             .strip-scroll::-webkit-scrollbar,
+             .products-scroll::-webkit-scrollbar {
+                 height: 4px;
+             }
          }
 
     </style>
@@ -379,15 +1768,17 @@
 <!-- ===== Header ===== -->
 <header class="glass mb-4">
     <div class="container py-3 d-flex justify-content-between align-items-center">
-
-         <a href="{{ route('home') }}" class="d-flex align-items-center gap-2 text-decoration-none">
-             <div class="brand-logo">VM</div>
-             <strong class="text-white">electropalestine</strong>
+        {{-- Logo --}}
+        <a href="{{ route('home') }}" class="d-flex align-items-center gap-2 text-decoration-none">
+            <img src="{{ asset('images/LOGO-remove background.png') }}" alt="ElectroPalestine Logo" height="46" class="d-none d-md-block">
+            <img src="{{ asset('images/LOGO-remove background.png') }}" alt="ElectroPalestine Logo" height="40" class="d-md-none">
         </a>
 
-        <nav class="d-flex align-items-center gap-2 flex-wrap">
-            @php($authUser = auth()->user())
+        @php($authUser = auth()->user())
+        @php($cartCount = count(session()->get('cart', [])))
 
+        {{-- Desktop Navigation --}}
+        <nav class="d-flex align-items-center gap-2 flex-wrap desktop-nav">
             {{-- Language Switcher --}}
             <div class="dropdown">
                 <button class="btn btn-sm btn-outline-main dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -404,19 +1795,8 @@
             <a href="{{ route('home') }}" class="btn btn-sm btn-outline-main">{{ __('common.home') }}</a>
             <a href="{{ route('store.about') }}" class="btn btn-sm btn-outline-main">{{ __('common.about') }}</a>
             <a href="{{ route('store.story') }}" class="btn btn-sm btn-outline-main">{{ __('common.story') }}</a>
-            <a href="{{ route('home') }}#products" class="btn btn-sm btn-outline-main">{{ __('common.products') }}</a>
+            <a href="{{ route('store.products') }}" class="btn btn-sm btn-outline-main">{{ __('common.products') }}</a>
             <a href="{{ route('store.contact') }}" class="btn btn-sm btn-outline-main">{{ __('common.contact') }}</a>
-
-            {{-- سلة الشراء (أيقونة فقط) --}}
-            @php($cartCount = count(session()->get('cart', [])))
-            <a href="{{ route('store.cart') }}" class="btn btn-sm btn-outline-main position-relative" title="{{ __('common.cart') }}">
-                <i class="bi bi-cart3 fs-5"></i>
-                @if($cartCount > 0)
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger small">
-                        {{ $cartCount }}
-                    </span>
-                @endif
-            </a>
 
             {{-- شريط خاص بالأدمن فقط --}}
             @if($authUser && strtolower($authUser->role) === 'admin')
@@ -430,27 +1810,53 @@
                 <a href="{{ route('admin.store-settings') }}" class="btn btn-sm btn-outline-main font">{{ __('common.store_settings') }}</a>
             @endif
 
-            {{-- جزء المستخدم المسجّل (غير الأدمن): صورة + نقاط + رصيد + إعدادات (dropdown) --}}
+            {{-- جزء المستخدم المسجّل (غير الأدمن): نقاط + رصيد --}}
             @if($authUser)
                 <div class="d-flex align-items-center gap-2 ms-2">
-                    <div class="rounded-circle bg-success d-flex align-items-center justify-content-center"
-                         style="width:34px;height:34px;font-size:0.8rem;">
-                        {{ mb_substr($authUser->first_name,0,1) }}{{ mb_substr($authUser->last_name,0,1) }}
-                    </div>
-                    <span class="badge bg-dark border border-success small">
-                        {{ __('common.your_points') }}: <strong class="text-success">{{ number_format($authUser->points ?? 0) }}</strong>
+                    <span class="badge border border-warning small">
+                        {{ __('common.your_points') }}: <strong>{{ number_format($authUser->points ?? 0) }}</strong>
                     </span>
-                    <span class="badge bg-dark border border-info small">
-                        {{ __('common.your_balance') }}: <strong class="text-info">${{ number_format($authUser->balance ?? 0, 2) }}</strong>
+                    <span class="badge border border-info small">
+                        {{ __('common.your_balance') }}: <strong>${{ number_format($authUser->balance ?? 0, 2) }}</strong>
                     </span>
                 </div>
+            @endif
+        </nav>
 
-                {{-- قائمة الإعدادات المنسدلة --}}
+        {{-- Mobile Actions (Cart + Account) --}}
+        <div class="header-actions">
+            {{-- سلة الشراء --}}
+            <a href="{{ route('store.cart') }}" class="btn btn-sm btn-outline-main position-relative" title="{{ __('common.cart') }}">
+                <i class="bi bi-cart3 fs-5"></i>
+                @if($cartCount > 0)
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger small">
+                        {{ $cartCount }}
+                    </span>
+                @endif
+            </a>
+
+            {{-- حساب المستخدم (على الشاشات الصغيرة) --}}
+            @if($authUser)
                 <div class="dropdown">
-                    <button class="btn btn-sm btn-outline-main dropdown-toggle" type="button" id="settingsDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="{{ __('common.settings') }}">
-                        <i class="bi bi-gear fs-5"></i>
+                    <button class="btn btn-sm btn-outline-main dropdown-toggle d-flex align-items-center" type="button" id="mobileUserDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="{{ __('common.account') }}">
+                        <div class="rounded-circle bg-success d-flex align-items-center justify-content-center"
+                             style="width:28px;height:28px;font-size:0.7rem;">
+                            {{ mb_substr($authUser->first_name,0,1) }}{{ mb_substr($authUser->last_name,0,1) }}
+                        </div>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end glass border border-secondary-subtle" aria-labelledby="settingsDropdown" style="min-width: 200px;">
+                    <ul class="dropdown-menu dropdown-menu-end glass border border-secondary-subtle" aria-labelledby="mobileUserDropdown" style="min-width: 200px;">
+                        <li class="px-3 py-2">
+                            <div class="small mb-1">
+                                <strong>{{ $authUser->first_name }} {{ $authUser->last_name }}</strong>
+                            </div>
+                            <div class="small">
+                                {{ __('common.your_points') }}: <strong class="text-warning">{{ number_format($authUser->points ?? 0) }}</strong>
+                            </div>
+                            <div class="small">
+                                {{ __('common.your_balance') }}: <strong class="text-info">${{ number_format($authUser->balance ?? 0, 2) }}</strong>
+                            </div>
+                        </li>
+                        <li><hr class="dropdown-divider border-secondary-subtle"></li>
                         <li>
                             <a class="dropdown-item text-light" href="{{ route('store.account-settings') }}">
                                 <i class="bi bi-person-circle me-2"></i>
@@ -469,6 +1875,15 @@
                                 {{ __('common.my_comments') }}
                             </a>
                         </li>
+                        @if(strtolower($authUser->role) === 'admin')
+                            <li><hr class="dropdown-divider border-secondary-subtle"></li>
+                            <li>
+                                <a class="dropdown-item text-light" href="{{ route('admin.dashboard') }}">
+                                    <i class="bi bi-speedometer2 me-2"></i>
+                                    {{ __('common.admin_dashboard') }}
+                                </a>
+                            </li>
+                        @endif
                         <li><hr class="dropdown-divider border-secondary-subtle"></li>
                         <li>
                             <form method="POST" action="{{ route('logout') }}" class="d-inline w-100">
@@ -482,10 +1897,110 @@
                     </ul>
                 </div>
             @else
-                <a href="{{ route('login') }}" class="btn btn-sm btn-outline-main">{{ __('common.login') }}</a>
-                <a href="{{ route('register') }}" class="btn btn-sm btn-main">{{ __('common.register') }}</a>
+                <a href="{{ route('login') }}" class="btn btn-sm btn-outline-main d-none d-md-inline-block">{{ __('common.login') }}</a>
+                <a href="{{ route('register') }}" class="btn btn-sm btn-main d-none d-md-inline-block">{{ __('common.register') }}</a>
             @endif
-        </nav>
+
+            {{-- Hamburger Menu Toggle --}}
+            <button class="mobile-menu-toggle" type="button" id="mobileMenuToggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </div>
+
+    {{-- Mobile Navigation Menu --}}
+    <div class="mobile-nav-menu" id="mobileNavMenu">
+        {{-- Language Switcher --}}
+        <div class="mb-3">
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-main w-100 dropdown-toggle" type="button" id="mobileLanguageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-translate"></i>
+                    {{ $locale === 'ar' ? __('common.arabic') : __('common.english') }}
+                </button>
+                <ul class="dropdown-menu w-100 glass border border-secondary-subtle" aria-labelledby="mobileLanguageDropdown">
+                    <li><a class="dropdown-item text-light" href="{{ route('language.switch', 'ar') }}">العربية</a></li>
+                    <li><a class="dropdown-item text-light" href="{{ route('language.switch', 'en') }}">English</a></li>
+                </ul>
+            </div>
+        </div>
+
+        {{-- روابط عامة --}}
+        <a href="{{ route('home') }}" class="nav-link-mobile">
+            <i class="bi bi-house me-2"></i>
+            {{ __('common.home') }}
+        </a>
+        <a href="{{ route('store.about') }}" class="nav-link-mobile">
+            <i class="bi bi-info-circle me-2"></i>
+            {{ __('common.about') }}
+        </a>
+        <a href="{{ route('store.story') }}" class="nav-link-mobile">
+            <i class="bi bi-book me-2"></i>
+            {{ __('common.story') }}
+        </a>
+        <a href="{{ route('store.products') }}" class="nav-link-mobile">
+            <i class="bi bi-box-seam me-2"></i>
+            {{ __('common.products') }}
+        </a>
+        <a href="{{ route('store.contact') }}" class="nav-link-mobile">
+            <i class="bi bi-envelope me-2"></i>
+            {{ __('common.contact') }}
+        </a>
+
+        {{-- شريط خاص بالأدمن فقط --}}
+        @if($authUser && strtolower($authUser->role) === 'admin')
+            <hr class="dropdown-divider">
+            <div class="small text-success px-3 py-2 mb-2">
+                <i class="bi bi-shield-check me-2"></i>
+                <strong>{{ __('common.admin_panel') }}</strong>
+            </div>
+            <a href="{{ route('admin.dashboard') }}" class="nav-link-mobile">
+                <i class="bi bi-speedometer2 me-2"></i>
+                {{ __('common.admin_dashboard') }}
+            </a>
+            <a href="{{ route('admin.catalog') }}" class="nav-link-mobile">
+                <i class="bi bi-folder me-2"></i>
+                {{ __('common.manage_categories') }}
+            </a>
+            <a href="{{ route('admin.campaigns') }}" class="nav-link-mobile">
+                <i class="bi bi-megaphone me-2"></i>
+                {{ __('common.advertising_campaigns') }}
+            </a>
+            <a href="{{ route('admin.roles') }}" class="nav-link-mobile">
+                <i class="bi bi-person-badge me-2"></i>
+                {{ __('common.roles_permissions') }}
+            </a>
+            <a href="{{ route('admin.users') }}" class="nav-link-mobile">
+                <i class="bi bi-people me-2"></i>
+                {{ __('common.show_users') }}
+            </a>
+            <a href="{{ route('admin.orders') }}" class="nav-link-mobile">
+                <i class="bi bi-receipt me-2"></i>
+                {{ __('common.show_orders') }}
+            </a>
+            <a href="{{ route('admin.coupons') }}" class="nav-link-mobile">
+                <i class="bi bi-ticket-perforated me-2"></i>
+                {{ __('common.coupons') }}
+            </a>
+            <a href="{{ route('admin.store-settings') }}" class="nav-link-mobile">
+                <i class="bi bi-gear me-2"></i>
+                {{ __('common.store_settings') }}
+            </a>
+        @endif
+
+        {{-- روابط تسجيل الدخول/التسجيل للزوار --}}
+        @if(!$authUser)
+            <hr class="dropdown-divider">
+            <a href="{{ route('login') }}" class="nav-link-mobile">
+                <i class="bi bi-box-arrow-in-right me-2"></i>
+                {{ __('common.login') }}
+            </a>
+            <a href="{{ route('register') }}" class="nav-link-mobile" style="background: var(--primary); color: #fff; border-color: var(--primary);">
+                <i class="bi bi-person-plus me-2"></i>
+                {{ __('common.register') }}
+            </a>
+        @endif
     </div>
 </header>
 
@@ -543,7 +2058,7 @@
                     <a href="https://www.instagram.com/electropalestine" target="_blank" rel="noopener noreferrer" class="social-icon d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%; background-color: rgba(255,255,255,0.1); color: white; text-decoration: none; font-size: 18px;" title="Instagram">
                         <i class="fab fa-instagram"></i>
                     </a>
-                    <a href="https://wa.me/970591234567" target="_blank" rel="noopener noreferrer" class="social-icon d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%; background-color: rgba(255,255,255,0.1); color: white; text-decoration: none; font-size: 18px;" title="WhatsApp">
+                    <a href="https://wa.me/970598134332" target="_blank" rel="noopener noreferrer" class="social-icon d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%; background-color: rgba(255,255,255,0.1); color: white; text-decoration: none; font-size: 18px;" title="WhatsApp">
                         <i class="fab fa-whatsapp"></i>
                     </a>
                 </div>
@@ -562,10 +2077,16 @@
             <div class="col-md-3 col-lg-2 col-xl-2 mx-auto mb-4">
                 <h6 class="text-uppercase fw-bold mb-4 d-inline-block pb-1" style="border-bottom: 2px solid #0db777;">{{ __('common.customer_service') }}</h6>
                 <ul class="list-unstyled">
-                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-link">{{ __('common.my_account') }}</a></li>
-                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-link">{{ __('common.track_order') }}</a></li>
-                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-link">{{ __('common.return_policy') }}</a></li>
-                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-link">{{ __('common.faq') }}</a></li>
+                    <li class="mb-2">
+                        @auth
+                            <a href="{{ route('store.account-settings') }}" class="text-white-50 text-decoration-none hover-link">{{ __('common.my_account') }}</a>
+                        @else
+                            <a href="{{ route('login') }}" class="text-white-50 text-decoration-none hover-link">{{ __('common.my_account') }}</a>
+                        @endauth
+                    </li>
+                    <li class="mb-2"><a href="{{ route('store.track-order') }}" class="text-white-50 text-decoration-none hover-link">{{ __('common.track_order') }}</a></li>
+                    <li class="mb-2"><a href="{{ route('store.return-policy') }}" class="text-white-50 text-decoration-none hover-link">{{ __('common.return_policy') }}</a></li>
+                    <li class="mb-2"><a href="{{ route('store.faq') }}" class="text-white-50 text-decoration-none hover-link">{{ __('common.faq') }}</a></li>
                 </ul>
             </div>
 
@@ -573,8 +2094,7 @@
                 <h6 class="text-uppercase fw-bold mb-4 d-inline-block pb-1" style="border-bottom: 2px solid #0db777;">{{ __('common.contact_us') }}</h6>
                 <p class="text-white-50"><i class="fas fa-home me-3 text-secondary ms-2"></i> {{ __('common.footer_address') }}</p>
                 <p class="text-white-50"><i class="fas fa-envelope me-3 text-secondary ms-2"></i> info@electropalestine.com</p>
-                <p class="text-white-50" dir="ltr"><i class="fas fa-phone me-3 text-secondary ms-2"></i> +970 59 123 4567</p>
-                <p class="text-white-50" dir="ltr"><i class="fas fa-print me-3 text-secondary ms-2"></i> +970 2 298 7654</p>
+                <p class="text-white-50" dir="ltr"><i class="fas fa-phone me-3 text-secondary ms-2"></i> +970598134332</p>
             </div>
         </div>
     </div>
@@ -595,6 +2115,41 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Mobile Menu Toggle
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileNavMenu = document.getElementById('mobileNavMenu');
+        
+        if (mobileMenuToggle && mobileNavMenu) {
+            mobileMenuToggle.addEventListener('click', function() {
+                this.classList.toggle('active');
+                mobileNavMenu.classList.toggle('active');
+            });
+            
+            // إغلاق القائمة عند النقر خارجها
+            document.addEventListener('click', function(event) {
+                const isClickInsideMenu = mobileNavMenu.contains(event.target);
+                const isClickOnToggle = mobileMenuToggle.contains(event.target);
+                
+                if (!isClickInsideMenu && !isClickOnToggle && mobileNavMenu.classList.contains('active')) {
+                    mobileMenuToggle.classList.remove('active');
+                    mobileNavMenu.classList.remove('active');
+                }
+            });
+            
+            // إغلاق القائمة عند النقر على رابط
+            const mobileNavLinks = mobileNavMenu.querySelectorAll('.nav-link-mobile');
+            mobileNavLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    mobileMenuToggle.classList.remove('active');
+                    mobileNavMenu.classList.remove('active');
+                });
+            });
+        }
+    });
+</script>
 
 </body>
 </html>

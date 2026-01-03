@@ -7,9 +7,12 @@ use App\Models\Category;
 use App\Models\Company;
 use App\Models\Product;
 use App\Models\Type;
+use App\Helpers\ImageHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class AdminCampaignController extends Controller
 {
@@ -60,7 +63,11 @@ class AdminCampaignController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('campaigns', 'public');
+            $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), 'campaigns', 'public');
+            if (!$data['image']) {
+                Log::error('فشل رفع صورة الحملة', ['campaign_title' => $data['title']]);
+                return back()->withErrors(['error' => 'فشل رفع صورة الحملة. يرجى التحقق من صلاحيات المجلدات.'])->withInput();
+            }
         }
 
         if ($data['shipping_type'] !== 'conditional') {

@@ -7,6 +7,7 @@ use App\Models\Role;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Storage;
 
 class AdminUserController extends Controller
 {
@@ -142,6 +143,11 @@ class AdminUserController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
+        // حذف صورة الهوية المرتبطة بالمستخدم
+        if ($user->id_image && Storage::disk('public')->exists($user->id_image)) {
+            Storage::disk('public')->delete($user->id_image);
+        }
+        
         $user->delete();
         return back()->with('status', 'تم حذف المستخدم بنجاح.');
     }

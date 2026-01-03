@@ -19,6 +19,8 @@
 /storage/*.key
 /storage/pail
 /vendor
-Homestead.json
-Homestead.yaml
-Thumbs.db
+
+# Temporary deployment files (delete after use)
+generate-key.php
+run-migrations.php
+clear-cache.php

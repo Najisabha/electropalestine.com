@@ -156,19 +156,48 @@
         <table class="header-table">
             <tr>
                 <td class="company-info" style="width: 50%;">
-                    <h1 class="text-green">electropalestine</h1>
-                    <p style="margin: 5px 0 0 0; font-size: 12px; color: #777;">{{ __('common.simplified_tax_invoice') }}</p>
-                    <p style="margin: 5px 0 0 0;">
-                        <span style="font-weight: bold;">{{ __('common.address') }}:</span> [{{ __('common.address') }}]
-                    </p>
+                    <h1 class="text-green" style="margin-bottom: 8px;">electropalestine</h1>
+                    <p style="margin: 5px 0; font-size: 12px; color: #777;">{{ __('common.simplified_tax_invoice') }}</p>
+                    <div style="margin-top: 12px; font-size: 11px; color: #555; line-height: 1.8;">
+                        <p style="margin: 3px 0;">
+                            <strong>{{ __('common.address') }}:</strong> {{ __('common.footer_address') ?? 'فلسطين، طولكرم، عنبتا' }}
+                        </p>
+                        <p style="margin: 3px 0;">
+                            <strong>{{ __('common.email') }}:</strong> <span class="ltr">info@electropalestine.com</span>
+                        </p>
+                        <p style="margin: 3px 0;">
+                            <strong>{{ __('common.phone') }}:</strong> <span class="ltr">+970598134332</span>
+                        </p>
+                        <p style="margin: 3px 0;">
+                            <strong>{{ __('common.tax_number') ?? 'الرقم الضريبي' }}:</strong> <span class="ltr">123456789</span>
+                        </p>
+                    </div>
                 </td>
                 <td style="width: 50%; text-align: left;">
-                    <strong style="color: #555;">{{ __('common.invoice_number') }}:</strong> <span class="ltr" style="font-weight: bold; font-size: 16px;">#{{ $order->id }}</span><br>
-                    <strong style="color: #555;">{{ __('common.issue_date') }}:</strong> <span class="ltr">{{ $order->created_at->format('Y-m-d') }}</span><br>
-                    <strong style="color: #555;">{{ __('common.status') }}:</strong> 
-                    <span class="tag {{ $order->status == 'confirmed' ? 'tag-confirmed' : 'tag-pending' }}">
-                        {{ $order->status === 'confirmed' ? __('common.confirmed') : __('common.pending') }}
-                    </span>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #e0e0e0;">
+                        <strong style="color: #555; display: block; margin-bottom: 8px;">{{ __('common.invoice_number') }}:</strong>
+                        <span class="ltr" style="font-weight: bold; font-size: 18px; color: #0db777;">#{{ $order->id }}</span>
+                        <small style="color: #777; font-size: 10px; display: block; margin-top: 4px;">{{ __('common.tracking_number_note') ?? '(يمكنك استخدام هذا الرقم لتتبع طلبك)' }}</small>
+                        
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0;">
+                            <p style="margin: 5px 0; font-size: 12px;">
+                                <strong style="color: #555;">{{ __('common.issue_date') }}:</strong> 
+                                <span class="ltr">{{ $order->created_at->format('Y-m-d') }}</span>
+                            </p>
+                            <p style="margin: 5px 0; font-size: 12px;">
+                                <strong style="color: #555;">{{ __('common.status') }}:</strong> 
+                                <span class="tag {{ $order->status == 'confirmed' ? 'tag-confirmed' : 'tag-pending' }}">
+                                    {{ $order->status === 'confirmed' ? __('common.confirmed') : __('common.pending') }}
+                                </span>
+                            </p>
+                            @if($order->payment_method)
+                            <p style="margin: 5px 0; font-size: 12px;">
+                                <strong style="color: #555;">{{ __('common.payment_method') ?? 'طريقة الدفع' }}:</strong> 
+                                <span>{{ __('common.payment_' . $order->payment_method) ?? $order->payment_method }}</span>
+                            </p>
+                            @endif
+                        </div>
+                    </div>
                 </td>
             </tr>
         </table>
@@ -234,8 +263,16 @@
         </table>
 
         <div class="footer">
-            <p style="margin: 0;">{{ __('common.invoice_footer') }}</p>
-            <p style="margin: 5px 0 0 0;">{{ __('common.invoice_contact') }} <span dir="ltr">info@electropalestine.com</span></p>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-top: 20px; border: 1px solid #e0e0e0;">
+                <p style="margin: 0 0 8px 0; font-weight: bold; color: #555;">{{ __('common.important_notes') ?? 'ملاحظات مهمة' }}:</p>
+                <ul style="margin: 0; padding-right: 20px; font-size: 11px; color: #666; line-height: 1.8;">
+                    <li>{{ __('common.invoice_note_1') ?? 'هذه الفاتورة تم إصدارها آلياً وهي صالحة دون توقيع' }}</li>
+                    <li>{{ __('common.invoice_note_2') ?? 'يرجى الاحتفاظ بهذه الفاتورة للمراجعة' }}</li>
+                    <li>{{ __('common.invoice_note_3') ?? 'للاستفسارات: info@electropalestine.com أو +970598134332' }}</li>
+                </ul>
+            </div>
+            <p style="margin: 15px 0 5px 0; font-size: 11px; color: #999;">{{ __('common.invoice_footer') }}</p>
+            <p style="margin: 0; font-size: 10px; color: #aaa;">© {{ date('Y') }} electropalestine - {{ __('common.all_rights_reserved') }}</p>
         </div>
     </div>
 

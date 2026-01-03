@@ -1,10 +1,10 @@
 @php($bestSelling = $bestSelling ?? collect())
 @php($campaigns = $campaigns ?? collect())
 
-<section class="py-4 text-light">
+<section class="py-3 py-md-4 text-light">
     <div class="container">
         @if ($campaigns->isNotEmpty())
-            <div class="mb-4">
+            <div class="mb-3 mb-md-4">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <div>
                         <p class="text-success small mb-1">{{ __('common.special_offers') }}</p>
@@ -70,7 +70,7 @@
             </div>
         @endif
 
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2 mb-md-3">
             <div>
                 <p class="text-success small mb-1">{{ __('common.main_categories') }}</p>
                 <h2 class="h5 fw-bold mb-0">{{ __('common.category_images_strip') }}</h2>
@@ -87,12 +87,12 @@
                             {{ __('common.no_image') }}
                         </div>
                     @endif
-                    <div class="p-3">
-                        <div class="d-flex justify-content_between align-items-center mb-1">
-                            <strong class="text-white">{{ $category->translated_name }}</strong>
-                            <span class="badge bg-success text-dark">{{ __('common.main_category') }}</span>
+                    <div class="p-2 p-md-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong class="text-white small">{{ $category->translated_name }}</strong>
+                            <span class="badge bg-success text-dark small">{{ __('common.main_category') }}</span>
                         </div>
-                        <p class="text-secondary small mb-0">{{ \Illuminate\Support\Str::limit($category->translated_description, 80) }}</p>
+                        <p class="text-secondary small mb-0">{{ \Illuminate\Support\Str::limit($category->translated_description, 60) }}</p>
                     </div>
                 </a>
             @empty
@@ -100,13 +100,13 @@
             @endforelse
         </div>
 
-        <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+        <div class="d-flex justify-content-between align-items-center mt-3 mt-md-4 mb-2 mb-md-3">
             <div>
                 <p class="text-success small mb-1">{{ __('common.best_selling') }}</p>
                 <h2 class="h5 fw-bold mb-0">{{ __('common.best_selling_strip') }}</h2>
             </div>
         </div>
-        <div class="products-scroll mb-4">
+        <div class="products-scroll mb-3 mb-md-4">
             @forelse ($bestSelling as $product)
                 <x-product-card :product="$product" />
             @empty
@@ -115,7 +115,7 @@
         </div>
 
         {{-- جميع المنتجات في قاعدة البيانات --}}
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2 mb-md-3">
             <div>
                 <p class="text-success small mb-1">{{ __('common.all_products_title') }}</p>
                 <h2 class="h5 fw-bold mb-0">{{ __('common.all_store_products') }}</h2>

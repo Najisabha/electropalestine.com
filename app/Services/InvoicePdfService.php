@@ -30,7 +30,17 @@ class InvoicePdfService
         $pdf->SetFont('dejavusans', '', 9);
         $pdf->SetTextColor(100, 100, 100);
         $pdf->Cell(0, 7, '(فاتورة ضريبية مبسطة)', 0, 1, 'R');
-        $pdf->Ln(12);
+        $pdf->Ln(5);
+        
+        // معلومات الشركة
+        $pdf->SetFont('dejavusans', '', 8);
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->Cell(0, 6, 'فلسطين، طولكرم، عنبتا', 0, 1, 'R');
+        $pdf->setRTL(false);
+        $pdf->Cell(0, 6, 'info@electropalestine.com | +970598134332', 0, 1, 'R');
+        $pdf->setRTL(true);
+        $pdf->Cell(0, 6, 'الرقم الضريبي: 123456789', 0, 1, 'R');
+        $pdf->Ln(8);
         
         // معلومات الفاتورة - كل سطر منفصل وواضح
         $pdf->SetFillColor(240, 252, 248);
@@ -47,6 +57,14 @@ class InvoicePdfService
         $pdf->setRTL(false);
         $pdf->SetTextColor(13, 183, 119);
         $pdf->Cell(145, 7, '# ' . $order->id, 0, 1, 'L');
+        $pdf->setRTL(true);
+        
+        // ملاحظة رقم التتبع
+        $pdf->SetFont('dejavusans', '', 7);
+        $pdf->SetTextColor(100, 100, 100);
+        $pdf->Cell(45, 5, '', 0, 0, 'R');
+        $pdf->setRTL(false);
+        $pdf->Cell(145, 5, '(يمكنك استخدام هذا الرقم لتتبع طلبك)', 0, 1, 'L');
         $pdf->setRTL(true);
         
         // التاريخ - سطر كامل
@@ -69,6 +87,25 @@ class InvoicePdfService
         $pdf->SetTextColor($statusColor[0], $statusColor[1], $statusColor[2]);
         $pdf->Cell(145, 7, $status, 0, 1, 'R');
         $pdf->SetTextColor(0, 0, 0);
+        
+        // طريقة الدفع - إذا كانت موجودة
+        if ($order->payment_method) {
+            $pdf->SetFont('dejavusans', 'B', 9);
+            $pdf->SetTextColor(0, 0, 0);
+            $pdf->Cell(45, 7, 'طريقة الدفع:', 0, 0, 'R');
+            $pdf->SetFont('dejavusans', '', 9);
+            $paymentMethod = $order->payment_method;
+            $paymentMethods = [
+                'cash_on_delivery' => 'الدفع عند الاستلام',
+                'balance_points' => 'الرصيد/النقاط',
+                'card' => 'بطاقة ائتمانية',
+                'wallet' => 'محفظة إلكترونية',
+                'agent' => 'وكيل',
+            ];
+            $paymentText = $paymentMethods[$paymentMethod] ?? $paymentMethod;
+            $pdf->Cell(145, 7, $paymentText, 0, 1, 'R');
+        }
+        
         $pdf->Ln(15);
         
         // معلومات العميل
@@ -214,17 +251,31 @@ class InvoicePdfService
         $pdf->Ln(16);
         
         // التذييل
-        $pdf->SetTextColor(120, 120, 120);
-        $pdf->SetFont('dejavusans', '', 8);
-        $pdf->Cell(0, 7, 'شكراً لاختيارك electropalestine', 0, 1, 'C');
-        $pdf->Cell(0, 7, 'هذه الفاتورة تم إصدارها آلياً وهي صالحة دون توقيع', 0, 1, 'C');
-        $pdf->Ln(5);
-        $pdf->SetFont('dejavusans', '', 8);
-        $pdf->Cell(0, 7, 'لأي استفسار، يرجى التواصل معنا عبر:', 0, 1, 'C');
+        $pdf->Ln(8);
+        $pdf->SetFillColor(240, 248, 255);
+        $pdf->SetDrawColor(200, 200, 200);
+        $pdf->Rect(10, $pdf->GetY(), 190, 35, 'DF');
+        $pdf->SetY($pdf->GetY() + 5);
+        
+        $pdf->SetFont('dejavusans', 'B', 9);
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->Cell(0, 6, 'ملاحظات مهمة:', 0, 1, 'R');
+        
+        $pdf->SetFont('dejavusans', '', 7);
+        $pdf->SetTextColor(80, 80, 80);
+        $pdf->Cell(0, 5, '• هذه الفاتورة تم إصدارها آلياً وهي صالحة دون توقيع', 0, 1, 'R');
+        $pdf->Cell(0, 5, '• يرجى الاحتفاظ بهذه الفاتورة للمراجعة', 0, 1, 'R');
         $pdf->setRTL(false);
-        $pdf->SetFont('dejavusans', 'B', 8);
-        $pdf->SetTextColor(13, 183, 119);
-        $pdf->Cell(0, 7, 'info@electropalestine.com', 0, 1, 'C');
+        $pdf->Cell(0, 5, '• For inquiries: info@electropalestine.com | +970598134332', 0, 1, 'L');
+        $pdf->setRTL(true);
+        
+        $pdf->Ln(8);
+        $pdf->SetTextColor(120, 120, 120);
+        $pdf->SetFont('dejavusans', '', 7);
+        $pdf->Cell(0, 5, 'شكراً لاختيارك electropalestine', 0, 1, 'C');
+        $pdf->setRTL(false);
+        $pdf->SetFont('dejavusans', '', 6);
+        $pdf->Cell(0, 4, '© ' . date('Y') . ' electropalestine - All Rights Reserved', 0, 1, 'C');
         $pdf->setRTL(true);
         
         return $pdf;

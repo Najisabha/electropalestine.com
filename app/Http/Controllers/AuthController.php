@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Helpers\ImageHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\View\View;
 
@@ -67,7 +69,11 @@ class AuthController extends Controller
 
         $idImagePath = null;
         if ($request->hasFile('id_image')) {
-            $idImagePath = $request->file('id_image')->store('ids', 'public');
+            $idImagePath = ImageHelper::storeWithSequentialName($request->file('id_image'), 'ids', 'public');
+            if (!$idImagePath) {
+                Log::error('فشل رفع صورة الهوية عند التسجيل', ['email' => $data['email']]);
+                return back()->withErrors(['id_image' => 'فشل رفع صورة الهوية. يرجى التحقق من صلاحيات المجلدات.'])->withInput();
+            }
         }
 
         $user = User::create([
@@ -108,7 +114,7 @@ class AuthController extends Controller
     {
         $request->validate(['email' => ['required', 'email']]);
 
-        $status = Password::sendResetLink(
+        $status = Password::broker('users')->sendResetLink(
             $request->only('email')
         );
 
@@ -130,7 +136,7 @@ class AuthController extends Controller
             'password' => ['required', 'confirmed', PasswordRule::defaults()],
         ]);
 
-        $status = Password::reset(
+        $status = Password::broker('users')->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user, string $password) {
                 $user->forceFill([
