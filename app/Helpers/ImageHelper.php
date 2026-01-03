@@ -8,6 +8,80 @@ use Illuminate\Support\Facades\Log;
 class ImageHelper
 {
     /**
+     * يتحقق من وجود الرابط الرمزي ويُنشئه إذا لزم الأمر
+     * 
+     * @return bool
+     */
+    private static function ensureStorageLink(): bool
+    {
+        try {
+            $linkPath = public_path('storage');
+            $targetPath = storage_path('app/public');
+            
+            // التأكد من وجود المجلد الهدف
+            if (!file_exists($targetPath)) {
+                @mkdir($targetPath, 0755, true);
+            }
+            
+            // إذا كان الرابط موجوداً بالفعل ويعمل، نرجع true
+            if (file_exists($linkPath) || is_link($linkPath)) {
+                // التحقق من أن الرابط يعمل بشكل صحيح
+                $testFile = $targetPath . '/.test';
+                @file_put_contents($testFile, 'test');
+                if (file_exists($linkPath . '/.test')) {
+                    @unlink($testFile);
+                    @unlink($linkPath . '/.test');
+                    return true;
+                }
+                @unlink($testFile);
+            }
+            
+            // محاولة إنشاء الرابط الرمزي
+            // في Windows، قد نحتاج لاستخدام junction بدلاً من symlink
+            if (PHP_OS_FAMILY === 'Windows') {
+                // في Windows، نستخدم exec لإنشاء junction (يحتاج صلاحيات إدارية)
+                // إذا فشل، نترك الأمر للمستخدم لإنشائه يدوياً
+                if (!file_exists($linkPath)) {
+                    $command = sprintf('mklink /J "%s" "%s"', $linkPath, $targetPath);
+                    @exec($command, $output, $returnCode);
+                    if ($returnCode === 0 || is_dir($linkPath)) {
+                        Log::info('تم إنشاء الرابط الرمزي بنجاح', ['linkPath' => $linkPath]);
+                        return true;
+                    } else {
+                        Log::warning('فشل إنشاء الرابط الرمزي في Windows - قد تحتاج صلاحيات إدارية', [
+                            'linkPath' => $linkPath,
+                            'targetPath' => $targetPath
+                        ]);
+                    }
+                }
+            } else {
+                // في Linux/Unix، نستخدم symlink
+                if (!file_exists($linkPath)) {
+                    if (@symlink($targetPath, $linkPath)) {
+                        Log::info('تم إنشاء الرابط الرمزي بنجاح', ['linkPath' => $linkPath]);
+                        return true;
+                    } else {
+                        Log::warning('فشل إنشاء الرابط الرمزي', [
+                            'linkPath' => $linkPath,
+                            'targetPath' => $targetPath
+                        ]);
+                    }
+                }
+            }
+            
+            // إذا وصلنا هنا، الرابط موجود أو فشلنا في إنشائه
+            // نرجع true لأن الحفظ قد يعمل حتى بدون الرابط (اعتماداً على الإعدادات)
+            return true;
+        } catch (\Exception $e) {
+            Log::warning('فشل التحقق من الرابط الرمزي', [
+                'error' => $e->getMessage()
+            ]);
+            // لا نرجع false هنا لأن الرابط قد يكون موجوداً بالفعل
+            return true;
+        }
+    }
+
+    /**
      * يحفظ الصورة مع اسم متسلسل بناءً على اسم المجلد
      * 
      * @param \Illuminate\Http\UploadedFile $file
@@ -27,6 +101,11 @@ class ImageHelper
                 return null;
             }
 
+            // التأكد من وجود الرابط الرمزي
+            if ($disk === 'public') {
+                self::ensureStorageLink();
+            }
+
             $storage = Storage::disk($disk);
             
             // التأكد من وجود المجلد وإنشاؤه إذا لم يكن موجوداً
@@ -44,15 +123,27 @@ class ImageHelper
                 }
             }
 
-            // التحقق من صلاحيات الكتابة على المجلد
-            $fullPath = $storage->path($directory);
-            if (!is_writable($fullPath)) {
-                Log::error('المجلد غير قابل للكتابة', [
+            // محاولة التحقق من صلاحيات الكتابة (مع معالجة الأخطاء)
+            try {
+                $fullPath = $storage->path($directory);
+                if (file_exists($fullPath) && !is_writable($fullPath)) {
+                    // محاولة تغيير الصلاحيات
+                    @chmod($fullPath, 0755);
+                    if (!is_writable($fullPath)) {
+                        Log::warning('المجلد قد لا يكون قابل للكتابة، سيتم المحاولة على أي حال', [
+                            'directory' => $directory,
+                            'fullPath' => $fullPath,
+                            'permissions' => file_exists($fullPath) ? substr(sprintf('%o', fileperms($fullPath)), -4) : 'N/A'
+                        ]);
+                        // لا نرجع null هنا، نترك المحاولة الفعلية للحفظ
+                    }
+                }
+            } catch (\Exception $e) {
+                // إذا فشل التحقق من المسار، نتابع المحاولة على أي حال
+                Log::warning('فشل التحقق من صلاحيات المجلد، سيتم المحاولة على أي حال', [
                     'directory' => $directory,
-                    'fullPath' => $fullPath,
-                    'permissions' => substr(sprintf('%o', fileperms($fullPath)), -4)
+                    'error' => $e->getMessage()
                 ]);
-                return null;
             }
 
             // الحصول على امتداد الملف
@@ -84,15 +175,40 @@ class ImageHelper
             }
 
             // حفظ الملف
-            $storedPath = $file->storeAs($directory, $fileName, $disk);
-            
-            // التحقق من نجاح الحفظ
-            if (!$storedPath || !$storage->exists($storedPath)) {
-                Log::error('فشل حفظ الملف', [
+            try {
+                $storedPath = $file->storeAs($directory, $fileName, $disk);
+                
+                if (!$storedPath) {
+                    Log::error('فشل حفظ الملف - storeAs أرجعت null', [
+                        'directory' => $directory,
+                        'fileName' => $fileName,
+                        'disk' => $disk
+                    ]);
+                    return null;
+                }
+                
+                // التحقق من وجود الملف بعد الحفظ
+                if (!$storage->exists($storedPath)) {
+                    // محاولة التحقق بالمسار الكامل
+                    $fullStoredPath = $storage->path($storedPath);
+                    if (!file_exists($fullStoredPath)) {
+                        Log::error('فشل حفظ الملف - الملف غير موجود بعد الحفظ', [
+                            'directory' => $directory,
+                            'fileName' => $fileName,
+                            'storedPath' => $storedPath,
+                            'fullStoredPath' => $fullStoredPath,
+                            'disk' => $disk
+                        ]);
+                        return null;
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('استثناء أثناء حفظ الملف', [
                     'directory' => $directory,
                     'fileName' => $fileName,
-                    'storedPath' => $storedPath,
-                    'disk' => $disk
+                    'disk' => $disk,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
                 ]);
                 return null;
             }

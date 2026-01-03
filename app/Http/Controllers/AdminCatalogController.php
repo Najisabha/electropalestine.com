@@ -107,14 +107,35 @@ class AdminCatalogController extends Controller
         $data['slug'] = Str::slug($data['name']);
 
         if ($request->hasFile('image')) {
+            Log::info('بدء رفع صورة الفئة', [
+                'category_name' => $data['name'],
+                'file_name' => $request->file('image')->getClientOriginalName(),
+                'file_size' => $request->file('image')->getSize()
+            ]);
+            
             $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), 'categories', 'public');
+            
             if (!$data['image']) {
-                Log::error('فشل رفع صورة الفئة', ['category_name' => $data['name']]);
+                Log::error('فشل رفع صورة الفئة', [
+                    'category_name' => $data['name'],
+                    'file_name' => $request->file('image')->getClientOriginalName()
+                ]);
                 return back()->withErrors(['error' => 'فشل رفع صورة الفئة. يرجى التحقق من صلاحيات المجلدات.'])->withInput();
             }
+            
+            Log::info('تم رفع صورة الفئة بنجاح', [
+                'category_name' => $data['name'],
+                'image_path' => $data['image']
+            ]);
         }
 
-        Category::create($data);
+        $category = Category::create($data);
+        
+        Log::info('تم إنشاء الفئة بنجاح', [
+            'category_id' => $category->id,
+            'category_name' => $category->name,
+            'image_path' => $category->image
+        ]);
 
         return back()->with('status', 'تم إضافة الصنف الرئيسي.');
     }
