@@ -410,4 +410,57 @@ class ImageHelper
         // إرجاع أكبر رقم + 1
         return max($numbers) + 1;
     }
+
+    /**
+     * يحصل على URL للصورة مع دعم symbolic link وroute كبديل
+     * 
+     * @param string|null $path المسار النسبي للصورة داخل storage/app/public
+     * @return string|null
+     */
+    public static function url(?string $path): ?string
+    {
+        if (empty($path)) {
+            return null;
+        }
+
+        // تنظيف المسار من الشرطة المائلة في البداية
+        $path = ltrim($path, '/');
+
+        // التحقق من وجود symbolic link
+        $publicStoragePath = public_path('storage');
+        $targetPath = storage_path('app/public');
+        $testFilePath = $path; // ملف للاختبار (مثل categories/category1.png)
+        
+        // التحقق من وجود symbolic link ويعمل بشكل صحيح
+        $symbolicLinkExists = false;
+        if (is_link($publicStoragePath) || file_exists($publicStoragePath)) {
+            try {
+                if (is_link($publicStoragePath)) {
+                    // في Unix/Linux
+                    $linkTarget = readlink($publicStoragePath);
+                    if ($linkTarget === $targetPath || realpath($linkTarget) === realpath($targetPath)) {
+                        $symbolicLinkExists = true;
+                    }
+                } elseif (PHP_OS_FAMILY === 'Windows' && is_dir($publicStoragePath)) {
+                    // في Windows، junction points
+                    // التحقق من وجود ملف اختبار
+                    $testFile = $publicStoragePath . '/' . $testFilePath;
+                    if (file_exists($testFile)) {
+                        $symbolicLinkExists = true;
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::debug('خطأ في التحقق من symbolic link', ['error' => $e->getMessage()]);
+            }
+        }
+        
+        // إذا كان symbolic link موجود ويعمل، استخدم asset
+        if ($symbolicLinkExists) {
+            return asset('storage/' . $path);
+        }
+        
+        // إذا لم يكن symbolic link موجود، استخدم route
+        // route يعمل دائماً لأن StorageController يتحقق من وجود الملف
+        return route('storage.show', ['path' => $path]);
+    }
 }
