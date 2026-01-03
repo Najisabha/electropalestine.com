@@ -10,8 +10,16 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\StorageController;
 use App\Http\Controllers\StoreController;
 use Illuminate\Support\Facades\Route;
+
+// Storage route - حل بديل لـ symlink في الاستضافة المشتركة
+// هذا الـ route يعرض الملفات من storage/app/public مباشرة بدون الحاجة لـ symlink
+// يجب أن يكون في البداية قبل أي routes أخرى
+Route::get('/storage/{path}', [StorageController::class, 'show'])
+    ->where('path', '.*')
+    ->name('storage.show');
 
 // Sitemap
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
