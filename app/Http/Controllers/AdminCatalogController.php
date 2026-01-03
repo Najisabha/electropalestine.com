@@ -108,6 +108,10 @@ class AdminCatalogController extends Controller
 
         if ($request->hasFile('image')) {
             $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), 'categories', 'public');
+            if (!$data['image']) {
+                Log::error('فشل رفع صورة الفئة', ['category_name' => $data['name']]);
+                return back()->withErrors(['error' => 'فشل رفع صورة الفئة. يرجى التحقق من صلاحيات المجلدات.'])->withInput();
+            }
         }
 
         Category::create($data);
@@ -128,6 +132,10 @@ class AdminCatalogController extends Controller
 
         if ($request->hasFile('image')) {
             $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), 'types', 'public');
+            if (!$data['image']) {
+                Log::error('فشل رفع صورة النوع', ['type_name' => $data['name']]);
+                return back()->withErrors(['error' => 'فشل رفع صورة النوع. يرجى التحقق من صلاحيات المجلدات.'])->withInput();
+            }
         }
 
         Type::create($data);
@@ -149,10 +157,18 @@ class AdminCatalogController extends Controller
 
         if ($request->hasFile('image')) {
             $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), 'companies', 'public');
+            if (!$data['image']) {
+                Log::error('فشل رفع صورة الشركة', ['company_name' => $data['name']]);
+                return back()->withErrors(['error' => 'فشل رفع صورة الشركة. يرجى التحقق من صلاحيات المجلدات.'])->withInput();
+            }
         }
 
         if ($request->hasFile('background')) {
             $data['background'] = ImageHelper::storeWithSequentialName($request->file('background'), 'companies', 'public');
+            if (!$data['background']) {
+                Log::error('فشل رفع صورة الخلفية للشركة', ['company_name' => $data['name']]);
+                return back()->withErrors(['error' => 'فشل رفع صورة الخلفية. يرجى التحقق من صلاحيات المجلدات.'])->withInput();
+            }
         }
 
         $company = Company::create($data);
@@ -264,6 +280,10 @@ class AdminCatalogController extends Controller
                 Storage::disk('public')->delete($category->image);
             }
             $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), 'categories', 'public');
+            if (!$data['image']) {
+                Log::error('فشل رفع صورة الفئة عند التحديث', ['category_id' => $category->id]);
+                return back()->withErrors(['error' => 'فشل رفع صورة الفئة. يرجى التحقق من صلاحيات المجلدات.'])->withInput();
+            }
         }
 
         $category->update($data);
@@ -286,6 +306,10 @@ class AdminCatalogController extends Controller
                 Storage::disk('public')->delete($type->image);
             }
             $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), 'types', 'public');
+            if (!$data['image']) {
+                Log::error('فشل رفع صورة النوع عند التحديث', ['type_id' => $type->id]);
+                return back()->withErrors(['error' => 'فشل رفع صورة النوع. يرجى التحقق من صلاحيات المجلدات.'])->withInput();
+            }
         }
         $type->update($data);
         return back()->with('status', 'تم تعديل النوع.');
@@ -312,6 +336,10 @@ class AdminCatalogController extends Controller
                 Storage::disk('public')->delete($company->image);
             }
             $data['image'] = ImageHelper::storeWithSequentialName($request->file('image'), 'companies', 'public');
+            if (!$data['image']) {
+                Log::error('فشل رفع صورة الشركة عند التحديث', ['company_id' => $company->id]);
+                return back()->withErrors(['error' => 'فشل رفع صورة الشركة. يرجى التحقق من صلاحيات المجلدات.'])->withInput();
+            }
         }
         
         // حذف الصورة الخلفية القديمة إذا تم رفع صورة جديدة
@@ -321,6 +349,10 @@ class AdminCatalogController extends Controller
                 Storage::disk('public')->delete($company->background);
             }
             $data['background'] = ImageHelper::storeWithSequentialName($request->file('background'), 'companies', 'public');
+            if (!$data['background']) {
+                Log::error('فشل رفع صورة الخلفية للشركة عند التحديث', ['company_id' => $company->id]);
+                return back()->withErrors(['error' => 'فشل رفع صورة الخلفية. يرجى التحقق من صلاحيات المجلدات.'])->withInput();
+            }
         }
         
         $company->update($data);

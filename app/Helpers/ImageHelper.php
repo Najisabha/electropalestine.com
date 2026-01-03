@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class ImageHelper
 {
@@ -16,42 +17,103 @@ class ImageHelper
      */
     public static function storeWithSequentialName($file, string $directory = 'images', string $disk = 'public'): ?string
     {
-        if (!$file || !$file->isValid()) {
+        try {
+            if (!$file || !$file->isValid()) {
+                Log::warning('محاولة حفظ ملف غير صالح', [
+                    'directory' => $directory,
+                    'disk' => $disk,
+                    'error' => $file ? $file->getError() : 'File is null'
+                ]);
+                return null;
+            }
+
+            $storage = Storage::disk($disk);
+            
+            // التأكد من وجود المجلد وإنشاؤه إذا لم يكن موجوداً
+            if (!$storage->exists($directory)) {
+                try {
+                    $storage->makeDirectory($directory, 0755, true);
+                    Log::info('تم إنشاء مجلد جديد', ['directory' => $directory, 'disk' => $disk]);
+                } catch (\Exception $e) {
+                    Log::error('فشل إنشاء المجلد', [
+                        'directory' => $directory,
+                        'disk' => $disk,
+                        'error' => $e->getMessage()
+                    ]);
+                    return null;
+                }
+            }
+
+            // التحقق من صلاحيات الكتابة على المجلد
+            $fullPath = $storage->path($directory);
+            if (!is_writable($fullPath)) {
+                Log::error('المجلد غير قابل للكتابة', [
+                    'directory' => $directory,
+                    'fullPath' => $fullPath,
+                    'permissions' => substr(sprintf('%o', fileperms($fullPath)), -4)
+                ]);
+                return null;
+            }
+
+            // الحصول على امتداد الملف
+            $extension = $file->getClientOriginalExtension() ?: $file->guessExtension();
+            if (empty($extension)) {
+                Log::warning('لم يتم تحديد امتداد الملف', [
+                    'originalName' => $file->getClientOriginalName(),
+                    'mimeType' => $file->getMimeType()
+                ]);
+                $extension = 'jpg'; // افتراضي
+            }
+            
+            // الحصول على البادئة بناءً على اسم المجلد
+            $prefix = self::getPrefixForDirectory($directory);
+            
+            // الحصول على الرقم التالي
+            $nextNumber = self::getNextImageNumber($directory, $prefix, $disk);
+            
+            // إنشاء اسم الملف
+            $fileName = "{$prefix}{$nextNumber}.{$extension}";
+            $filePath = $directory . '/' . $fileName;
+
+            // التأكد من عدم وجود ملف بنفس الاسم (في حالة التضارب)
+            $counter = 0;
+            while ($storage->exists($filePath)) {
+                $counter++;
+                $fileName = "{$prefix}{$nextNumber}_{$counter}.{$extension}";
+                $filePath = $directory . '/' . $fileName;
+            }
+
+            // حفظ الملف
+            $storedPath = $file->storeAs($directory, $fileName, $disk);
+            
+            // التحقق من نجاح الحفظ
+            if (!$storedPath || !$storage->exists($storedPath)) {
+                Log::error('فشل حفظ الملف', [
+                    'directory' => $directory,
+                    'fileName' => $fileName,
+                    'storedPath' => $storedPath,
+                    'disk' => $disk
+                ]);
+                return null;
+            }
+
+            Log::info('تم حفظ الصورة بنجاح', [
+                'directory' => $directory,
+                'fileName' => $fileName,
+                'storedPath' => $storedPath
+            ]);
+            
+            return $storedPath;
+            
+        } catch (\Exception $e) {
+            Log::error('خطأ في حفظ الصورة', [
+                'directory' => $directory,
+                'disk' => $disk,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return null;
         }
-
-        $storage = Storage::disk($disk);
-        
-        // التأكد من وجود المجلد
-        if (!$storage->exists($directory)) {
-            $storage->makeDirectory($directory, 0755, true);
-        }
-
-        // الحصول على امتداد الملف
-        $extension = $file->getClientOriginalExtension() ?: $file->guessExtension();
-        
-        // الحصول على البادئة بناءً على اسم المجلد
-        $prefix = self::getPrefixForDirectory($directory);
-        
-        // الحصول على الرقم التالي
-        $nextNumber = self::getNextImageNumber($directory, $prefix, $disk);
-        
-        // إنشاء اسم الملف
-        $fileName = "{$prefix}{$nextNumber}.{$extension}";
-        $filePath = $directory . '/' . $fileName;
-
-        // التأكد من عدم وجود ملف بنفس الاسم (في حالة التضارب)
-        $counter = 0;
-        while ($storage->exists($filePath)) {
-            $counter++;
-            $fileName = "{$prefix}{$nextNumber}_{$counter}.{$extension}";
-            $filePath = $directory . '/' . $fileName;
-        }
-
-        // حفظ الملف
-        $storedPath = $file->storeAs($directory, $fileName, $disk);
-        
-        return $storedPath;
     }
 
     /**
