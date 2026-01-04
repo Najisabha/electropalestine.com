@@ -90,9 +90,8 @@
                     <div class="p-2 p-md-3">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <strong class="text-white small">{{ $category->translated_name }}</strong>
-                            <span class="badge bg-success text-dark small">{{ __('common.main_category') }}</span>
                         </div>
-                        <p class="text-secondary small mb-0">{{ \Illuminate\Support\Str::limit($category->translated_description, 60) }}</p>
+                        <p class="text-secondary small mb-0 d-none d-md-block">{{ \Illuminate\Support\Str::limit($category->translated_description, 30) }}</p>
                     </div>
                 </a>
             @empty

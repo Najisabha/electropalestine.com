@@ -17,8 +17,8 @@ class SetLocale
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Get locale from session, default to config value (Arabic)
-        $locale = Session::get('locale', config('app.locale', 'ar'));
+        // Get locale from session, default to Arabic for new visitors
+        $locale = Session::get('locale', 'ar');
         
         // Validate locale (only allow 'ar' or 'en')
         if (!in_array($locale, ['ar', 'en'])) {
