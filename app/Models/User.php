@@ -32,6 +32,7 @@ class User extends Authenticatable
         'birth_day',
         'role',
         'id_image',
+        'id_verified_status',
         'city',
         'district',
         'governorate',
@@ -120,5 +121,18 @@ class User extends Authenticatable
         return static::customerStatsQuery()
             ->havingRaw('MAX(orders.created_at) IS NULL OR MAX(orders.created_at) < ?', [$cutoff])
             ->get();
+    }
+
+    /**
+     * التحقق من اكتمال التسجيل
+     * يعتبر التسجيل مكتملاً إذا كان لديه: id_image, address, city, district, governorate
+     */
+    public function isRegistrationComplete(): bool
+    {
+        return !empty($this->id_image) 
+            && !empty($this->address) 
+            && !empty($this->city) 
+            && !empty($this->district) 
+            && !empty($this->governorate);
     }
 }

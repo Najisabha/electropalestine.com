@@ -660,10 +660,11 @@ class StoreController extends Controller
     public function updateAddress(Request $request): RedirectResponse
     {
         $user = auth()->user();
-
-        $data = $request->validate([
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
+        
+        // التحقق من اكتمال التسجيل - إذا كان مكتملاً، لا يمكن تعديل المعلومات الشخصية
+        $isRegistrationComplete = $user->isRegistrationComplete();
+        
+        $validationRules = [
             'city' => ['required', 'string', 'max:255'],
             'district' => ['required', 'string', 'max:255'],
             'governorate' => ['required', 'string', 'max:255'],
@@ -672,15 +673,114 @@ class StoreController extends Controller
             'zip_code' => ['nullable', 'string', 'max:20'],
             'country_code' => ['nullable', 'string', 'max:10'],
             'phone' => ['required', 'string', 'max:50'],
-        ]);
+        ];
+        
+        // إذا لم يكمل التسجيل، يمكن تعديل المعلومات الشخصية
+        if (!$isRegistrationComplete) {
+            $validationRules = array_merge($validationRules, [
+                'first_name' => ['required', 'string', 'max:255'],
+                'last_name' => ['required', 'string', 'max:255'],
+                'whatsapp_prefix' => ['required', 'string', 'max:10'],
+                'birth_year' => ['nullable', 'integer', 'min:1900', 'max:' . now()->year],
+                'birth_month' => ['nullable', 'integer', 'between:1,12'],
+                'birth_day' => ['nullable', 'integer', 'between:1,31'],
+            ]);
+        } else {
+            // إذا كان التسجيل مكتملاً، يمكن تحديث الاسم فقط إذا كان موجوداً
+            $validationRules['first_name'] = ['sometimes', 'string', 'max:255'];
+            $validationRules['last_name'] = ['sometimes', 'string', 'max:255'];
+        }
 
+        $data = $request->validate($validationRules);
+
+        // إذا لم يكمل التسجيل، تحديث المعلومات الشخصية
+        if (!$isRegistrationComplete) {
+            $user->first_name = $data['first_name'] ?? $user->first_name;
+            $user->last_name = $data['last_name'] ?? $user->last_name;
+            $user->whatsapp_prefix = $data['whatsapp_prefix'] ?? $user->whatsapp_prefix;
+            $user->birth_year = $data['birth_year'] ?? $user->birth_year;
+            $user->birth_month = $data['birth_month'] ?? $user->birth_month;
+            $user->birth_day = $data['birth_day'] ?? $user->birth_day;
+        }
+
+        // تحديث بيانات العنوان والمعلومات الأخرى
         $user->fill($data);
+        
         // تحديث حقل name الكامل ليتطابق مع الاسم الأول والأخير
-        $user->name = trim(($data['first_name'] ?? '') . ' ' . ($data['last_name'] ?? ''));
+        $user->name = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
         $user->save();
 
         return redirect()->route('store.account-settings')
-            ->with('status', 'تم حفظ عنوانك الشخصي بنجاح.');
+            ->with('status', 'تم حفظ بياناتك بنجاح.');
+    }
+
+    public function uploadIdImage(Request $request): RedirectResponse
+    {
+        $user = auth()->user();
+        
+        // التحقق: إذا كانت الحالة "موثق"، لا يمكن رفع/تعديل الصورة إلا من ADMIN
+        $status = $user->id_verified_status ?? 'unverified';
+        if ($status === 'verified') {
+            return back()->withErrors(['id_image' => 'لا يمكن تعديل صورة الهوية لأنها موثقة. يرجى التواصل مع المدير.']);
+        }
+        
+        $data = $request->validate([
+            'id_image' => ['required', 'image', 'max:2048'],
+        ]);
+
+        // حذف الصورة القديمة إذا كانت موجودة
+        if ($user->id_image) {
+            \App\Helpers\ImageHelper::delete($user->id_image, 'public');
+        }
+
+        // رفع الصورة الجديدة
+        $idImagePath = \App\Helpers\ImageHelper::storeWithSequentialName($request->file('id_image'), 'ids', 'public');
+        if (!$idImagePath) {
+            return back()->withErrors(['id_image' => 'فشل رفع صورة الهوية. يرجى التحقق من صلاحيات المجلدات.']);
+        }
+
+        // تحديث المستخدم: رفع الصورة وتغيير الحالة إلى "قيد التنفيذ"
+        $user->id_image = $idImagePath;
+        $user->id_verified_status = 'pending'; // الحالة الافتراضية عند رفع صورة
+        $user->save();
+
+        return redirect()->route('store.account-settings')
+            ->with('status', 'تم رفع صورة الهوية بنجاح. ستكون الحالة "قيد التنفيذ" حتى يتم مراجعتها من قبل المدير.');
+    }
+
+    public function deleteIdImage(Request $request): RedirectResponse
+    {
+        $user = auth()->user();
+        
+        // التحقق: إذا كانت الحالة "موثق"، لا يمكن حذف الصورة إلا من ADMIN
+        $status = $user->id_verified_status ?? 'unverified';
+        if ($status === 'verified') {
+            return back()->withErrors(['error' => 'لا يمكن حذف صورة الهوية لأنها موثقة. يرجى التواصل مع المدير.']);
+        }
+
+        if ($user->id_image) {
+            // حذف الصورة من التخزين
+            \App\Helpers\ImageHelper::delete($user->id_image, 'public');
+            
+            // حذف المسار من قاعدة البيانات
+            $user->id_image = null;
+            $user->id_verified_status = 'unverified'; // تغيير الحالة إلى غير موثق
+            $user->save();
+
+            return redirect()->route('store.account-settings')
+                ->with('status', 'تم حذف صورة الهوية بنجاح.');
+        }
+
+        return back()->withErrors(['error' => 'لا توجد صورة هوية للحذف.']);
+    }
+
+    public function updateIdVerified(Request $request): \Illuminate\Http\JsonResponse
+    {
+        // هذا method لم يعد مستخدماً، يمكن حذفه لاحقاً
+        return response()->json([
+            'success' => false,
+            'message' => 'هذه الوظيفة لم تعد متاحة.',
+        ], 400);
     }
 
     public function myOrders(): View

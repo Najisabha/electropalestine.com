@@ -33,6 +33,7 @@
                         <th>البريد الإلكتروني</th>
                         <th>رقم الجوال</th>
                         <th>الدور</th>
+                        <th>حالة الحساب</th>
                         <th>إجراءات</th>
                     </tr>
                 </thead>
@@ -49,6 +50,24 @@
                                 <span class="badge {{ strtolower($user->role) === 'admin' ? 'bg-danger' : 'bg-info text-dark' }}">
                                     {{ $user->role }}
                                 </span>
+                            </td>
+                            <td>
+                                @php
+                                    $status = $user->id_verified_status ?? 'unverified';
+                                @endphp
+                                @if($status == 'verified')
+                                    <span class="badge bg-primary" title="موثق">
+                                        <i class="bi bi-check-circle-fill"></i>
+                                    </span>
+                                @elseif($status == 'pending')
+                                    <span class="badge bg-warning text-dark" title="قيد التنفيذ">
+                                        قيد التنفيذ
+                                    </span>
+                                @else
+                                    <span class="badge bg-danger" title="غير موثق">
+                                        غير موثق
+                                    </span>
+                                @endif
                             </td>
                             <td>
                                 <div class="d-flex gap-1 flex-wrap">
@@ -72,7 +91,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center text-secondary py-4">لا يوجد مستخدمون حالياً.</td>
+                            <td colspan="7" class="text-center text-secondary py-4">لا يوجد مستخدمون حالياً.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -106,6 +125,56 @@
                                         <li class="mb-2"><span class="text-secondary">البريد:</span> {{ $user->email }}</li>
                                         <li class="mb-2"><span class="text-secondary">الجوال:</span> <span dir="ltr">{{ $user->whatsapp_prefix }}{{ $user->phone }}</span></li>
                                         <li class="mb-2"><span class="text-secondary">الميلاد:</span> {{ $user->birth_year }}-{{ $user->birth_month }}-{{ $user->birth_day }}</li>
+                                        <li class="mb-2">
+                                            <span class="text-secondary">حالة رفع الهوية:</span>
+                                            @if($user->id_image)
+                                                <div class="d-flex align-items-center gap-3 mt-2 flex-wrap">
+                                                    <span class="badge bg-success d-flex align-items-center gap-1">
+                                                        <i class="bi bi-check-circle"></i> تم رفع الهوية
+                                                    </span>
+                                                    @php
+                                                        $idImageUrl = asset('storage/'.$user->id_image);
+                                                        try {
+                                                            $helperUrl = \App\Helpers\ImageHelper::url($user->id_image);
+                                                            if ($helperUrl) {
+                                                                $idImageUrl = $helperUrl;
+                                                            }
+                                                        } catch (\Exception $e) {
+                                                            // استخدام asset كبديل
+                                                        }
+                                                    @endphp
+                                                    <img src="{{ $idImageUrl }}" 
+                                                         alt="صورة الهوية" 
+                                                         class="img-thumbnail border border-success shadow-sm" 
+                                                         style="max-width: 120px; max-height: 120px; min-width: 120px; min-height: 120px; object-fit: cover; cursor: pointer;"
+                                                         onclick="window.open(this.src, '_blank')"
+                                                         onerror="console.error('خطأ في تحميل الصورة: ' + this.src); this.style.border='2px solid red';">
+                                                </div>
+                                            @else
+                                                <span class="badge bg-danger ms-2">
+                                                    <i class="bi bi-x-circle"></i> لم يتم رفع الهوية
+                                                </span>
+                                            @endif
+                                        </li>
+                                        <li class="mb-2">
+                                            <span class="text-secondary">حالة الحساب:</span>
+                                            @php
+                                                $status = $user->id_verified_status ?? 'unverified';
+                                            @endphp
+                                            @if($status == 'verified')
+                                                <span class="badge bg-primary">
+                                                    <i class="bi bi-check-circle-fill"></i> موثق
+                                                </span>
+                                            @elseif($status == 'pending')
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="bi bi-clock-history"></i> قيد التنفيذ
+                                                </span>
+                                            @else
+                                                <span class="badge bg-danger">
+                                                    <i class="bi bi-x-circle"></i> غير موثق
+                                                </span>
+                                            @endif
+                                        </li>
                                     </ul>
                                 </div>
                             </div>
@@ -265,6 +334,104 @@
                                             <label class="form-label text-secondary small">الرصيد</label>
                                             <input type="number" step="0.01" class="form-control auth-input" name="balance" value="{{ $user->balance ?? 0 }}">
                                         </div>
+                                        
+                                        {{-- حالة رفع الهوية --}}
+                                        <div class="col-12">
+                                            <label class="form-label text-secondary small">حالة رفع الهوية</label>
+                                            <div class="mb-2">
+                                                @if($user->id_image)
+                                                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                                                        <span class="badge bg-success d-flex align-items-center gap-1">
+                                                            <i class="bi bi-check-circle"></i> تم رفع الهوية
+                                                        </span>
+                                                        @php
+                                                            $idImageUrl = asset('storage/'.$user->id_image);
+                                                            try {
+                                                                $helperUrl = \App\Helpers\ImageHelper::url($user->id_image);
+                                                                if ($helperUrl) {
+                                                                    $idImageUrl = $helperUrl;
+                                                                }
+                                                            } catch (\Exception $e) {
+                                                                // استخدام asset كبديل
+                                                            }
+                                                        @endphp
+                                                        <img src="{{ $idImageUrl }}" 
+                                                             alt="صورة الهوية" 
+                                                             class="img-thumbnail border border-success shadow-sm" 
+                                                             style="max-width: 120px; max-height: 120px; min-width: 120px; min-height: 120px; object-fit: cover; cursor: pointer;"
+                                                             onclick="window.open(this.src, '_blank')"
+                                                             onerror="console.error('خطأ في تحميل الصورة: ' + this.src); this.style.border='2px solid red';">
+                                                    </div>
+                                                    @php
+                                                        $status = $user->id_verified_status ?? 'unverified';
+                                                    @endphp
+                                                    @if($status === 'verified')
+                                                        <small class="text-info d-block mt-2">
+                                                            <i class="bi bi-shield-check"></i> الصورة موثقة ومحمية من التعديل
+                                                        </small>
+                                                    @endif
+                                                @else
+                                                    <span class="badge bg-danger">
+                                                        <i class="bi bi-x-circle"></i> لم يتم رفع الهوية
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        
+                                        {{-- حالة الحساب (3 حالات) --}}
+                                        <div class="col-12">
+                                            <label class="form-label text-secondary small">حالة الحساب</label>
+                                            <select name="id_verified_status" 
+                                                    id="id_verified_status{{ $user->id }}" 
+                                                    class="form-select auth-input bg-dark text-light"
+                                                    onchange="updateIdVerifiedStatus{{ $user->id }}(this); toggleRejectionReason{{ $user->id }}(this);">
+                                                <option value="verified" {{ (isset($user->id_verified_status) && $user->id_verified_status == 'verified') ? 'selected' : '' }}>
+                                                    موثق
+                                                </option>
+                                                <option value="pending" {{ (isset($user->id_verified_status) && $user->id_verified_status == 'pending') ? 'selected' : '' }}>
+                                                    قيد التنفيذ
+                                                </option>
+                                                <option value="unverified" {{ (!isset($user->id_verified_status) || $user->id_verified_status == 'unverified') ? 'selected' : '' }}>
+                                                    غير موثق
+                                                </option>
+                                            </select>
+                                            <div class="mt-2" id="id_verified_status_badge{{ $user->id }}">
+                                                @php
+                                                    $status = $user->id_verified_status ?? 'unverified';
+                                                @endphp
+                                                @if($status == 'verified')
+                                                    <span class="badge bg-primary">
+                                                        <i class="bi bi-check-circle-fill"></i> موثق
+                                                    </span>
+                                                @elseif($status == 'pending')
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="bi bi-clock-history"></i> قيد التنفيذ
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-danger">
+                                                        <i class="bi bi-x-circle"></i> غير موثق
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            
+                                            {{-- حقل سبب الرفض - يظهر فقط عند اختيار "غير موثق" --}}
+                                            <div class="mt-2" id="rejection_reason_container{{ $user->id }}" style="display: none;">
+                                                <label class="form-label text-secondary small">سبب رفض صورة الهوية (اختياري)</label>
+                                                <textarea name="rejection_reason" 
+                                                          id="rejection_reason{{ $user->id }}" 
+                                                          class="form-control auth-input" 
+                                                          rows="2" 
+                                                          placeholder="أدخل سبب رفض صورة الهوية..."></textarea>
+                                                <small class="text-secondary">سيتم إرسال هذا السبب للمستخدم في الإشعار</small>
+                                            </div>
+                                            
+                                            <small class="text-secondary d-block mt-2">
+                                                <strong>ملاحظات:</strong><br>
+                                                • <strong>موثق:</strong> الصورة محمية ولا يمكن تعديلها إلا من ADMIN<br>
+                                                • <strong>قيد التنفيذ:</strong> الصورة موجودة ويمكن حذفها (الحالة الافتراضية عند رفع صورة)<br>
+                                                • <strong>غير موثق:</strong> سيتم حذف الصورة تلقائياً وإرسال إشعار للمستخدم
+                                            </small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -418,5 +585,42 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
+    
+    // دالة لتحديث Badge حالة الحساب عند تغيير Select
+    @foreach ($users as $user)
+    window.updateIdVerifiedStatus{{ $user->id }} = function(select) {
+        const badgeContainer = document.getElementById('id_verified_status_badge{{ $user->id }}');
+        if (badgeContainer) {
+            const value = select.value;
+            if (value === 'verified') {
+                badgeContainer.innerHTML = '<span class="badge bg-primary"><i class="bi bi-check-circle-fill"></i> موثق</span>';
+            } else if (value === 'pending') {
+                badgeContainer.innerHTML = '<span class="badge bg-warning text-dark"><i class="bi bi-clock-history"></i> قيد التنفيذ</span>';
+            } else {
+                badgeContainer.innerHTML = '<span class="badge bg-danger"><i class="bi bi-x-circle"></i> غير موثق</span>';
+            }
+        }
+    };
+    
+    // دالة لإظهار/إخفاء حقل سبب الرفض
+    window.toggleRejectionReason{{ $user->id }} = function(select) {
+        const reasonContainer = document.getElementById('rejection_reason_container{{ $user->id }}');
+        if (reasonContainer) {
+            if (select.value === 'unverified') {
+                reasonContainer.style.display = 'block';
+            } else {
+                reasonContainer.style.display = 'none';
+            }
+        }
+    };
+    
+    // تفعيل/تعطيل حقل سبب الرفض عند تحميل الصفحة
+    document.addEventListener('DOMContentLoaded', function() {
+        const select{{ $user->id }} = document.getElementById('id_verified_status{{ $user->id }}');
+        if (select{{ $user->id }}) {
+            toggleRejectionReason{{ $user->id }}(select{{ $user->id }});
+        }
+    });
+    @endforeach
 });
 </script>

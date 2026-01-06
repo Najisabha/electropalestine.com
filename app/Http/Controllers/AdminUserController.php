@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Storage;
+use App\Notifications\IdImageRejected;
 
 class AdminUserController extends Controller
 {
@@ -102,6 +103,8 @@ class AdminUserController extends Controller
                 'points' => ['nullable', 'integer', 'min:0'],
                 'balance' => ['nullable', 'numeric', 'min:0'],
                 'role' => ['required', 'string', 'max:255'],
+                'id_verified_status' => ['nullable', 'string', 'in:verified,pending,unverified'],
+                'rejection_reason' => ['nullable', 'string', 'max:500'],
             ], [
                 'first_name.required' => 'الاسم الأول مطلوب',
                 'last_name.required' => 'اسم العائلة مطلوب',
@@ -116,6 +119,22 @@ class AdminUserController extends Controller
                 'role.required' => 'الدور مطلوب',
             ]);
 
+            $oldStatus = $user->id_verified_status ?? 'unverified';
+            $newStatus = $data['id_verified_status'] ?? ($user->id_verified_status ?? 'unverified');
+            
+            // إذا تم تغيير الحالة إلى "غير موثق"، حذف الصورة وإرسال إشعار
+            if ($newStatus === 'unverified' && $oldStatus !== 'unverified' && $user->id_image) {
+                // حذف الصورة من التخزين
+                \App\Helpers\ImageHelper::delete($user->id_image, 'public');
+                
+                // حذف المسار من قاعدة البيانات
+                $user->id_image = null;
+                
+                // إرسال إشعار للمستخدم
+                $rejectionReason = $request->input('rejection_reason', null);
+                $user->notify(new IdImageRejected($rejectionReason));
+            }
+            
             $updated = $user->update([
                 'name' => $data['first_name'] . ' ' . $data['last_name'],
                 'first_name' => $data['first_name'],
@@ -129,10 +148,15 @@ class AdminUserController extends Controller
                 'points' => $data['points'] ?? $user->points,
                 'balance' => $data['balance'] ?? $user->balance,
                 'role' => $data['role'],
+                'id_verified_status' => $newStatus,
             ]);
 
             if ($updated) {
-                return back()->with('status', 'تم تحديث بيانات المستخدم بنجاح.');
+                $message = 'تم تحديث بيانات المستخدم بنجاح.';
+                if ($newStatus === 'unverified' && $oldStatus !== 'unverified') {
+                    $message .= ' تم حذف صورة الهوية وإرسال إشعار للمستخدم.';
+                }
+                return back()->with('status', $message);
             } else {
                 return back()->withErrors(['error' => 'حدث خطأ أثناء تحديث البيانات.'])->withInput();
             }

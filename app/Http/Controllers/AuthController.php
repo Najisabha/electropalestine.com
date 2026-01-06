@@ -88,6 +88,7 @@ class AuthController extends Controller
             'birth_day' => $data['birth_day'],
             'role' => 'user',
             'id_image' => $idImagePath,
+            'id_verified_status' => $idImagePath ? 'pending' : 'unverified', // إذا تم رفع صورة، الحالة الافتراضية: قيد التنفيذ
             'password' => Hash::make($data['password']),
         ]);
 

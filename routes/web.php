@@ -63,6 +63,9 @@ Route::view('/faq', 'store.faq')->name('store.faq');
 Route::middleware('auth')->group(function () {
     Route::get('/account-settings', [StoreController::class, 'accountSettings'])->name('store.account-settings');
     Route::post('/account-settings/address', [StoreController::class, 'updateAddress'])->name('store.address.update');
+    Route::post('/account-settings/id-image', [StoreController::class, 'uploadIdImage'])->name('store.id-image.upload');
+    Route::delete('/account-settings/id-image', [StoreController::class, 'deleteIdImage'])->name('store.id-image.delete');
+    Route::post('/account-settings/id-verified', [StoreController::class, 'updateIdVerified'])->name('store.update-id-verified');
     Route::get('/my-orders', [StoreController::class, 'myOrders'])->name('store.my-orders');
     Route::get('/my-orders/{order}/invoice', [StoreController::class, 'downloadInvoice'])->name('store.order.invoice');
     Route::get('/my-orders/{order}/review', [StoreController::class, 'showReviewForm'])->name('store.order.review');
