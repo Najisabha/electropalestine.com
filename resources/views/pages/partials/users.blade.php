@@ -281,9 +281,28 @@
                                             <label class="form-label text-secondary small">البريد الإلكتروني</label>
                                             <input type="email" class="form-control auth-input" name="email" value="{{ $user->email }}" required>
                                         </div>
+                                        @php
+                                            // قائمة مقدمات الاتصال للدول مع الأعلام، تؤخذ من ملف الإعدادات
+                                            // واختيار اسم الدولة حسب لغة التطبيق (عربي/إنجليزي)
+                                            $locale = app()->getLocale();
+                                            $displayNameKey = $locale === 'ar' ? 'name_ar' : 'name_en';
+                                            $countryDialCodes = collect(config('dial_codes.countries', []))
+                                                ->map(function ($country) use ($displayNameKey) {
+                                                    $country['name'] = $country[$displayNameKey] ?? $country['name_en'] ?? $country['name_ar'] ?? '';
+                                                    return $country;
+                                                })
+                                                ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
+                                                ->values();
+                                        @endphp
                                         <div class="col-md-4">
                                             <label class="form-label text-secondary small">مقدمة واتساب</label>
-                                            <input type="text" class="form-control auth-input" name="whatsapp_prefix" value="{{ $user->whatsapp_prefix }}" required>
+                                            <select class="form-select auth-input" name="whatsapp_prefix" required>
+                                                @foreach($countryDialCodes as $country)
+                                                    <option value="{{ $country['code'] }}" {{ $user->whatsapp_prefix === $country['code'] ? 'selected' : '' }}>
+                                                        {{ $country['flag'] }} {{ $country['name'] }} ({{ $country['code'] }})
+                                                    </option>
+                                                @endforeach
+                                            </select>
                                         </div>
                                         <div class="col-md-8">
                                             <label class="form-label text-secondary small">رقم الجوال</label>

@@ -21,7 +21,7 @@ return [
     'have_account' => 'لديك حساب بالفعل؟',
     'first_name' => 'الاسم الأول',
     'last_name' => 'الاسم الأخير',
-    'phone' => 'الجوال',
+    'phone' => 'رقم الهاتف',
     'confirm_password' => 'تأكيد كلمة المرور',
     'reset_password' => 'إعادة تعيين كلمة المرور',
     'send_reset_link' => 'إرسال رابط إعادة التعيين',
@@ -314,6 +314,11 @@ return [
     "all" => 'الكل',
     "message_sent_success" => 'تم إرسال رسالتك بنجاح! سنتواصل معك قريباً.',
     "message_sent_error" => 'حدث خطأ أثناء إرسال الرسالة. يرجى المحاولة مرة أخرى.',
+
+    // Registration sections
+    "personal_info" => 'المعلومات الشخصية',
+    "contact_info" => 'معلومات التواصل',
+    "security_info" => 'معلومات تسجيل الدخول',
     
     // Product Card
     "view_details" => 'عرض التفاصيل',

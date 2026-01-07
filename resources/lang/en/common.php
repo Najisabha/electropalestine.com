@@ -314,6 +314,11 @@ return [
     'all' => 'All',
     'message_sent_success' => 'Your message has been sent successfully! We will contact you soon.',
     'message_sent_error' => 'An error occurred while sending the message. Please try again.',
+
+    // Registration sections
+    'personal_info' => 'Personal Information',
+    'contact_info' => 'Contact Information',
+    'security_info' => 'Security & Login',
     
     // Product Card
     'view_details' => 'View Details',

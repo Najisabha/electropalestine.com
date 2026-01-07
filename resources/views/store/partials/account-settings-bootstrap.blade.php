@@ -1,5 +1,17 @@
 @php
     $isRegistrationComplete = $user ? $user->isRegistrationComplete() : false;
+
+    // قائمة مقدمات الاتصال للدول مع الأعلام، تؤخذ من ملف الإعدادات
+    // واختيار اسم الدولة حسب لغة التطبيق (عربي/إنجليزي)
+    $locale = app()->getLocale();
+    $displayNameKey = $locale === 'ar' ? 'name_ar' : 'name_en';
+    $countryDialCodes = collect(config('dial_codes.countries', []))
+        ->map(function ($country) use ($displayNameKey) {
+            $country['name'] = $country[$displayNameKey] ?? $country['name_en'] ?? $country['name_ar'] ?? '';
+            return $country;
+        })
+        ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
+        ->values();
 @endphp
 
 @if(!$user)
@@ -86,14 +98,20 @@
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small text-secondary">البريد الإلكتروني</label>
-                                        <input type="email" class="form-control auth-input" value="{{ $user->email ?? '' }}" readonly>
-                                        <small class="text-secondary">لا يمكن تغيير البريد الإلكتروني من هذه الصفحة</small>
+                                        <input type="email" class="form-control auth-input" name="email" value="{{ old('email', $user->email ?? '') }}">
+                                        <small class="text-secondary">يمكنك إضافة أو تحديث بريدك الإلكتروني هنا</small>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <label class="form-label small text-secondary">مقدمة واتساب</label>
-                                        <input type="text" class="form-control auth-input" name="whatsapp_prefix" value="{{ old('whatsapp_prefix', $user->whatsapp_prefix ?? '+970') }}" {{ $isRegistrationComplete ? 'disabled' : 'required' }} placeholder="+970">
+                                        <select class="form-select auth-input" name="whatsapp_prefix" {{ $isRegistrationComplete ? 'disabled' : 'required' }}>
+                                            @foreach($countryDialCodes as $country)
+                                                <option value="{{ $country['code'] }}" {{ old('whatsapp_prefix', $user->whatsapp_prefix ?? '+970') === $country['code'] ? 'selected' : '' }}>
+                                                    {{ $country['flag'] }} {{ $country['name'] }} ({{ $country['code'] }})
+                                                </option>
+                                            @endforeach
+                                        </select>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-8">
                                         <label class="form-label small text-secondary">رقم الهاتف</label>
                                         <input type="text" class="form-control auth-input" name="phone" value="{{ old('phone', $user->phone ?? '') }}" {{ $isRegistrationComplete ? 'disabled' : 'required' }}>
                                     </div>

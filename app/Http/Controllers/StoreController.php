@@ -665,6 +665,7 @@ class StoreController extends Controller
         $isRegistrationComplete = $user->isRegistrationComplete();
         
         $validationRules = [
+            'email' => ['nullable', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'city' => ['required', 'string', 'max:255'],
             'district' => ['required', 'string', 'max:255'],
             'governorate' => ['required', 'string', 'max:255'],
