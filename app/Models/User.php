@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -43,6 +44,7 @@ class User extends Authenticatable
         'secondary_address',
         'points',
         'balance',
+        'preferred_currency',
         'password',
         'last_login_at',
     ];
@@ -90,6 +92,33 @@ class User extends Authenticatable
     public function defaultAddress(): HasOne
     {
         return $this->hasOne(UserAddress::class)->where('is_default', true);
+    }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(UserActivity::class)->orderByDesc('created_at');
+    }
+
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(UserFavorite::class);
+    }
+
+    public function favoriteProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'user_favorites')->withTimestamps();
+    }
+
+    public function userRewards(): HasMany
+    {
+        return $this->hasMany(UserReward::class);
+    }
+
+    public function coupons(): HasMany
+    {
+        return $this->userRewards()->whereHas('reward', function ($q) {
+            $q->where('type', 'coupon');
+        });
     }
 
     /**

@@ -70,7 +70,7 @@
                                                 </div>
                                             </td>
                                             <td class="text-success fw-semibold">
-                                                ${{ number_format($product->price, 2) }}
+                                                <span data-price-usd="{{ $product->price }}">{{ $currencyHelper::convertAndFormat($product->price, $userCurrency) }}</span>
                                             </td>
                                             <td>
                                                 <form method="POST" action="{{ route('cart.update', $product) }}" class="d-inline">
@@ -86,7 +86,7 @@
                                                 </form>
                                             </td>
                                             <td class="text-success fw-bold">
-                                                ${{ number_format($item['subtotal'], 2) }}
+                                                <span data-price-usd="{{ $item['subtotal'] }}">{{ $currencyHelper::convertAndFormat($item['subtotal'], $userCurrency) }}</span>
                                             </td>
                                             <td>
                                                 <form method="POST" action="{{ route('cart.remove', $product) }}" class="d-inline">
@@ -121,7 +121,7 @@
 
                         <div class="d-flex justify-content-between align-items-center pt-3 mt-3 border-top border-secondary-subtle mb-3">
                             <span class="h6 mb-0">{{ __('common.grand_total') }}:</span>
-                            <span class="h5 fw-bold text-success mb-0">${{ number_format($total, 2) }}</span>
+                            <span class="h5 fw-bold text-success mb-0" data-price-usd="{{ $total }}">{{ $currencyHelper::convertAndFormat($total, $userCurrency) }}</span>
                         </div>
 
                         <a href="{{ route('store.cart.checkout') }}" class="btn btn-main w-100 mb-2">

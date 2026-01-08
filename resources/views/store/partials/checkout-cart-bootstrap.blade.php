@@ -49,10 +49,10 @@
                                             {{ $item['quantity'] }}
                                         </td>
                                         <td class="text-end text-success">
-                                            ${{ number_format($p->price, 2) }}
+                                            <span data-price-usd="{{ $p->price }}">{{ $currencyHelper::convertAndFormat($p->price, $userCurrency) }}</span>
                                         </td>
                                         <td class="text-end text-success fw-bold">
-                                            ${{ number_format($item['subtotal'], 2) }}
+                                            <span data-price-usd="{{ $item['subtotal'] }}">{{ $currencyHelper::convertAndFormat($item['subtotal'], $userCurrency) }}</span>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -75,7 +75,7 @@
 
                         <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary-subtle">
                             <span class="h6 mb-0">{{ __('common.grand_total') }}:</span>
-                            <span class="h5 fw-bold text-success mb-0">${{ number_format($total, 2) }}</span>
+                            <span class="h5 fw-bold text-success mb-0" data-price-usd="{{ $total }}">{{ $currencyHelper::convertAndFormat($total, $userCurrency) }}</span>
                         </div>
                     </div>
                 </div>
@@ -126,15 +126,16 @@
                         <div class="row g-3">
                             {{-- الخيار 1: الفيزا/الماستر كارد --}}
                             <div class="col-12">
-                                <div class="payment-option glass rounded-3 p-3 border border-secondary-subtle">
+                                <div class="payment-option glass rounded-3 p-3 border border-secondary-subtle opacity-50" style="cursor: not-allowed;">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="payment_method" id="cart_payment_visa" value="visa_mastercard" required>
-                                        <label class="form-check-label w-100" for="cart_payment_visa">
+                                        <input class="form-check-input" type="radio" name="payment_method" id="cart_payment_visa" value="visa_mastercard" disabled>
+                                        <label class="form-check-label w-100" for="cart_payment_visa" style="cursor: not-allowed;">
                                             <div class="d-flex align-items-center justify-content-between">
                                                 <div>
                                                     <strong class=" d-block mb-1">
                                                         <i class="bi bi-credit-card-2-front"></i>
                                                         {{ __('common.pay_with_visa_mastercard') }}
+                                                        <span class="badge bg-warning text-dark ms-2">قريباً</span>
                                                     </strong>
                                                     <span class="text-secondary small">{{ __('common.secure_card_payment') }}</span>
                                                 </div>
@@ -161,7 +162,7 @@
                                                     </strong>
                                                     <span class="text-secondary small">
                                                         {{ __('common.your_balance') }}:
-                                                        <strong class="text-info">${{ number_format($userBalance, 2) }}</strong>
+                                                        <strong class="text-info" id="cart-checkout-balance" data-price-usd="{{ $userBalance }}">{{ $currencyHelper::convertAndFormat($userBalance, $userCurrency) }}</strong>
                                                         • {{ __('common.your_points') }}:
                                                         <strong class="text-success">{{ number_format($userPoints) }}</strong>
                                                     </span>
@@ -210,15 +211,16 @@
 
                             {{-- الخيار 4: المحافظ الفلسطينية --}}
                             <div class="col-12">
-                                <div class="payment-option glass rounded-3 p-3 border border-secondary-subtle">
+                                <div class="payment-option glass rounded-3 p-3 border border-secondary-subtle opacity-50" style="cursor: not-allowed;">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="payment_method" id="cart_payment_wallet" value="palestinian_wallet" required>
-                                        <label class="form-check-label w-100" for="cart_payment_wallet">
+                                        <input class="form-check-input" type="radio" name="payment_method" id="cart_payment_wallet" value="palestinian_wallet" disabled>
+                                        <label class="form-check-label w-100" for="cart_payment_wallet" style="cursor: not-allowed;">
                                             <div class="d-flex align-items-center justify-content-between">
                                                 <div>
                                                     <strong class="d-block mb-1">
                                                         <i class="bi bi-phone"></i>
                                                         {{ __('common.pay_via_palestinian_wallet') }}
+                                                        <span class="badge bg-warning text-dark ms-2">قريباً</span>
                                                     </strong>
                                                     <span class="text-secondary small">Reflact, Jawwal Pay, Pal Pay</span>
                                                 </div>
@@ -250,15 +252,16 @@
 
                             {{-- الخيار 5: الدفع عن طريق وكيل --}}
                             <div class="col-12">
-                                <div class="payment-option glass rounded-3 p-3 border border-secondary-subtle">
+                                <div class="payment-option glass rounded-3 p-3 border border-secondary-subtle opacity-50" style="cursor: not-allowed;">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="payment_method" id="cart_payment_agent" value="agent" required>
-                                        <label class="form-check-label w-100" for="cart_payment_agent">
+                                        <input class="form-check-input" type="radio" name="payment_method" id="cart_payment_agent" value="agent" disabled>
+                                        <label class="form-check-label w-100" for="cart_payment_agent" style="cursor: not-allowed;">
                                             <div class="d-flex align-items-center justify-content-between">
                                                 <div>
                                                     <strong class="d-block mb-1">
                                                         <i class="bi bi-person-check"></i>
                                                         {{ __('common.pay_via_agent') }}
+                                                        <span class="badge bg-warning text-dark ms-2">قريباً</span>
                                                     </strong>
                                                     <span class="text-secondary small">{{ __('common.pay_via_agent_note') }}</span>
                                                 </div>
@@ -360,7 +363,7 @@ document.addEventListener('DOMContentLoaded', function() {
     transition: all 0.3s ease;
     cursor: pointer;
 }
-.payment-option:hover {
+.payment-option:hover:not(.opacity-50) {
     border-color: var(--primary) !important;
     background: rgba(13, 183, 119, 0.1);
 }

@@ -15,6 +15,7 @@
     <!-- Meta Tags for Logo -->
     <meta property="og:image" content="{{ asset('images/LOGO-remove background.png') }}">
     <meta name="twitter:image" content="{{ asset('images/LOGO-remove background.png') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Bootstrap -->
     @if($isRTL)
@@ -1041,6 +1042,43 @@
         }
         .product-card-stock-badge.out-of-stock{
             background:rgba(220,53,69,0.15);
+            border-color:rgba(220,53,69,0.3);
+        }
+        
+        /* زر القلب في بطاقة المنتج */
+        .product-favorite-btn {
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .product-favorite-btn:hover {
+            background: rgba(220, 53, 69, 0.8) !important;
+            transform: scale(1.1);
+        }
+        
+        .product-favorite-btn.favorited {
+            background: rgba(220, 53, 69, 0.3) !important;
+        }
+        
+        .product-favorite-btn-page {
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .product-favorite-btn-page:hover {
+            background: rgba(220, 53, 69, 0.8) !important;
+            border-color: rgba(220, 53, 69, 0.5) !important;
+            transform: scale(1.1);
+        }
+        
+        .product-favorite-btn-page.favorited {
+            background: rgba(220, 53, 69, 0.3) !important;
+            border-color: rgba(220, 53, 69, 0.5) !important;
+        }
+        
+        .product-card-wrapper {
+            position: relative;
+        }background:rgba(220,53,69,0.15);
             border-color:rgba(220,53,69,0.2);
             color:#dc3545;
         }
@@ -1817,7 +1855,7 @@
                         {{ __('common.your_points') }}: <strong>{{ number_format($authUser->points ?? 0) }}</strong>
                     </span>
                     <span class="badge border border-info small">
-                        {{ __('common.your_balance') }}: <strong>${{ number_format($authUser->balance ?? 0, 2) }}</strong>
+                        {{ __('common.your_balance') }}: <strong id="header-balance-desktop" data-price-usd="{{ $authUser->balance ?? 0 }}">{{ $currencyHelper::convertAndFormat($authUser->balance ?? 0, $userCurrency) }}</strong>
                     </span>
                 </div>
             @endif
@@ -1853,12 +1891,12 @@
                                 {{ __('common.your_points') }}: <strong class="text-warning">{{ number_format($authUser->points ?? 0) }}</strong>
                             </div>
                             <div class="small">
-                                {{ __('common.your_balance') }}: <strong class="text-info">${{ number_format($authUser->balance ?? 0, 2) }}</strong>
+                                {{ __('common.your_balance') }}: <strong class="text-info" id="header-balance-mobile" data-price-usd="{{ $authUser->balance ?? 0 }}">{{ $currencyHelper::convertAndFormat($authUser->balance ?? 0, $userCurrency) }}</strong>
                             </div>
                         </li>
                         <li><hr class="dropdown-divider border-secondary-subtle"></li>
                         <li>
-                            <a class="dropdown-item text-light" href="{{ route('store.account-settings') }}">
+                            <a class="dropdown-item text-light" href="{{ route('store.my-orders') }}">
                                 <i class="bi bi-bag-check me-2"></i>
                                 الطلبيات الخاصة بي
                             </a>
@@ -1882,13 +1920,13 @@
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item text-light" href="#">
+                            <a class="dropdown-item text-light" href="{{ route('store.favorites') }}">
                                 <i class="bi bi-heart me-2"></i>
                                 قائمة الرغبات
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item text-light" href="#">
+                            <a class="dropdown-item text-light" href="{{ route('store.coupons') }}">
                                 <i class="bi bi-ticket-perforated me-2"></i>
                                 كوبوناتي
                             </a>
@@ -2173,6 +2211,217 @@
             });
         }
     });
+
+    // Currency Conversion System
+    (function() {
+        // الحصول على العملة المفضلة من session أو localStorage أو select
+        function getPreferredCurrency() {
+            // أولاً، التحقق من وجود select في الصفحة (صفحة الإعدادات)
+            const currencySelect = document.getElementById('currency-select');
+            if (currencySelect && currencySelect.value) {
+                return currencySelect.value;
+            }
+            
+            // ثانياً، التحقق من localStorage
+            const localCurrency = localStorage.getItem('preferred_currency');
+            if (localCurrency) {
+                return localCurrency;
+            }
+            
+            // أخيراً، استخدام القيمة الافتراضية من قاعدة البيانات
+            @auth
+                return '{{ auth()->user()->preferred_currency ?? "USD" }}';
+            @else
+                return 'USD';
+            @endauth
+        }
+
+        // حفظ العملة المفضلة
+        function setPreferredCurrency(currency) {
+            @auth
+                // سيتم الحفظ في قاعدة البيانات عبر form submission
+            @else
+                localStorage.setItem('preferred_currency', currency);
+            @endauth
+        }
+
+        // تحميل أسعار الصرف
+        let exchangeRates = null;
+        async function loadExchangeRates() {
+            try {
+                const response = await fetch('{{ route("api.exchange-rates") }}');
+                const data = await response.json();
+                if (data.success) {
+                    exchangeRates = data.rates;
+                    return exchangeRates;
+                }
+            } catch (error) {
+                console.error('خطأ في تحميل أسعار الصرف:', error);
+            }
+            return null;
+        }
+
+        // تحويل السعر من USD إلى العملة المفضلة
+        function convertPrice(priceInUSD, targetCurrency) {
+            if (!exchangeRates || targetCurrency === 'USD') {
+                return priceInUSD;
+            }
+
+            if (targetCurrency === 'ILS') {
+                return priceInUSD * (exchangeRates.USD_to_ILS || 3.65);
+            } else if (targetCurrency === 'JOD') {
+                return priceInUSD * (exchangeRates.USD_to_JOD || 0.71);
+            }
+
+            return priceInUSD;
+        }
+
+        // الحصول على رمز العملة
+        function getCurrencySymbol(currency) {
+            const symbols = {
+                'USD': '$',
+                'ILS': '₪',
+                'JOD': 'د.أ'
+            };
+            return symbols[currency] || '$';
+        }
+
+        // تحديث جميع الأسعار في الصفحة
+        async function updateAllPrices() {
+            const currency = getPreferredCurrency();
+            if (!exchangeRates) {
+                await loadExchangeRates();
+            }
+
+            // البحث عن جميع العناصر التي تحتوي على أسعار
+            const priceElements = document.querySelectorAll('[data-price-usd]');
+            priceElements.forEach(element => {
+                const priceUSD = parseFloat(element.getAttribute('data-price-usd'));
+                if (!isNaN(priceUSD)) {
+                    const convertedPrice = convertPrice(priceUSD, currency);
+                    const symbol = getCurrencySymbol(currency);
+                    element.textContent = symbol + convertedPrice.toFixed(2);
+                }
+            });
+        }
+
+        // تحميل أسعار الصرف عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            loadExchangeRates().then(() => {
+                updateAllPrices();
+            });
+            
+            // مراقبة تغييرات localStorage للعملة
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'preferred_currency') {
+                    updateAllPrices();
+                }
+            });
+            
+            // مراقبة تغييرات العملة في select (إذا كان موجوداً في الصفحة)
+            const currencySelect = document.getElementById('currency-select');
+            if (currencySelect) {
+                currencySelect.addEventListener('change', function() {
+                    const newCurrency = this.value;
+                    localStorage.setItem('preferred_currency', newCurrency);
+                    // إرسال event مخصص لتحديث الأسعار
+                    window.dispatchEvent(new CustomEvent('currencyChanged', { detail: { currency: newCurrency } }));
+                    updateAllPrices();
+                });
+            }
+            
+            // الاستماع لحدث تغيير العملة
+            window.addEventListener('currencyChanged', function(e) {
+                updateAllPrices();
+            });
+        });
+
+        // جعل الدوال متاحة عالمياً
+        window.currencySystem = {
+            getPreferredCurrency,
+            setPreferredCurrency,
+            convertPrice,
+            getCurrencySymbol,
+            updateAllPrices,
+            loadExchangeRates,
+            get exchangeRates() {
+                return exchangeRates;
+            },
+            set exchangeRates(value) {
+                exchangeRates = value;
+            }
+        };
+    })();
+
+    // Favorite System
+    async function toggleFavorite(productId, buttonElement) {
+        if (!buttonElement) {
+            buttonElement = document.querySelector(`[data-product-id="${productId}"]`);
+        }
+        
+        if (!buttonElement) return;
+        
+        const icon = buttonElement.querySelector('i');
+        
+        try {
+            const response = await fetch(`/favorites/${productId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                if (data.is_favorite) {
+                    buttonElement.classList.add('favorited');
+                    if (icon) {
+                        icon.classList.remove('bi-heart', 'text-white');
+                        icon.classList.add('bi-heart-fill', 'text-danger');
+                    }
+                } else {
+                    buttonElement.classList.remove('favorited');
+                    if (icon) {
+                        icon.classList.remove('bi-heart-fill', 'text-danger');
+                        icon.classList.add('bi-heart', 'text-white');
+                    }
+                }
+                
+                // تحديث جميع أزرار القلب لنفس المنتج في الصفحة
+                document.querySelectorAll(`[data-product-id="${productId}"]`).forEach(btn => {
+                    if (btn !== buttonElement) {
+                        const btnIcon = btn.querySelector('i');
+                        if (data.is_favorite) {
+                            btn.classList.add('favorited');
+                            if (btnIcon) {
+                                btnIcon.classList.remove('bi-heart', 'text-white');
+                                btnIcon.classList.add('bi-heart-fill', 'text-danger');
+                            }
+                        } else {
+                            btn.classList.remove('favorited');
+                            if (btnIcon) {
+                                btnIcon.classList.remove('bi-heart-fill', 'text-danger');
+                                btnIcon.classList.add('bi-heart', 'text-white');
+                            }
+                        }
+                    }
+                });
+            } else {
+                if (response.status === 401) {
+                    alert('يجب تسجيل الدخول أولاً');
+                    window.location.href = '/login';
+                } else {
+                    alert(data.message || 'حدث خطأ أثناء تحديث المفضلة');
+                }
+            }
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+            alert('حدث خطأ أثناء تحديث المفضلة');
+        }
+    }
 </script>
 
 </body>

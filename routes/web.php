@@ -61,6 +61,9 @@ Route::get('/track-order', [StoreController::class, 'trackOrder'])->name('store.
 Route::view('/return-policy', 'store.return-policy')->name('store.return-policy');
 Route::view('/faq', 'store.faq')->name('store.faq');
 
+// API routes for exchange rates (public)
+Route::get('/api/exchange-rates', [StoreController::class, 'getExchangeRates'])->name('api.exchange-rates');
+
 Route::middleware('auth')->group(function () {
     Route::get('/account-settings', [StoreController::class, 'accountSettings'])->name('store.account-settings');
     Route::post('/account-settings/address', [StoreController::class, 'updateAddress'])->name('store.address.update');
@@ -70,6 +73,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/account-settings/id-image', [StoreController::class, 'uploadIdImage'])->name('store.id-image.upload');
     Route::delete('/account-settings/id-image', [StoreController::class, 'deleteIdImage'])->name('store.id-image.delete');
     Route::post('/account-settings/id-verified', [StoreController::class, 'updateIdVerified'])->name('store.update-id-verified');
+    Route::post('/account-settings/currency', [StoreController::class, 'updateCurrency'])->name('store.currency.update');
     Route::get('/points', [StoreController::class, 'points'])->name('store.points');
     Route::post('/points/redeem', [StoreController::class, 'redeemPoints'])->name('store.points.redeem');
     Route::get('/my-orders', [StoreController::class, 'myOrders'])->name('store.my-orders');
@@ -77,6 +81,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/my-orders/{order}/review', [StoreController::class, 'showReviewForm'])->name('store.order.review');
     Route::post('/my-orders/{order}/review', [StoreController::class, 'submitReview'])->name('store.order.review.submit');
     Route::get('/my-comments', [StoreController::class, 'myComments'])->name('store.my-comments');
+    Route::get('/favorites', [StoreController::class, 'favorites'])->name('store.favorites');
+    Route::post('/favorites/{product}', [StoreController::class, 'toggleFavorite'])->name('store.favorites.toggle');
+    Route::get('/coupons', [StoreController::class, 'coupons'])->name('store.coupons');
 });
 
 Route::redirect('/dashboard', '/admin/dashboard');

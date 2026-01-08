@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Reward extends Model
 {
@@ -25,9 +27,14 @@ class Reward extends Model
         'is_active' => 'boolean',
     ];
 
-    public function product()
+    public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function userRewards(): HasMany
+    {
+        return $this->hasMany(UserReward::class);
     }
 
     public function getTitleTranslatedAttribute(): string

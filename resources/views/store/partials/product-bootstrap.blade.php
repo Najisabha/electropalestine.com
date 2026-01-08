@@ -3,6 +3,14 @@
     $ratingCount = $product->rating_count ?? 0;
     $category = $product->category;
     $types = $category?->types ?? collect();
+    $isFavorite = false;
+    if (auth()->check() && \Illuminate\Support\Facades\Schema::hasTable('user_favorites')) {
+        try {
+            $isFavorite = auth()->user()->favoriteProducts()->where('product_id', $product->id)->exists();
+        } catch (\Exception $e) {
+            $isFavorite = false;
+        }
+    }
 @endphp
 
 <section class="py-3 py-md-5 text-light">
@@ -95,10 +103,21 @@
 
             {{-- معلومات المنتج + الأزرار --}}
             <div class="col-12 col-lg-6">
-                <h1 class="product-page-title">{{ $product->translated_name }}</h1>
+                <div class="d-flex align-items-start justify-content-between mb-2">
+                    <h1 class="product-page-title mb-0">{{ $product->translated_name }}</h1>
+                    @auth
+                        <button type="button" 
+                                class="btn btn-sm product-favorite-btn-page {{ $isFavorite ? 'favorited' : '' }}"
+                                data-product-id="{{ $product->id }}"
+                                onclick="toggleFavorite({{ $product->id }}, this);"
+                                style="background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <i class="bi {{ $isFavorite ? 'bi-heart-fill text-danger' : 'bi-heart text-white' }}" style="font-size: 1.3rem;"></i>
+                        </button>
+                    @endauth
+                </div>
 
-                <div class="product-page-price mb-3">
-                    ${{ number_format($product->price, 2) }}
+                <div class="product-page-price mb-3" data-price-usd="{{ $product->price }}">
+                    {{ $currencyHelper::convertAndFormat($product->price, $userCurrency) }}
                 </div>
 
                 <div class="product-page-stock mb-4">

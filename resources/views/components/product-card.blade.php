@@ -4,11 +4,20 @@
     $ratingAverage = $product->rating_average ?? 0;
     $salesCount = $product->sales_count ?? 0;
     $hasStock = ($product->stock ?? 0) > 0;
+    $isFavorite = false;
+    if (auth()->check() && \Illuminate\Support\Facades\Schema::hasTable('user_favorites')) {
+        try {
+            $isFavorite = auth()->user()->favoriteProducts()->where('product_id', $product->id)->exists();
+        } catch (\Exception $e) {
+            $isFavorite = false;
+        }
+    }
 @endphp
 
-<a href="{{ route('products.show', $product) }}" class="product-card-new text-decoration-none">
-    {{-- الصورة مع الشارات --}}
-    <div class="product-card-image-wrapper">
+<div class="product-card-wrapper position-relative">
+    <a href="{{ route('products.show', $product) }}" class="product-card-new text-decoration-none">
+        {{-- الصورة مع الشارات --}}
+        <div class="product-card-image-wrapper">
         {{-- شارة التقييم (أعلى يسار) --}}
         @if($ratingAverage > 0)
             <span class="product-badge-rating">
@@ -69,7 +78,9 @@
         
         <div class="product-card-footer">
             <div class="product-card-price-section">
-                <span class="product-card-price">${{ number_format($product->price, 2) }}</span>
+                <span class="product-card-price" data-price-usd="{{ $product->price }}">
+                    {{ $currencyHelper::convertAndFormat($product->price, $userCurrency) }}
+                </span>
                 @if($hasStock)
                     <span class="product-card-stock-badge">
                         <i class="bi bi-check2-circle"></i>
@@ -84,5 +95,17 @@
             </div>
         </div>
     </div>
-</a>
+    </a>
+    
+    {{-- زر القلب (المفضلة) --}}
+    @auth
+        <button type="button" 
+                class="btn btn-sm product-favorite-btn position-absolute top-0 end-0 m-2 {{ $isFavorite ? 'favorited' : '' }}"
+                data-product-id="{{ $product->id }}"
+                onclick="event.preventDefault(); toggleFavorite({{ $product->id }}, this);"
+                style="z-index: 10; background: rgba(0,0,0,0.6); border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            <i class="bi {{ $isFavorite ? 'bi-heart-fill text-danger' : 'bi-heart text-white' }}" style="font-size: 1.2rem;"></i>
+        </button>
+    @endauth
+</div>
 

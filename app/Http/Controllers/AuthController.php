@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Helpers\ImageHelper;
+use App\Helpers\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -47,6 +48,9 @@ class AuthController extends Controller
         $request->session()->regenerate();
 
         $user->update(['last_login_at' => now()]);
+        
+        // تسجيل نشاط تسجيل الدخول
+        ActivityLogger::logLogin();
 
         if (strtolower($user->role) === 'admin') {
             return redirect()->intended('/admin/dashboard');

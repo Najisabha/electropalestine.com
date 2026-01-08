@@ -243,6 +243,177 @@
                         </div>
                     </div>
 
+                    <!-- إعدادات العملة Accordion -->
+                    <div class="accordion-item glass rounded-4 mb-3 border-0">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed text-light" type="button" data-bs-toggle="collapse" data-bs-target="#currencyCollapse" aria-expanded="false" aria-controls="currencyCollapse" style="background: transparent; box-shadow: none;">
+                                <h2 class="h6 fw-semibold mb-0">إعدادات العملة</h2>
+                            </button>
+                        </h2>
+                        <div id="currencyCollapse" class="accordion-collapse collapse" data-bs-parent="#accountAccordion">
+                            <div class="accordion-body p-4">
+                                <form id="currency-form" method="POST" action="{{ route('store.currency.update') }}" onsubmit="return handleCurrencyFormSubmit(event)">
+                                    @csrf
+                                    <div class="mb-3">
+                                        <label class="form-label small text-secondary mb-2">اختر العملة المفضلة</label>
+                                        <select class="form-select auth-input" name="currency" id="currency-select" required>
+                                            <option value="USD" {{ ($user->preferred_currency ?? 'USD') === 'USD' ? 'selected' : '' }}>دولار أمريكي (USD)</option>
+                                            <option value="ILS" {{ ($user->preferred_currency ?? 'USD') === 'ILS' ? 'selected' : '' }}>شيكل إسرائيلي (ILS)</option>
+                                            <option value="JOD" {{ ($user->preferred_currency ?? 'USD') === 'JOD' ? 'selected' : '' }}>دينار أردني (JOD)</option>
+                                        </select>
+                                        <small class="text-secondary d-block mt-2">
+                                            سيتم تحديث جميع الأسعار تلقائياً حسب سعر الصرف الحالي
+                                        </small>
+                                    </div>
+                                    <div id="exchange-rates" class="mb-3 p-3 rounded-3 bg-dark bg-opacity-25 border border-secondary-subtle">
+                                        <div class="text-secondary small mb-2">أسعار الصرف الحالية:</div>
+                                        <div id="rates-display" class="text-white small">
+                                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                                <span class="visually-hidden">جاري التحميل...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-main px-4">
+                                        <i class="bi bi-currency-exchange"></i>
+                                        حفظ العملة المفضلة
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- حركاتي Accordion -->
+                    <div class="accordion-item glass rounded-4 mb-3 border-0">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed text-light" type="button" data-bs-toggle="collapse" data-bs-target="#activitiesCollapse" aria-expanded="false" aria-controls="activitiesCollapse" style="background: transparent; box-shadow: none;">
+                                <h2 class="h6 fw-semibold mb-0">حركاتي</h2>
+                            </button>
+                        </h2>
+                        <div id="activitiesCollapse" class="accordion-collapse collapse" data-bs-parent="#accountAccordion">
+                            <div class="accordion-body p-4">
+                                <div class="mb-3">
+                                    <p class="text-secondary small mb-3">
+                                        جميع الحركات والنشاطات التي قمت بها في حسابك
+                                    </p>
+                                    
+                                    @php($activities = $user->activities()->paginate(20))
+                                    
+                                    @if($activities->count() > 0)
+                                        <div class="table-responsive">
+                                            <table class="table table-dark table-sm align-middle">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="width: 20%">التاريخ والوقت</th>
+                                                        <th style="width: 15%">نوع الحركة</th>
+                                                        <th style="width: 50%">الوصف</th>
+                                                        <th style="width: 15%">التفاصيل</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($activities as $activity)
+                                                        <tr>
+                                                            <td class="text-secondary small">
+                                                                {{ $activity->created_at->format('Y/m/d H:i') }}
+                                                            </td>
+                                                            <td>
+                                                                <span class="badge bg-primary small">
+                                                                    {{ $activity->action }}
+                                                                </span>
+                                                            </td>
+                                                            <td>
+                                                                <div class="text-white small">{{ $activity->description ?? '-' }}</div>
+                                                                @if($activity->metadata)
+                                                                    @php($meta = $activity->metadata)
+                                                                    @if(isset($meta['product_id']))
+                                                                        <div class="text-secondary" style="font-size: 0.75rem;">
+                                                                            منتج #{{ $meta['product_id'] }}
+                                                                        </div>
+                                                                    @endif
+                                                                    @if(isset($meta['amount']))
+                                                                        <div class="text-success" style="font-size: 0.75rem;">
+                                                                            المبلغ: ${{ number_format($meta['amount'], 2) }}
+                                                                        </div>
+                                                                    @endif
+                                                                    @if(isset($meta['points']))
+                                                                        <div class="text-warning" style="font-size: 0.75rem;">
+                                                                            النقاط: {{ number_format($meta['points']) }}
+                                                                        </div>
+                                                                    @endif
+                                                                    @if(isset($meta['order_id']))
+                                                                        <div class="text-info" style="font-size: 0.75rem;">
+                                                                            طلب #{{ $meta['order_id'] }}
+                                                                        </div>
+                                                                    @endif
+                                                                    @if(isset($meta['quantity']))
+                                                                        <div class="text-primary" style="font-size: 0.75rem;">
+                                                                            الكمية: {{ $meta['quantity'] }}
+                                                                        </div>
+                                                                    @endif
+                                                                @endif
+                                                            </td>
+                                                            <td>
+                                                                @if($activity->metadata)
+                                                                    <button class="btn btn-sm btn-outline-info" 
+                                                                            type="button"
+                                                                            data-bs-toggle="modal" 
+                                                                            data-bs-target="#activityModal{{ $activity->id }}">
+                                                                        <i class="bi bi-info-circle"></i>
+                                                                    </button>
+                                                                @endif
+                                                            </td>
+                                                        </tr>
+                                                        
+                                                        @if($activity->metadata)
+                                                            <div class="modal fade" id="activityModal{{ $activity->id }}" tabindex="-1">
+                                                                <div class="modal-dialog modal-dialog-centered">
+                                                                    <div class="modal-content glass border border-secondary-subtle">
+                                                                        <div class="modal-header border-bottom border-secondary-subtle">
+                                                                            <h5 class="modal-title text-light">تفاصيل الحركة</h5>
+                                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                                        </div>
+                                                                        <div class="modal-body text-light">
+                                                                            <div class="mb-2">
+                                                                                <strong>النوع:</strong> {{ $activity->action }}
+                                                                            </div>
+                                                                            <div class="mb-2">
+                                                                                <strong>الوصف:</strong> {{ $activity->description ?? '-' }}
+                                                                            </div>
+                                                                            <div class="mb-2">
+                                                                                <strong>التاريخ:</strong> {{ $activity->created_at->format('Y/m/d H:i:s') }}
+                                                                            </div>
+                                                                            @if($activity->metadata)
+                                                                                <div class="mt-3">
+                                                                                    <strong>البيانات الإضافية:</strong>
+                                                                                    <pre class="bg-dark p-2 rounded mt-2 small text-white" style="max-height: 200px; overflow-y: auto;">{{ json_encode($activity->metadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                                                                                </div>
+                                                                            @endif
+                                                                        </div>
+                                                                        <div class="modal-footer border-top border-secondary-subtle">
+                                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        @endif
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        
+                                        <div class="mt-3">
+                                            {{ $activities->links() }}
+                                        </div>
+                                    @else
+                                        <div class="text-center py-5">
+                                            <i class="bi bi-inbox display-4 text-secondary mb-3"></i>
+                                            <p class="text-secondary">لا توجد حركات مسجلة بعد</p>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- عنواني الشخصي Accordion (إدارة عناوين متعددة) -->
                     <div class="accordion-item glass rounded-4 border-0">
                         <h2 class="accordion-header">
@@ -383,11 +554,17 @@
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-secondary">الرصيد:</span>
-                            <strong class="text-info">${{ number_format($user->balance ?? 0, 2) }}</strong>
+                            <strong class="text-info" id="user-balance" data-price-usd="{{ $user->balance ?? 0 }}">{{ $currencyHelper::convertAndFormat($user->balance ?? 0, $userCurrency) }}</strong>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-secondary">تاريخ التسجيل:</span>
-                            <strong class="text-white">{{ $user->created_at ? $user->created_at->format('Y/m/d') : 'غير محدد' }}</strong>
+                            <strong class="text-white">
+                                @if($user->created_at)
+                                    {{ $user->created_at->format('Y/m/d H:i') }}
+                                @else
+                                    <span class="text-secondary">غير محدد</span>
+                                @endif
+                            </strong>
                         </div>
                     </div>
                 </div>
@@ -400,8 +577,20 @@
                             <strong class="text-white">
                                 @if($user->last_login_at)
                                     {{ $user->last_login_at->format('Y/m/d H:i') }}
+                                    <span class="text-secondary small ms-2">({{ $user->last_login_at->diffForHumans() }})</span>
                                 @else
                                     <span class="text-secondary">لم يتم تسجيل الدخول بعد</span>
+                                @endif
+                            </strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-secondary">تاريخ إنشاء الحساب:</span>
+                            <strong class="text-white">
+                                @if($user->created_at)
+                                    {{ $user->created_at->format('Y/m/d H:i') }}
+                                    <span class="text-secondary small ms-2">({{ $user->created_at->diffForHumans() }})</span>
+                                @else
+                                    <span class="text-secondary">غير محدد</span>
                                 @endif
                             </strong>
                         </div>
@@ -479,6 +668,198 @@ function closeAddressForm() {
         container.classList.add('d-none');
     }
 }
+
+// تحميل أسعار الصرف
+async function loadExchangeRates() {
+    try {
+        const response = await fetch('{{ route("api.exchange-rates") }}');
+        const data = await response.json();
+        
+        if (data.success) {
+            const rates = data.rates;
+            const ratesDisplay = document.getElementById('rates-display');
+            if (ratesDisplay) {
+                ratesDisplay.innerHTML = `
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>1 USD =</span>
+                        <strong>${rates.USD_to_ILS?.toFixed(4) || 'N/A'} ILS</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>1 USD =</span>
+                        <strong>${rates.USD_to_JOD?.toFixed(4) || 'N/A'} JOD</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>1 ILS =</span>
+                        <strong>${rates.ILS_to_JOD?.toFixed(4) || 'N/A'} JOD</strong>
+                    </div>
+                `;
+            }
+        }
+    } catch (error) {
+        console.error('خطأ في تحميل أسعار الصرف:', error);
+        const ratesDisplay = document.getElementById('rates-display');
+        if (ratesDisplay) {
+            ratesDisplay.innerHTML = '<span class="text-danger small">فشل تحميل أسعار الصرف</span>';
+        }
+    }
+}
+
+// تحديث الرصيد عند تغيير العملة
+async function updateBalanceDisplay(currency) {
+    // تحديث الرصيد في صفحة الإعدادات
+    const balanceElement = document.getElementById('user-balance');
+    if (balanceElement) {
+        const balanceUSD = parseFloat(balanceElement.getAttribute('data-price-usd')) || 0;
+        await updateSingleBalance(balanceElement, balanceUSD, currency);
+    }
+    
+    // تحديث الرصيد في الـ header (desktop)
+    const headerBalanceDesktop = document.getElementById('header-balance-desktop');
+    if (headerBalanceDesktop) {
+        const balanceUSD = parseFloat(headerBalanceDesktop.getAttribute('data-price-usd')) || 0;
+        await updateSingleBalance(headerBalanceDesktop, balanceUSD, currency);
+    }
+    
+    // تحديث الرصيد في الـ header (mobile)
+    const headerBalanceMobile = document.getElementById('header-balance-mobile');
+    if (headerBalanceMobile) {
+        const balanceUSD = parseFloat(headerBalanceMobile.getAttribute('data-price-usd')) || 0;
+        await updateSingleBalance(headerBalanceMobile, balanceUSD, currency);
+    }
+    
+    // تحديث الرصيد في صفحة الدفع
+    const checkoutBalance = document.getElementById('checkout-balance');
+    if (checkoutBalance) {
+        const balanceUSD = parseFloat(checkoutBalance.getAttribute('data-price-usd')) || 0;
+        await updateSingleBalance(checkoutBalance, balanceUSD, currency);
+    }
+    
+    // تحديث الرصيد في صفحة دفع السلة
+    const cartCheckoutBalance = document.getElementById('cart-checkout-balance');
+    if (cartCheckoutBalance) {
+        const balanceUSD = parseFloat(cartCheckoutBalance.getAttribute('data-price-usd')) || 0;
+        await updateSingleBalance(cartCheckoutBalance, balanceUSD, currency);
+    }
+    
+    // تحديث جميع الأسعار الأخرى في الصفحة
+    if (window.currencySystem) {
+        await window.currencySystem.updateAllPrices();
+    }
+}
+
+// دالة مساعدة لتحديث رصيد واحد
+async function updateSingleBalance(element, balanceUSD, currency) {
+    // التأكد من تحميل أسعار الصرف
+    if (window.currencySystem) {
+        if (!window.currencySystem.exchangeRates) {
+            await window.currencySystem.loadExchangeRates();
+        }
+        
+        const convertedBalance = window.currencySystem.convertPrice(balanceUSD, currency);
+        const symbol = window.currencySystem.getCurrencySymbol(currency);
+        element.textContent = symbol + convertedBalance.toFixed(2);
+    } else {
+        // استخدام قيم افتراضية إذا لم يتم تحميل النظام بعد
+        let convertedBalance = balanceUSD;
+        let symbol = '$';
+        
+        if (currency === 'ILS') {
+            convertedBalance = balanceUSD * 3.65;
+            symbol = '₪';
+        } else if (currency === 'JOD') {
+            convertedBalance = balanceUSD * 0.71;
+            symbol = 'د.أ';
+        }
+        
+        element.textContent = symbol + convertedBalance.toFixed(2);
+    }
+}
+
+// معالجة إرسال form العملة
+async function handleCurrencyFormSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (response.ok) {
+            const selectedCurrency = document.getElementById('currency-select').value;
+            
+            // حفظ العملة في localStorage
+            localStorage.setItem('preferred_currency', selectedCurrency);
+            
+            // إرسال event لتحديث جميع الأسعار
+            window.dispatchEvent(new CustomEvent('currencyChanged', { detail: { currency: selectedCurrency } }));
+            
+            // تحديث جميع الأسعار
+            if (window.currencySystem) {
+                await window.currencySystem.updateAllPrices();
+            }
+            
+            // إرسال form بشكل عادي لإظهار رسالة النجاح
+            form.submit();
+        } else {
+            alert('حدث خطأ أثناء حفظ العملة');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        // في حالة الخطأ، إرسال form بشكل عادي
+        return true;
+    }
+    
+    return false;
+}
+
+// تحديث الرصيد عند تغيير العملة في الـ select
+document.addEventListener('DOMContentLoaded', async function() {
+    const currencySelect = document.getElementById('currency-select');
+    if (currencySelect) {
+        // تحديث الرصيد عند تغيير العملة
+        currencySelect.addEventListener('change', async function() {
+            const selectedCurrency = this.value;
+            
+            // حفظ العملة في localStorage (للزوار) أو تحديثها في النظام
+            if (window.currencySystem) {
+                window.currencySystem.setPreferredCurrency(selectedCurrency);
+            } else {
+                localStorage.setItem('preferred_currency', selectedCurrency);
+            }
+            
+            // إرسال event مخصص لتحديث جميع الأسعار في الموقع
+            window.dispatchEvent(new CustomEvent('currencyChanged', { detail: { currency: selectedCurrency } }));
+            
+            // تحديث جميع الأرصدة والأسعار
+            await updateBalanceDisplay(selectedCurrency);
+            
+            // تحديث جميع الأسعار في الصفحة
+            if (window.currencySystem) {
+                await window.currencySystem.updateAllPrices();
+            }
+        });
+        
+        // تحديث الرصيد عند تحميل الصفحة
+        const currentCurrency = currencySelect.value;
+        await updateBalanceDisplay(currentCurrency);
+    }
+    
+    // تحميل أسعار الصرف وتحديث الرصيد مرة أخرى بعد التحميل
+    loadExchangeRates().then(async () => {
+        if (currencySelect && window.currencySystem) {
+            await updateBalanceDisplay(currencySelect.value);
+        }
+    });
+    
+    // تحديث أسعار الصرف كل 5 دقائق
+    setInterval(loadExchangeRates, 300000);
+});
 </script>
 
 @endif

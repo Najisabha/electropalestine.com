@@ -19,6 +19,9 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Services\InvoicePdfService;
+use App\Helpers\ActivityLogger;
+use App\Models\UserFavorite;
+use App\Models\UserReward;
 
 class StoreController extends Controller
 {
@@ -69,6 +72,10 @@ class StoreController extends Controller
 
     public function product(Product $product): View
     {
+        // تسجيل نشاط عرض المنتج
+        if (auth()->check()) {
+            ActivityLogger::logProductView($product);
+        }
         $product->load(['category.types', 'company', 'type']);
 
         // جلب تقييمات الطلبات التي تحتوي هذا المنتج
@@ -513,6 +520,11 @@ class StoreController extends Controller
 
         session()->put('cart', $cart);
 
+        // تسجيل نشاط إضافة إلى السلة
+        if (auth()->check()) {
+            ActivityLogger::logAddToCart($product, $quantity);
+        }
+
         return back()->with('status', 'تم إضافة المنتج إلى السلة بنجاح.');
     }
 
@@ -523,6 +535,11 @@ class StoreController extends Controller
         if (isset($cart[$product->id])) {
             unset($cart[$product->id]);
             session()->put('cart', $cart);
+            
+            // تسجيل نشاط حذف من السلة
+            if (auth()->check()) {
+                ActivityLogger::logRemoveFromCart($product);
+            }
         }
 
         return back()->with('status', 'تم حذف المنتج من السلة.');
@@ -556,11 +573,21 @@ class StoreController extends Controller
         $cart[$product->id] = $quantity;
         session()->put('cart', $cart);
 
+        // تسجيل نشاط تحديث السلة
+        if (auth()->check()) {
+            ActivityLogger::logUpdateCart($product, $quantity);
+        }
+
         return back()->with('status', 'تم تحديث الكمية بنجاح.');
     }
 
     public function clearCart(): RedirectResponse
     {
+        // تسجيل نشاط تفريغ السلة
+        if (auth()->check()) {
+            ActivityLogger::logClearCart();
+        }
+        
         session()->forget('cart');
         return redirect()->route('store.cart')->with('status', 'تم تفريغ السلة.');
     }
@@ -934,6 +961,77 @@ class StoreController extends Controller
         ], 400);
     }
 
+    public function updateCurrency(Request $request): RedirectResponse
+    {
+        $user = auth()->user();
+        
+        $data = $request->validate([
+            'currency' => ['required', 'string', 'in:USD,ILS,JOD'],
+        ]);
+
+        $oldCurrency = $user->preferred_currency ?? 'USD';
+        $user->preferred_currency = $data['currency'];
+        $user->save();
+
+        // حفظ العملة في session أيضاً
+        session(['preferred_currency' => $data['currency']]);
+        
+        // تحديث العملة في الـ auth user object
+        auth()->user()->preferred_currency = $data['currency'];
+        
+        // تسجيل نشاط تغيير العملة
+        if ($oldCurrency !== $data['currency']) {
+            ActivityLogger::logCurrencyChange($oldCurrency, $data['currency']);
+        }
+
+        return redirect()->route('store.account-settings')
+            ->with('status', 'تم حفظ العملة المفضلة بنجاح.');
+    }
+
+    public function getExchangeRates(): \Illuminate\Http\JsonResponse
+    {
+        try {
+            // استخدام API مجاني لأسعار الصرف (مثال: exchangerate-api.com أو fixer.io)
+            // هنا سنستخدم قيم افتراضية أو API مجاني
+            
+            // يمكن استخدام API مثل: https://api.exchangerate-api.com/v4/latest/USD
+            $usdToIls = 3.65; // قيمة افتراضية - يجب استبدالها بـ API حقيقي
+            $usdToJod = 0.71; // قيمة افتراضية - يجب استبدالها بـ API حقيقي
+            $ilsToJod = $usdToJod / $usdToIls;
+
+            // محاولة الحصول على أسعار حقيقية من API
+            try {
+                $response = @file_get_contents('https://api.exchangerate-api.com/v4/latest/USD');
+                if ($response) {
+                    $data = json_decode($response, true);
+                    if (isset($data['rates'])) {
+                        $usdToIls = $data['rates']['ILS'] ?? $usdToIls;
+                        $usdToJod = $data['rates']['JOD'] ?? $usdToJod;
+                        $ilsToJod = $usdToJod / $usdToIls;
+                    }
+                }
+            } catch (\Exception $e) {
+                // في حالة فشل API، نستخدم القيم الافتراضية
+                Log::warning('Failed to fetch exchange rates from API: ' . $e->getMessage());
+            }
+
+            return response()->json([
+                'success' => true,
+                'rates' => [
+                    'USD_to_ILS' => round($usdToIls, 4),
+                    'USD_to_JOD' => round($usdToJod, 4),
+                    'ILS_to_JOD' => round($ilsToJod, 4),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching exchange rates: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'فشل تحميل أسعار الصرف',
+            ], 500);
+        }
+    }
+
     public function myOrders(): View
     {
         $user = auth()->user();
@@ -1172,6 +1270,9 @@ class StoreController extends Controller
                     'payment_method' => $data['payment_method'],
                 ]);
 
+                // تسجيل نشاط إتمام الطلب
+                ActivityLogger::logOrderPlaced($order);
+                
                 // تخزين العناصر في حقل items (طلب يحتوي على منتج واحد)
                 $order->update([
                     'items' => [[
@@ -1250,6 +1351,9 @@ class StoreController extends Controller
             'status' => 'pending',
             'payment_method' => $data['payment_method'],
         ]);
+        
+        // تسجيل نشاط إتمام الطلب
+        ActivityLogger::logOrderPlaced($order);
 
         $order->update([
             'items' => [[
@@ -1401,6 +1505,9 @@ class StoreController extends Controller
                     'shipping_address' => $user->address ?? null,
                     'items' => $items,
                 ]);
+                
+                // تسجيل نشاط إتمام الطلب
+                ActivityLogger::logOrderPlaced($order);
 
                 // تحديث المخزون وعدّاد المبيعات بناءً على هذه الطلبية المؤكدة (سلة كاملة)
                 Order::applyInventoryForOrder($order);
@@ -1461,6 +1568,9 @@ class StoreController extends Controller
             'shipping_address' => $user->address ?? null,
             'items' => $items,
         ]);
+        
+        // تسجيل نشاط إتمام الطلب
+        ActivityLogger::logOrderPlaced($order);
 
         session()->forget('cart');
 
@@ -1553,16 +1663,37 @@ class StoreController extends Controller
                 $user->balance = $currentBalance + ($reward->value ?? 0);
                 $user->save();
             } elseif ($reward->type === 'coupon') {
-                // هنا يمكن إضافة منطق إنشاء كوبون خصم للمستخدم
-                // حالياً نكتفي بتسجيل العملية
+                // إنشاء كوبون خصم للمستخدم
+                $couponCode = $reward->coupon_code ?? strtoupper(substr(md5($user->id . $reward->id . time()), 0, 10));
+                $expiresAt = now()->addMonths(3); // صلاحية 3 أشهر
+                
+                UserReward::create([
+                    'user_id' => $user->id,
+                    'reward_id' => $reward->id,
+                    'coupon_code' => $couponCode,
+                    'discount_value' => $reward->value,
+                    'discount_type' => 'percent', // يمكن جعله قابل للتعديل
+                    'expires_at' => $expiresAt,
+                ]);
+
+                // تقليل المخزون إذا كان موجوداً
+                if ($reward->stock !== null && $reward->stock > 0) {
+                    $reward->stock = $reward->stock - 1;
+                    $reward->save();
+                }
             }
             // gift لا يحتاج معالجة إضافية هنا (سيتم التعامل معها لاحقاً)
 
             DB::commit();
 
-            $message = $reward->type === 'wallet_credit' 
-                ? 'تم استبدال النقاط بنجاح! تم إضافة ' . number_format($reward->value, 2) . '$ إلى محفظتك.'
-                : 'تم استبدال النقاط بنجاح! سيتم مراجعة طلبك قريباً.';
+            if ($reward->type === 'wallet_credit') {
+                $message = 'تم استبدال النقاط بنجاح! تم إضافة ' . number_format($reward->value, 2) . '$ إلى محفظتك.';
+            } elseif ($reward->type === 'coupon') {
+                $couponCode = $reward->coupon_code ?? 'تم إنشاؤه';
+                $message = 'تم استبدال النقاط بنجاح! تم إضافة كوبون خصم جديد إلى قائمة كوبوناتك.';
+            } else {
+                $message = 'تم استبدال النقاط بنجاح! سيتم مراجعة طلبك قريباً.';
+            }
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -1624,6 +1755,90 @@ class StoreController extends Controller
             return redirect()->back()
                 ->withInput()
                 ->withErrors(['error' => __('common.message_sent_error')]);
+        }
+    }
+
+    public function favorites(): View
+    {
+        $user = auth()->user();
+        
+        try {
+            $favoriteProducts = $user->favoriteProducts()
+                ->with(['category', 'company', 'type'])
+                ->paginate(20);
+        } catch (\Exception $e) {
+            // في حالة عدم وجود الجدول بعد
+            $favoriteProducts = collect()->paginate(20);
+        }
+
+        return view('store.favorites', [
+            'favoriteProducts' => $favoriteProducts,
+        ]);
+    }
+
+    public function coupons(): View
+    {
+        $user = auth()->user();
+        
+        try {
+            $userCoupons = UserReward::where('user_id', $user->id)
+                ->whereHas('reward', function ($q) {
+                    $q->where('type', 'coupon');
+                })
+                ->with('reward')
+                ->orderByDesc('created_at')
+                ->paginate(20);
+        } catch (\Exception $e) {
+            // في حالة عدم وجود الجدول بعد
+            $userCoupons = collect()->paginate(20);
+        }
+
+        return view('store.coupons', [
+            'userCoupons' => $userCoupons,
+        ]);
+    }
+
+    public function toggleFavorite(Product $product): \Illuminate\Http\JsonResponse
+    {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'يجب تسجيل الدخول أولاً',
+            ], 401);
+        }
+
+        try {
+            $user = auth()->user();
+            $favorite = UserFavorite::where('user_id', $user->id)
+                ->where('product_id', $product->id)
+                ->first();
+
+            if ($favorite) {
+                // حذف من المفضلة
+                $favorite->delete();
+                $isFavorite = false;
+                $message = 'تم إزالة المنتج من المفضلة';
+            } else {
+                // إضافة إلى المفضلة
+                UserFavorite::create([
+                    'user_id' => $user->id,
+                    'product_id' => $product->id,
+                ]);
+                $isFavorite = true;
+                $message = 'تم إضافة المنتج إلى المفضلة';
+            }
+
+            return response()->json([
+                'success' => true,
+                'is_favorite' => $isFavorite,
+                'message' => $message,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error toggling favorite: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء تحديث المفضلة. يرجى التأكد من تنفيذ migrations.',
+            ], 500);
         }
     }
 }
