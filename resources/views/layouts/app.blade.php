@@ -1844,7 +1844,7 @@
                             {{ mb_substr($authUser->first_name,0,1) }}{{ mb_substr($authUser->last_name,0,1) }}
                         </div>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end glass border border-secondary-subtle" aria-labelledby="mobileUserDropdown" style="min-width: 200px;">
+                    <ul class="dropdown-menu dropdown-menu-end glass border border-secondary-subtle" aria-labelledby="mobileUserDropdown" style="min-width: 220px;">
                         <li class="px-3 py-2">
                             <div class="small mb-1">
                                 <strong>{{ $authUser->first_name }} {{ $authUser->last_name }}</strong>
@@ -1859,20 +1859,44 @@
                         <li><hr class="dropdown-divider border-secondary-subtle"></li>
                         <li>
                             <a class="dropdown-item text-light" href="{{ route('store.account-settings') }}">
-                                <i class="bi bi-person-circle me-2"></i>
-                                {{ __('common.account_settings') }}
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item text-light" href="{{ route('store.my-orders') }}">
                                 <i class="bi bi-bag-check me-2"></i>
-                                {{ __('common.my_orders') }}
+                                الطلبيات الخاصة بي
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item text-light" href="{{ route('store.my-comments') }}">
+                            <a class="dropdown-item text-light" href="{{ route('store.points') }}">
+                                <i class="bi bi-star me-2"></i>
+                                نقاطي
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-light" href="#">
                                 <i class="bi bi-chat-left-text me-2"></i>
-                                {{ __('common.my_comments') }}
+                                مركز الرسائل
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-light" href="{{ route('store.checkout') }}">
+                                <i class="bi bi-credit-card me-2"></i>
+                                دفع
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-light" href="#">
+                                <i class="bi bi-heart me-2"></i>
+                                قائمة الرغبات
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-light" href="#">
+                                <i class="bi bi-ticket-perforated me-2"></i>
+                                كوبوناتي
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-light" href="{{ route('store.account-settings') }}">
+                                <i class="bi bi-gear me-2"></i>
+                                الإعدادات
                             </a>
                         </li>
                         @if(strtolower($authUser->role) === 'admin')

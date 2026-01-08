@@ -653,8 +653,158 @@ class StoreController extends Controller
 
     public function accountSettings(): View
     {
-        $user = auth()->user();
+        $user = auth()->user()->load('addresses');
         return view('store.account-settings', compact('user'));
+    }
+
+    /**
+     * صفحة استبدال نقاط الولاء.
+     */
+    public function points(): View|RedirectResponse
+    {
+        if (!auth()->check()) {
+            return redirect()->route('login')->withErrors(['error' => __('common.login_required')]);
+        }
+
+        $user = auth()->user();
+        $userPoints = (int) ($user->points ?? 0);
+        $userBalance = (float) ($user->balance ?? 0);
+
+        // قيمة النقطة الواحدة بالدولار (يمكن تعديلها من لوحة التحكم لاحقاً)
+        $pointValue = 0.1;
+        $pointsValue = $userPoints * $pointValue;
+
+        // مستويات الولاء
+        $tiers = collect([
+            ['key' => 'bronze', 'label' => __('common.tier_bronze'), 'threshold' => 0],
+            ['key' => 'silver', 'label' => __('common.tier_silver'), 'threshold' => 500],
+            ['key' => 'gold', 'label' => __('common.tier_gold'), 'threshold' => 1000],
+            ['key' => 'platinum', 'label' => __('common.tier_platinum'), 'threshold' => 2000],
+        ]);
+
+        $currentTier = $tiers->last(fn($tier) => $userPoints >= $tier['threshold']);
+        $nextTier = $tiers->first(fn($tier) => $tier['threshold'] > $userPoints);
+
+        $progressToNext = $nextTier
+            ? min(100, round(($userPoints / max(1, $nextTier['threshold'])) * 100, 1))
+            : 100;
+        $pointsToNext = $nextTier ? max(0, $nextTier['threshold'] - $userPoints) : 0;
+
+        $rewards = $this->buildRewardsDataset();
+        $history = $this->buildPointsHistory();
+
+        return view('store.points', [
+            'userPoints' => $userPoints,
+            'userBalance' => $userBalance,
+            'pointValue' => $pointValue,
+            'pointsValue' => $pointsValue,
+            'currentTier' => $currentTier,
+            'nextTier' => $nextTier,
+            'progressToNext' => $progressToNext,
+            'pointsToNext' => $pointsToNext,
+            'rewards' => $rewards,
+            'history' => $history,
+            'tiers' => $tiers,
+        ]);
+    }
+
+    /**
+     * إنشاء أو تحديث عنوان (يستخدمه نموذج العناوين المتعددة).
+     */
+    public function saveAddress(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'address_id' => ['nullable', 'integer', 'exists:user_addresses,id'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'governorate' => ['nullable', 'string', 'max:255'],
+            'zip_code' => ['nullable', 'string', 'max:20'],
+            'country_code' => ['nullable', 'string', 'max:10'],
+            'phone' => ['required', 'string', 'max:50'],
+            'street' => ['nullable', 'string', 'max:500'],
+            'is_default' => ['nullable', 'boolean'],
+        ]);
+
+        // إنشاء أو تحديث
+        if (!empty($data['address_id'])) {
+            $address = $user->addresses()->whereKey($data['address_id'])->firstOrFail();
+            $address->fill($data);
+        } else {
+            $address = $user->addresses()->create($data);
+        }
+
+        // إدارة العنوان الافتراضي
+        if (!empty($data['is_default'])) {
+            $user->addresses()->where('id', '!=', $address->id)->update(['is_default' => false]);
+            $address->is_default = true;
+        }
+
+        $address->save();
+
+        // مزامنة العنوان الافتراضي مع حقول المستخدم الحالية لاستخدامها في الشحن / الفواتير
+        if ($address->is_default) {
+            $user->city = $address->city;
+            $user->district = $address->district;
+            $user->governorate = $address->governorate;
+            $user->zip_code = $address->zip_code;
+            $user->country_code = $address->country_code;
+            $user->phone = $address->phone;
+            $user->address = $address->street;
+            $user->save();
+        }
+
+        return redirect()->route('store.account-settings')
+            ->with('status', __('addresses.saved_successfully'));
+    }
+
+    public function setDefaultAddress(Request $request, \App\Models\UserAddress $address): RedirectResponse
+    {
+        $user = $request->user();
+
+        abort_unless($address->user_id === $user->id, 403);
+
+        $user->addresses()->update(['is_default' => false]);
+        $address->is_default = true;
+        $address->save();
+
+        // مزامنة مع حقول المستخدم
+        $user->city = $address->city;
+        $user->district = $address->district;
+        $user->governorate = $address->governorate;
+        $user->zip_code = $address->zip_code;
+        $user->country_code = $address->country_code;
+        $user->phone = $address->phone;
+        $user->address = $address->street;
+        $user->save();
+
+        return redirect()->route('store.account-settings')
+            ->with('status', 'تم تعيين العنوان الافتراضي بنجاح.');
+    }
+
+    public function destroyAddress(Request $request, \App\Models\UserAddress $address): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($address->user_id === $user->id, 403);
+
+        $wasDefault = $address->is_default;
+        $address->delete();
+
+        // إذا حُذف العنوان الافتراضي، أزل البيانات المنسوخة من المستخدم (اختياري)
+        if ($wasDefault) {
+            $user->city = null;
+            $user->district = null;
+            $user->governorate = null;
+            $user->zip_code = null;
+            $user->country_code = null;
+            $user->address = null;
+            $user->save();
+        }
+
+        return redirect()->route('store.account-settings')
+            ->with('status', 'تم حذف العنوان بنجاح.');
     }
 
     public function updateAddress(Request $request): RedirectResponse
@@ -666,10 +816,10 @@ class StoreController extends Controller
         
         $validationRules = [
             'email' => ['nullable', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'city' => ['required', 'string', 'max:255'],
-            'district' => ['required', 'string', 'max:255'],
-            'governorate' => ['required', 'string', 'max:255'],
-            'address' => ['required', 'string', 'max:500'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'district' => ['nullable', 'string', 'max:255'],
+            'governorate' => ['nullable', 'string', 'max:255'],
+            'address' => ['nullable', 'string', 'max:500'],
             'secondary_address' => ['nullable', 'string', 'max:500'],
             'zip_code' => ['nullable', 'string', 'max:20'],
             'country_code' => ['nullable', 'string', 'max:10'],
@@ -1316,6 +1466,132 @@ class StoreController extends Controller
 
         return redirect()->route('store.my-orders')
             ->with('status', 'تم استلام طلبيتك بنجاح! تم إنشاء طلب واحد يحتوي على جميع منتجات السلة وسيتم مراجعته قريباً.');
+    }
+
+    /**
+     * بيانات افتراضية للجوائز (في حال عدم توفر مودل Reward حالياً).
+     */
+    protected function buildRewardsDataset()
+    {
+        $rewards = collect();
+
+        if (class_exists(\App\Models\Reward::class)) {
+            $rewards = \App\Models\Reward::query()
+                ->where('is_active', true)
+                ->orderBy('points_required')
+                ->get()
+                ->map(function ($reward) {
+                    $type = $reward->type;
+                    // توحيد تسمية نوع الرصيد بين لوحة الأدمن والواجهة الأمامية
+                    if ($type === 'wallet_credit') {
+                        $type = 'wallet';
+                    }
+
+                    return (object) [
+                        'id' => $reward->id,
+                        'type' => $type,
+                        'points_required' => (int) $reward->points_required,
+                        'value' => $reward->value,
+                        'image' => $reward->image ?? null,
+                        'title' => $reward->title_translated ?? null,
+                        'description' => $reward->description_translated ?? null,
+                    ];
+                });
+        }
+
+        return $rewards;
+    }
+
+    /**
+     * معالجة استبدال النقاط.
+     */
+    public function redeemPoints(Request $request)
+    {
+        if (!auth()->check()) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'يجب تسجيل الدخول أولاً'], 401);
+            }
+            return redirect()->route('login')->withErrors(['error' => 'يجب تسجيل الدخول أولاً']);
+        }
+
+        $data = $request->validate([
+            'reward_id' => ['required', 'integer', 'exists:rewards,id'],
+        ]);
+
+        $user = auth()->user();
+        $reward = \App\Models\Reward::findOrFail($data['reward_id']);
+
+        // التحقق من أن المكافأة مفعلة
+        if (!$reward->is_active) {
+            $message = 'هذه المكافأة غير متاحة حالياً.';
+            if ($request->expectsJson()) {
+                return response()->json(['error' => $message], 400);
+            }
+            return back()->withErrors(['error' => $message]);
+        }
+
+        // التحقق من وجود نقاط كافية
+        $userPoints = (int) ($user->points ?? 0);
+        if ($userPoints < $reward->points_required) {
+            $message = 'نقاطك غير كافية لاستبدال هذه المكافأة.';
+            if ($request->expectsJson()) {
+                return response()->json(['error' => $message], 400);
+            }
+            return back()->withErrors(['error' => $message]);
+        }
+
+        DB::beginTransaction();
+        try {
+            // خصم النقاط
+            $user->points = $userPoints - $reward->points_required;
+            $user->save();
+
+            // معالجة حسب نوع المكافأة
+            if ($reward->type === 'wallet_credit') {
+                // إضافة الرصيد للمحفظة
+                $currentBalance = (float) ($user->balance ?? 0);
+                $user->balance = $currentBalance + ($reward->value ?? 0);
+                $user->save();
+            } elseif ($reward->type === 'coupon') {
+                // هنا يمكن إضافة منطق إنشاء كوبون خصم للمستخدم
+                // حالياً نكتفي بتسجيل العملية
+            }
+            // gift لا يحتاج معالجة إضافية هنا (سيتم التعامل معها لاحقاً)
+
+            DB::commit();
+
+            $message = $reward->type === 'wallet_credit' 
+                ? 'تم استبدال النقاط بنجاح! تم إضافة ' . number_format($reward->value, 2) . '$ إلى محفظتك.'
+                : 'تم استبدال النقاط بنجاح! سيتم مراجعة طلبك قريباً.';
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                ]);
+            }
+
+            return redirect()->route('store.points')->with('status', $message);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Points redemption error: ' . $e->getMessage());
+            \Log::error('Points redemption trace: ' . $e->getTraceAsString());
+            
+            $errorMessage = 'حدث خطأ أثناء استبدال النقاط. يرجى المحاولة مرة أخرى.';
+            if ($request->expectsJson()) {
+                return response()->json(['error' => $errorMessage], 500);
+            }
+            return back()->withErrors(['error' => $errorMessage]);
+        }
+    }
+
+    /**
+     * سجل افتراضي لعرض جدول تاريخ الاستبدال.
+     */
+    protected function buildPointsHistory()
+    {
+        // حالياً لا يوجد جدول حقيقي لسجل الاستبدال، لذلك نعيد قائمة فارغة
+        return collect();
     }
 
     public function sendContact(Request $request): RedirectResponse

@@ -81,10 +81,43 @@
                 </div>
             </div>
 
-        {{-- الصف الثاني: خيارات الدفع --}}
+        {{-- الصف الثاني: عناوين التسليم + خيارات الدفع --}}
         <div class="row g-4">
             <div class="col-12">
                 <div class="glass rounded-4 p-4">
+                    @if(auth()->check())
+                        @php($defaultAddress = auth()->user()->defaultAddress)
+                        <div class="d-flex align-items-start justify-content-between mb-4">
+                            <div class="me-3 text-start">
+                                <div class="text-secondary small mb-1">{{ __('addresses.shipping_addresses_title') }}</div>
+                                @if($defaultAddress)
+                                    <div class="fw-semibold">
+                                        {{ $defaultAddress->first_name }} {{ $defaultAddress->last_name }}
+                                        @if($defaultAddress->phone)
+                                            <span class="text-secondary small ms-2">
+                                                {{ $defaultAddress->country_code }} {{ $defaultAddress->phone }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <div class="text-secondary small">
+                                        {{ $defaultAddress->city }} • {{ $defaultAddress->governorate }} {{ $defaultAddress->zip_code ? ' - '.$defaultAddress->zip_code : '' }}<br>
+                                        {{ $defaultAddress->street }}
+                                    </div>
+                                @else
+                                    <div class="text-secondary small">
+                                        {{ __('addresses.no_addresses') }}
+                                    </div>
+                                @endif
+                            </div>
+                            <button type="button"
+                                    class="btn btn-outline-light btn-sm ms-auto"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#shippingAddressesModal">
+                                {{ __('addresses.section_title') }}
+                            </button>
+                        </div>
+                    @endif
+
                     <h2 class="h6 fw-semibold mb-4">{{ __('common.choose_payment_method') }}</h2>
 
                     <form id="cart-checkout-form" method="POST" action="{{ route('store.cart.checkout.confirm') }}">

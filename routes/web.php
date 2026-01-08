@@ -7,6 +7,7 @@ use App\Http\Controllers\AdminRoleController;
 use App\Http\Controllers\AdminProductAnalyticsController;
 use App\Http\Controllers\AdminReportController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\AdminRewardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SitemapController;
@@ -63,9 +64,14 @@ Route::view('/faq', 'store.faq')->name('store.faq');
 Route::middleware('auth')->group(function () {
     Route::get('/account-settings', [StoreController::class, 'accountSettings'])->name('store.account-settings');
     Route::post('/account-settings/address', [StoreController::class, 'updateAddress'])->name('store.address.update');
+    Route::post('/account-settings/addresses/save', [StoreController::class, 'saveAddress'])->name('store.addresses.save');
+    Route::post('/account-settings/addresses/{address}/default', [StoreController::class, 'setDefaultAddress'])->name('store.addresses.default');
+    Route::delete('/account-settings/addresses/{address}', [StoreController::class, 'destroyAddress'])->name('store.addresses.destroy');
     Route::post('/account-settings/id-image', [StoreController::class, 'uploadIdImage'])->name('store.id-image.upload');
     Route::delete('/account-settings/id-image', [StoreController::class, 'deleteIdImage'])->name('store.id-image.delete');
     Route::post('/account-settings/id-verified', [StoreController::class, 'updateIdVerified'])->name('store.update-id-verified');
+    Route::get('/points', [StoreController::class, 'points'])->name('store.points');
+    Route::post('/points/redeem', [StoreController::class, 'redeemPoints'])->name('store.points.redeem');
     Route::get('/my-orders', [StoreController::class, 'myOrders'])->name('store.my-orders');
     Route::get('/my-orders/{order}/invoice', [StoreController::class, 'downloadInvoice'])->name('store.order.invoice');
     Route::get('/my-orders/{order}/review', [StoreController::class, 'showReviewForm'])->name('store.order.review');
@@ -121,6 +127,11 @@ Route::middleware('auth')->prefix('admin')->as('admin.')->group(function () {
     Route::put('/orders/{order}', [AdminOrderController::class, 'update'])->name('orders.update');
     Route::delete('/orders/{order}', [AdminOrderController::class, 'destroy'])->name('orders.destroy');
     Route::view('/coupons', 'pages.coupons')->name('coupons');
+    Route::get('/rewards', [AdminRewardController::class, 'index'])->name('rewards');
+    Route::get('/products/search', [AdminRewardController::class, 'searchProducts'])->name('products.search');
+    Route::post('/rewards', [AdminRewardController::class, 'store'])->name('rewards.store');
+    Route::put('/rewards/{reward}', [AdminRewardController::class, 'update'])->name('rewards.update');
+    Route::delete('/rewards/{reward}', [AdminRewardController::class, 'destroy'])->name('rewards.destroy');
     Route::view('/store-settings', 'pages.store-settings')->name('store-settings');
 });
 

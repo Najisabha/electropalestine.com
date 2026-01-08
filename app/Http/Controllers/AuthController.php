@@ -23,28 +23,36 @@ class AuthController extends Controller
     public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            'login' => ['required', 'string'],
             'password' => ['required'],
         ]);
 
         $remember = $request->boolean('remember');
+        $loginInput = trim($credentials['login']);
+        $normalizedLogin = str_replace(' ', '', $loginInput);
 
-        if (Auth::attempt($credentials, $remember)) {
-            $request->session()->regenerate();
+        // ابحث عن المستخدم بالبريد أو الهاتف أو (مقدمة + هاتف)
+        $user = User::query()
+            ->where('email', $loginInput)
+            ->orWhere('phone', $loginInput)
+            ->orWhereRaw("REPLACE(CONCAT(COALESCE(whatsapp_prefix,''), phone), ' ', '') = ?", [$normalizedLogin])
+            ->first();
 
-            $user = Auth::user();
-            $user->update(['last_login_at' => now()]);
-
-            if (strtolower($user->role) === 'admin') {
-                return redirect()->intended('/admin/dashboard');
-            }
-
-            return redirect()->intended('/');
+        if (!$user || !Auth::attempt(['id' => $user->id, 'password' => $credentials['password']], $remember)) {
+            return back()->withErrors([
+                'login' => __('auth.failed'),
+            ])->onlyInput('login');
         }
 
-        return back()->withErrors([
-            'email' => __('auth.failed'),
-        ])->onlyInput('email');
+        $request->session()->regenerate();
+
+        $user->update(['last_login_at' => now()]);
+
+        if (strtolower($user->role) === 'admin') {
+            return redirect()->intended('/admin/dashboard');
+        }
+
+        return redirect()->intended('/');
     }
 
     public function showRegister(): View

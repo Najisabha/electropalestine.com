@@ -15,6 +15,7 @@
             <a href="{{ route('admin.users') }}" class="btn btn-sm btn-outline-main">إظهار المستخدمين</a>
             <a href="{{ route('admin.orders') }}" class="btn btn-sm btn-outline-main">إظهار الطلبات</a>
             <a href="{{ route('admin.coupons') }}" class="btn btn-sm btn-outline-main">الكوبونات</a>
+            <a href="{{ route('admin.rewards') }}" class="btn btn-sm btn-outline-main">مكافآت الولاء</a>
             <a href="{{ route('admin.store-settings') }}" class="btn btn-sm btn-outline-main">إعدادات المتجر</a>
             <form method="POST" action="{{ route('logout') }}" class="d-inline">
                 @csrf
@@ -65,6 +66,10 @@
         <a href="{{ route('admin.coupons') }}" class="nav-link-mobile">
             <i class="bi bi-ticket-perforated"></i>
             الكوبونات
+        </a>
+        <a href="{{ route('admin.rewards') }}" class="nav-link-mobile">
+            <i class="bi bi-gift"></i>
+            مكافآت الولاء
         </a>
         <a href="{{ route('admin.store-settings') }}" class="nav-link-mobile">
             <i class="bi bi-gear"></i>

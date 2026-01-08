@@ -9,19 +9,19 @@
     <form method="POST" action="{{ route('login.attempt') }}" class="d-flex flex-column gap-4">
         @csrf
 
-        <!-- Email -->
+        <!-- Email or Phone -->
         <div class="form-group">
-            <label class="form-label small text-secondary">{{ __('common.email') }}</label>
+            <label class="form-label small text-secondary">{{ __('common.email_or_phone') }}</label>
             <input
-                type="email"
-                name="email"
-                value="{{ old('email') }}"
+                type="text"
+                name="login"
+                value="{{ old('login') }}"
                 required
                 autofocus
                 class="form-control auth-input"
-                placeholder="example@email.com"
+                placeholder="{{ __('common.email_or_phone') }}"
             >
-            @error('email')
+            @error('login')
                 <div class="text-danger small mt-1">{{ $message }}</div>
             @enderror
         </div>
