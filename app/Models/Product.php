@@ -156,12 +156,23 @@ class Product extends Model
         parent::boot();
         
         // Clear sitemap cache when product is saved or deleted
-        static::saved(function () {
+        static::saved(function (Product $product) {
             SitemapController::clearCache();
+            // مسح cache الصفحة الرئيسية
+            \Illuminate\Support\Facades\Cache::forget('store.home.ar');
+            \Illuminate\Support\Facades\Cache::forget('store.home.en');
+            // مسح cache المنتجات المشابهة
+            \Illuminate\Support\Facades\Cache::forget('product.related.' . $product->category_id);
+            // مسح cache التقييمات للمنتج
+            \Illuminate\Support\Facades\Cache::forget('product.reviews.' . $product->id);
         });
         
-        static::deleted(function () {
+        static::deleted(function (Product $product) {
             SitemapController::clearCache();
+            \Illuminate\Support\Facades\Cache::forget('store.home.ar');
+            \Illuminate\Support\Facades\Cache::forget('store.home.en');
+            \Illuminate\Support\Facades\Cache::forget('product.related.' . $product->category_id);
+            \Illuminate\Support\Facades\Cache::forget('product.reviews.' . $product->id);
         });
     }
 }

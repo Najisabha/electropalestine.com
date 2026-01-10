@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Services\InvoicePdfService;
 use App\Helpers\ActivityLogger;
@@ -27,47 +28,53 @@ class StoreController extends Controller
 {
     public function home(): View
     {
-        $categories = Category::with([
-            'types',
-            'products' => fn ($q) => $q->active()->latest()->take(6),
-        ])->get();
+        // Cache الصفحة الرئيسية لمدة 10 دقائق
+        $cacheKey = 'store.home.' . app()->getLocale();
+        $data = Cache::remember($cacheKey, 600, function () {
+            $categories = Category::with([
+                'types',
+                'products' => fn ($q) => $q->active()->latest()->take(6),
+            ])->get();
 
-        $featured = Product::with(['category', 'company'])
-            ->active()
-            ->orderByDesc('created_at')
-            ->take(8)
-            ->get();
+            $featured = Product::with(['category', 'company'])
+                ->active()
+                ->orderByDesc('created_at')
+                ->take(8)
+                ->get();
 
-        // المنتجات الأكثر مبيعاً: فقط المنتجات التي تم تعليمها كـ \"ضمن المنتجات الأكثر مبيعاً\"
-        $bestSelling = Product::with(['category', 'company'])
-            ->where('is_best_seller', true)
-            ->active()
-            ->orderByDesc('sales_count')
-            ->orderByDesc('created_at')
-            ->take(12)
-            ->get();
+            // المنتجات الأكثر مبيعاً: فقط المنتجات التي تم تعليمها كـ \"ضمن المنتجات الأكثر مبيعاً\"
+            $bestSelling = Product::with(['category', 'company'])
+                ->where('is_best_seller', true)
+                ->active()
+                ->orderByDesc('sales_count')
+                ->orderByDesc('created_at')
+                ->take(12)
+                ->get();
 
-        // جميع المنتجات لعرضها في قائمة أسفل شريط الأكثر مبيعاً
-        $allProducts = Product::with(['category', 'company'])
-            ->active()
-            ->orderByDesc('created_at')
-            ->take(40)
-            ->get();
+            // جميع المنتجات لعرضها في قائمة أسفل شريط الأكثر مبيعاً
+            $allProducts = Product::with(['category', 'company'])
+                ->active()
+                ->orderByDesc('created_at')
+                ->take(40)
+                ->get();
 
-        $campaigns = Campaign::query()
-            ->where('is_active', true)
-            ->where(function ($q) {
-                $q->whereNull('starts_at')->orWhere('starts_at', '<=', now()->toDateString());
-            })
-            ->where(function ($q) {
-                $q->whereNull('ends_at')->orWhere('ends_at', '>=', now()->toDateString());
-            })
-            ->orderByDesc('starts_at')
-            ->orderByDesc('created_at')
-            ->take(10)
-            ->get();
+            $campaigns = Campaign::query()
+                ->where('is_active', true)
+                ->where(function ($q) {
+                    $q->whereNull('starts_at')->orWhere('starts_at', '<=', now()->toDateString());
+                })
+                ->where(function ($q) {
+                    $q->whereNull('ends_at')->orWhere('ends_at', '>=', now()->toDateString());
+                })
+                ->orderByDesc('starts_at')
+                ->orderByDesc('created_at')
+                ->take(10)
+                ->get();
 
-        return view('store.home', compact('categories', 'featured', 'bestSelling', 'campaigns', 'allProducts'));
+            return compact('categories', 'featured', 'bestSelling', 'campaigns', 'allProducts');
+        });
+
+        return view('store.home', $data);
     }
 
     public function product(Product $product): View
@@ -78,26 +85,33 @@ class StoreController extends Controller
         }
         $product->load(['category.types', 'company', 'type']);
 
-        // جلب تقييمات الطلبات التي تحتوي هذا المنتج
-        $reviews = Review::with(['user', 'order'])
-            ->whereHas('order', function ($q) use ($product) {
-                $q->where('product_name', $product->name)
-                    ->orWhere('items', 'like', '%"product_id":' . $product->id . '%');
-            })
-            ->latest()
-            ->get();
+        // Cache التقييمات لمدة 5 دقائق
+        $reviewsCacheKey = 'product.reviews.' . $product->id;
+        $reviews = Cache::remember($reviewsCacheKey, 300, function () use ($product) {
+            return Review::with(['user', 'order'])
+                ->whereHas('order', function ($q) use ($product) {
+                    $q->where('product_name', $product->name)
+                        ->orWhere('items', 'like', '%"product_id":' . $product->id . '%');
+                })
+                ->latest()
+                ->get();
+        });
 
-        // تحديث متوسط التقييم وعدد التقييمات مباشرة من التقييمات الموجودة
-        $ratingCount = $reviews->count();
-        $ratingAverage = $ratingCount > 0 ? (float) $reviews->avg('rating') : 0.0;
-        $product->rating_count = $ratingCount;
-        $product->rating_average = $ratingAverage;
-        $product->save();
+        // تحديث متوسط التقييم وعدد التقييمات فقط إذا تغيرت التقييمات
+        // سيتم التحديث تلقائياً عند إضافة/حذف تقييم من خلال Review model events
+        // هنا نستخدم البيانات المحفوظة في المنتج فقط
 
-        $related = Product::where('category_id', $product->category_id)
-            ->whereKeyNot($product->getKey())
-            ->take(4)
-            ->get();
+        // Cache المنتجات المشابهة لمدة 15 دقيقة (مع eager loading محسن)
+        $relatedCacheKey = 'product.related.' . $product->category_id . '.' . $product->id;
+        $related = Cache::remember($relatedCacheKey, 900, function () use ($product) {
+            return Product::with(['category:id,name,slug', 'company:id,name', 'type:id,name,slug'])
+                ->where('category_id', $product->category_id)
+                ->whereKeyNot($product->getKey())
+                ->active()
+                ->latest('created_at')
+                ->take(4)
+                ->get();
+        });
 
         return view('store.product', [
             'product' => $product,
@@ -110,14 +124,17 @@ class StoreController extends Controller
     {
         $product->load(['category.types', 'company', 'type']);
 
-        // جلب جميع تقييمات الطلبات التي تحتوي هذا المنتج
-        $reviews = Review::with(['user', 'order'])
-            ->whereHas('order', function ($q) use ($product) {
-                $q->where('product_name', $product->name)
-                    ->orWhere('items', 'like', '%"product_id":' . $product->id . '%');
-            })
-            ->latest()
-            ->get();
+        // Cache التقييمات لمدة 5 دقائق
+        $reviewsCacheKey = 'product.reviews.' . $product->id;
+        $reviews = Cache::remember($reviewsCacheKey, 300, function () use ($product) {
+            return Review::with(['user', 'order'])
+                ->whereHas('order', function ($q) use ($product) {
+                    $q->where('product_name', $product->name)
+                        ->orWhere('items', 'like', '%"product_id":' . $product->id . '%');
+                })
+                ->latest()
+                ->get();
+        });
 
         $ratingCount = $reviews->count();
         $ratingAverage = $ratingCount > 0 ? (float) $reviews->avg('rating') : 0.0;
@@ -476,11 +493,23 @@ class StoreController extends Controller
     public function cart(): View
     {
         $cart = session()->get('cart', []);
+        
+        if (empty($cart)) {
+            return view('store.cart', ['cartItems' => [], 'total' => 0]);
+        }
+
+        // جلب جميع المنتجات في query واحدة بدلاً من loop
+        $productIds = array_keys($cart);
+        $products = Product::with(['category', 'company'])
+            ->whereIn('id', $productIds)
+            ->get()
+            ->keyBy('id');
+
         $cartItems = [];
         $total = 0;
 
         foreach ($cart as $productId => $quantity) {
-            $product = Product::with(['category', 'company'])->find($productId);
+            $product = $products->get($productId);
             if ($product) {
                 $cartItems[$productId] = [
                     'product' => $product,
