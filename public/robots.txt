@@ -1,9 +1,22 @@
 # robots.txt for electropalestine.com
 # This file tells search engines which pages they can and cannot access
+# Optimized for SEO - Palestine Electronics Store
 
 # Allow all search engines
 User-agent: *
 Allow: /
+
+# Allow important pages for SEO
+Allow: /products
+Allow: /products/
+Allow: /categories/
+Allow: /types/
+Allow: /companies/
+Allow: /about
+Allow: /story
+Allow: /contact
+Allow: /faq
+Allow: /return-policy
 
 # Disallow admin and private areas
 Disallow: /admin/
@@ -15,8 +28,28 @@ Disallow: /reset-password/
 Disallow: /account-settings
 Disallow: /my-orders
 Disallow: /my-comments
+Disallow: /my-orders/
 Disallow: /cart/checkout
 Disallow: /checkout
+Disallow: /checkout/
+Disallow: /points
+Disallow: /favorites
+Disallow: /coupons
+Disallow: /track-order
+
+# Disallow search and filter parameters (to avoid duplicate content)
+Disallow: /*?search=*
+Disallow: /*?sort=*
+Disallow: /*?page=*
+Disallow: /*?category_id=*
+Disallow: /*?type_id=*
+Disallow: /*?company_id=*
+Disallow: /*?min_price=*
+Disallow: /*?max_price=*
+Disallow: /*?min_rating=*
+Disallow: /*?in_stock=*
+Disallow: /*?featured=*
+Disallow: /*?per_page=*
 
 # Disallow Laravel internal directories (if accessible)
 Disallow: /app/
@@ -27,18 +60,42 @@ Disallow: /routes/
 Disallow: /storage/
 Disallow: /vendor/
 Disallow: /tests/
+Disallow: /resources/
 
 # Disallow common non-indexable file types
 Disallow: /*.json$
-
-# Allow sitemap (must be before any .xml disallow rules)
+Disallow: /*.xml$ 
 Allow: /sitemap.xml
 Allow: /sitemap/
 
-# Sitemap location
+# Allow images for better SEO
+Allow: /images/
+Allow: /storage/
+
+# Special rules for major search engines
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Googlebot-Image
+Allow: /images/
+Allow: /storage/
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# Block bad bots (optional)
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: SemrushBot
+Crawl-delay: 10
+
+# Sitemap locations (all sitemaps)
 Sitemap: https://electropalestine.com/sitemap.xml
 Sitemap: https://electropalestine.com/sitemap/index.xml
 Sitemap: https://electropalestine.com/sitemap/images.xml
 
-# Crawl-delay (optional - helps prevent server overload)
-# Crawl-delay: 1
+# Host directive (helps with duplicate content)
+Host: https://electropalestine.com

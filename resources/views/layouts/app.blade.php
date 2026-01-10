@@ -1,21 +1,138 @@
 @php
     $locale = app()->getLocale();
     $isRTL = $locale === 'ar';
+    
+    // Generate SEO meta tags
+    $seoData = $seoMeta ?? [];
+    $metaTags = \App\Services\SeoService::generateMetaTags($seoData);
+    
+    // Generate structured data
+    $structuredData = $structuredData ?? [];
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRTL ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title ?? config('app.name', 'electropalestine') }}</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>{{ $metaTags['title'] }}</title>
+    <meta name="title" content="{{ $metaTags['title'] }}">
+    <meta name="description" content="{{ $metaTags['description'] }}">
+    <meta name="keywords" content="{{ $metaTags['keywords'] }}">
+    <meta name="author" content="ElectroPalestine">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="language" content="{{ $locale === 'ar' ? 'Arabic' : 'English' }}">
+    <meta name="geo.region" content="PS">
+    <meta name="geo.placename" content="Palestine">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{ $metaTags['canonical'] }}">
+    
+    <!-- Hreflang Tags -->
+    <link rel="alternate" hreflang="ar" href="{{ $metaTags['hreflang']['ar'] }}">
+    <link rel="alternate" hreflang="en" href="{{ $metaTags['hreflang']['en'] }}">
+    <link rel="alternate" hreflang="x-default" href="{{ $metaTags['hreflang']['x-default'] }}">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="{{ $metaTags['type'] }}">
+    <meta property="og:url" content="{{ $metaTags['url'] }}">
+    <meta property="og:title" content="{{ $metaTags['title'] }}">
+    <meta property="og:description" content="{{ $metaTags['description'] }}">
+    <meta property="og:image" content="{{ $metaTags['image'] }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="{{ $metaTags['title'] }}">
+    <meta property="og:site_name" content="{{ $metaTags['site_name'] }}">
+    <meta property="og:locale" content="{{ $locale === 'ar' ? 'ar_PS' : 'en_US' }}">
+    @if(isset($metaTags['price']))
+    <meta property="product:price:amount" content="{{ $metaTags['price'] }}">
+    <meta property="product:price:currency" content="{{ $metaTags['currency'] ?? 'ILS' }}">
+    <meta property="product:availability" content="{{ $metaTags['availability'] ?? 'in_stock' }}">
+    @endif
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="{{ $metaTags['twitter_card'] }}">
+    <meta name="twitter:url" content="{{ $metaTags['url'] }}">
+    <meta name="twitter:title" content="{{ $metaTags['title'] }}">
+    <meta name="twitter:description" content="{{ $metaTags['description'] }}">
+    <meta name="twitter:image" content="{{ $metaTags['image'] }}">
+    <meta name="twitter:image:alt" content="{{ $metaTags['title'] }}">
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('images/LOGO-remove background.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/LOGO-remove background.png') }}">
     
-    <!-- Meta Tags for Logo -->
-    <meta property="og:image" content="{{ asset('images/LOGO-remove background.png') }}">
-    <meta name="twitter:image" content="{{ asset('images/LOGO-remove background.png') }}">
+    <!-- Preconnect to external domains for better performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <link rel="dns-prefetch" href="https://www.google-analytics.com">
+    
+    <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <!-- Additional SEO Meta Tags -->
+    <meta name="theme-color" content="#0db777">
+    <meta name="msapplication-TileColor" content="#0db777">
+    <meta name="application-name" content="ElectroPalestine">
+    <meta name="apple-mobile-web-app-title" content="ElectroPalestine">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Geo Tags for Palestine -->
+    <meta name="geo.region" content="PS">
+    <meta name="geo.placename" content="Palestine">
+    <meta name="ICBM" content="31.9522, 35.2332">
+    
+    <!-- Structured Data (JSON-LD) -->
+    @if(!empty($structuredData))
+        @foreach($structuredData as $data)
+            <script type="application/ld+json">
+                {!! json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}
+            </script>
+        @endforeach
+    @endif
+
+    <!-- Google Analytics (GA4) - Add your Measurement ID from .env -->
+    @if(config('services.google.analytics_id'))
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ config('services.google.analytics_id') }}"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '{{ config("services.google.analytics_id") }}', {
+                'page_title': '{{ $metaTags["title"] ?? "" }}',
+                'page_location': '{{ $metaTags["url"] ?? "" }}',
+            });
+        </script>
+    @endif
+
+    <!-- Google Search Console Verification - Add your verification code from .env -->
+    @if(config('services.google.search_console_verification'))
+        <meta name="google-site-verification" content="{{ config('services.google.search_console_verification') }}" />
+    @endif
+
+    <!-- Facebook Pixel (Optional) - Add your Pixel ID from .env -->
+    @if(config('services.facebook.pixel_id'))
+        <script>
+            !function(f,b,e,v,n,t,s)
+            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '{{ config("services.facebook.pixel_id") }}');
+            fbq('track', 'PageView');
+        </script>
+        <noscript>
+            <img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id={{ config('services.facebook.pixel_id') }}&ev=PageView&noscript=1"/>
+        </noscript>
+    @endif
 
     <!-- Bootstrap -->
     @if($isRTL)
