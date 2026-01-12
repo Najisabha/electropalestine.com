@@ -97,6 +97,55 @@ class Product extends Model
     }
 
     /**
+     * نطاق محسن للمنتجات مع eager loading للعلاقات الأساسية
+     */
+    public function scopeWithRelations(Builder $query): Builder
+    {
+        return $query->with([
+            'category:id,name,slug',
+            'company:id,name',
+            'type:id,name,slug,category_id',
+        ]);
+    }
+
+    /**
+     * نطاق للمنتجات المميزة (الأكثر مبيعاً) مع ترتيب محسن
+     */
+    public function scopeBestSelling(Builder $query, int $limit = 12): Builder
+    {
+        return $query
+            ->where('is_best_seller', true)
+            ->active()
+            ->orderByDesc('sales_count')
+            ->orderByDesc('created_at')
+            ->limit($limit);
+    }
+
+    /**
+     * نطاق للمنتجات الجديدة مع ترتيب محسن
+     */
+    public function scopeNewest(Builder $query, int $limit = 20): Builder
+    {
+        return $query
+            ->active()
+            ->orderByDesc('created_at')
+            ->limit($limit);
+    }
+
+    /**
+     * نطاق للمنتجات الأعلى تقييماً
+     */
+    public function scopeTopRated(Builder $query, int $limit = 20): Builder
+    {
+        return $query
+            ->active()
+            ->where('rating_count', '>', 0)
+            ->orderByDesc('rating_average')
+            ->orderByDesc('rating_count')
+            ->limit($limit);
+    }
+
+    /**
      * المنتجات منخفضة المخزون.
      */
     public function scopeLowStock(Builder $query, ?int $threshold = null): Builder

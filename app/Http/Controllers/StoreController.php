@@ -36,26 +36,19 @@ class StoreController extends Controller
                 'products' => fn ($q) => $q->active()->latest()->take(6),
             ])->get();
 
-            $featured = Product::with(['category', 'company'])
-                ->active()
-                ->orderByDesc('created_at')
-                ->take(8)
+            // استخدام scopes محسنة
+            $featured = Product::withRelations()
+                ->newest(8)
                 ->get();
 
             // المنتجات الأكثر مبيعاً: فقط المنتجات التي تم تعليمها كـ \"ضمن المنتجات الأكثر مبيعاً\"
-            $bestSelling = Product::with(['category', 'company'])
-                ->where('is_best_seller', true)
-                ->active()
-                ->orderByDesc('sales_count')
-                ->orderByDesc('created_at')
-                ->take(12)
+            $bestSelling = Product::withRelations()
+                ->bestSelling(12)
                 ->get();
 
             // جميع المنتجات لعرضها في قائمة أسفل شريط الأكثر مبيعاً
-            $allProducts = Product::with(['category', 'company'])
-                ->active()
-                ->orderByDesc('created_at')
-                ->take(40)
+            $allProducts = Product::withRelations()
+                ->newest(40)
                 ->get();
 
             $campaigns = Campaign::query()
@@ -104,7 +97,7 @@ class StoreController extends Controller
         // Cache المنتجات المشابهة لمدة 15 دقيقة (مع eager loading محسن)
         $relatedCacheKey = 'product.related.' . $product->category_id . '.' . $product->id;
         $related = Cache::remember($relatedCacheKey, 900, function () use ($product) {
-            return Product::with(['category:id,name,slug', 'company:id,name', 'type:id,name,slug'])
+            return Product::withRelations()
                 ->where('category_id', $product->category_id)
                 ->whereKeyNot($product->getKey())
                 ->active()
@@ -173,8 +166,8 @@ class StoreController extends Controller
 
     public function products(Request $request): View
     {
-        // جلب جميع المنتجات مع الفلترة
-        $query = Product::active()->with(['company', 'category', 'type']);
+        // جلب جميع المنتجات مع الفلترة (استخدام scope محسن)
+        $query = Product::active()->withRelations();
 
         // البحث بالاسم
         if ($request->has('search') && $request->search) {
@@ -264,10 +257,20 @@ class StoreController extends Controller
         
         $products = $query->paginate($perPage)->withQueryString();
 
-        // جلب البيانات للفلترة
-        $categories = Category::orderBy('name')->get();
-        $types = Type::with('category')->orderBy('name')->get();
-        $companies = Company::orderBy('name')->get();
+        // Cache البيانات للفلترة لمدة ساعة (نادراً ما تتغير)
+        $locale = app()->getLocale();
+        $categories = Cache::remember("filter.categories.{$locale}", 3600, function () {
+            return Category::select('id', 'name', 'slug')->orderBy('name')->get();
+        });
+        $types = Cache::remember("filter.types.{$locale}", 3600, function () {
+            return Type::select('id', 'name', 'slug', 'category_id')
+                ->with('category:id,name,slug')
+                ->orderBy('name')
+                ->get();
+        });
+        $companies = Cache::remember("filter.companies.{$locale}", 3600, function () {
+            return Company::select('id', 'name')->orderBy('name')->get();
+        });
 
         return view('store.products', [
             'products' => $products,
@@ -391,7 +394,7 @@ class StoreController extends Controller
         // جلب جميع المنتجات التابعة لهذه الشركة
         $query = Product::where('company_id', $company->id)
             ->active()
-            ->with(['category', 'type', 'company']);
+            ->withRelations();
 
         // تطبيق الفلاتر من Request
         $sort = request()->get('sort', 'newest');
@@ -498,9 +501,9 @@ class StoreController extends Controller
             return view('store.cart', ['cartItems' => [], 'total' => 0]);
         }
 
-        // جلب جميع المنتجات في query واحدة بدلاً من loop
+        // جلب جميع المنتجات في query واحدة بدلاً من loop (محسن)
         $productIds = array_keys($cart);
-        $products = Product::with(['category', 'company'])
+        $products = Product::withRelations()
             ->whereIn('id', $productIds)
             ->get()
             ->keyBy('id');
@@ -644,7 +647,7 @@ class StoreController extends Controller
         }
 
         $productIds = array_keys($cart);
-        $products = Product::with(['category', 'company'])
+        $products = Product::withRelations()
             ->whereIn('id', $productIds)
             ->get()
             ->keyBy('id');
@@ -691,7 +694,7 @@ class StoreController extends Controller
             abort(404, 'المنتج غير موجود');
         }
 
-        $product = Product::with(['category', 'company'])->findOrFail($productId);
+        $product = Product::withRelations()->findOrFail($productId);
 
         // منع إتمام الطلب بدون عنوان
         $user = auth()->user();
@@ -1793,7 +1796,7 @@ class StoreController extends Controller
         
         try {
             $favoriteProducts = $user->favoriteProducts()
-                ->with(['category', 'company', 'type'])
+                ->withRelations()
                 ->paginate(20);
         } catch (\Exception $e) {
             // في حالة عدم وجود الجدول بعد

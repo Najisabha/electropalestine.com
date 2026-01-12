@@ -195,6 +195,29 @@
 - تخصيص نقاط لكل منتج
 - استخدام النقاط في التقييمات
 
+#### 6. **تحسينات الأداء المتقدمة** ⚡
+- **نظام Caching متقدم**:
+  - Cache للصفحة الرئيسية (10 دقائق)
+  - Cache للتقييمات والمنتجات المشابهة
+  - Cache لبيانات الفلترة (categories, types, companies)
+  - مسح Cache تلقائياً عند التحديثات
+- **Response Caching Middleware**: تخزين مؤقت للاستجابات على routes محددة
+- **Response Compression Middleware**: ضغط تلقائي للاستجابات (Gzip/Deflate)
+- **تحسين استعلامات قاعدة البيانات**:
+  - Database indexes على الأعمدة المهمة
+  - Query scopes محسنة (bestSelling, newest, topRated)
+  - Eager loading محسن مع تحديد الأعمدة المطلوبة فقط
+  - استخدام `whereIn()` بدلاً من loops
+- **تحسين الصور**:
+  - دعم CDN للصور
+  - Lazy loading للصور
+  - Component `optimized-image` للصور المحسنة
+  - Image Helper محسن مع دعم CDN
+- **Asset Preloading**: Preload للـ critical resources (Bootstrap, Fonts)
+- **Database Connection Optimization**: PDO optimizations و persistent connections
+
+**للمزيد من التفاصيل**: راجع ملفات `PERFORMANCE_IMPROVEMENTS.md` و `PERFORMANCE_SETUP.md` و `CONFIGURATION_GUIDE.md`
+
 ---
 
 ## 🛠️ المتطلبات التقنية
