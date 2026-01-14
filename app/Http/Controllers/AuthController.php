@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Helpers\ImageHelper;
 use App\Helpers\ActivityLogger;
+use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\View\View;
+use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
@@ -112,6 +114,76 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    /**
+     * Redirect the user to the OAuth provider.
+     */
+    public function redirectToProvider(string $provider): RedirectResponse
+    {
+        return Socialite::driver($provider)->redirect();
+    }
+
+    /**
+     * Handle OAuth provider callback.
+     */
+    public function handleProviderCallback(string $provider): RedirectResponse
+    {
+        try {
+            $socialUser = Socialite::driver($provider)->user();
+        } catch (Exception $e) {
+            Log::error('Social login error', [
+                'provider' => $provider,
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('login')->withErrors([
+                'login' => __('حدث خطأ أثناء تسجيل الدخول عبر مزود خارجي، الرجاء المحاولة مرة أخرى.'),
+            ]);
+        }
+
+        if (!$socialUser->getEmail()) {
+            return redirect()->route('login')->withErrors([
+                'login' => __('لا يمكن استكمال تسجيل الدخول بدون بريد إلكتروني من :provider.', ['provider' => ucfirst($provider)]),
+            ]);
+        }
+
+        $user = User::where('email', $socialUser->getEmail())->first();
+
+        if (!$user) {
+            // إنشاء مستخدم جديد من بيانات مزود الخدمة
+            $name = $socialUser->getName() ?: $socialUser->getNickname() ?: $socialUser->getEmail();
+            $nameParts = preg_split('/\s+/', $name, 2);
+            $firstName = $nameParts[0] ?? $name;
+            $lastName = $nameParts[1] ?? '';
+
+            $user = User::create([
+                'name' => $name,
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'email' => $socialUser->getEmail(),
+                'phone' => null,
+                'whatsapp_prefix' => null,
+                'birth_year' => null,
+                'birth_month' => null,
+                'birth_day' => null,
+                'role' => 'user',
+                'id_image' => null,
+                'id_verified_status' => 'unverified',
+                'password' => Hash::make(str()->random(32)),
+            ]);
+        }
+
+        Auth::login($user, true);
+
+        $user->update(['last_login_at' => now()]);
+        ActivityLogger::logLogin();
+
+        if (strtolower($user->role) === 'admin') {
+            return redirect()->intended('/admin/dashboard');
+        }
+
+        return redirect()->intended('/');
     }
 
     public function showForgot(): View

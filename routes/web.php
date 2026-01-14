@@ -14,6 +14,7 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StorageController;
 use App\Http\Controllers\StoreController;
 use Illuminate\Support\Facades\Route;
+use Laravel\Socialite\Facades\Socialite;
 
 // Storage route - حل بديل لـ symlink في الاستضافة المشتركة
 // هذا الـ route يعرض الملفات من storage/app/public مباشرة بدون الحاجة لـ symlink
@@ -147,6 +148,14 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.attempt');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Social login (Google / Facebook)
+Route::get('/auth/{provider}/redirect', [AuthController::class, 'redirectToProvider'])
+    ->whereIn('provider', ['google', 'facebook'])
+    ->name('social.redirect');
+Route::get('/auth/{provider}/callback', [AuthController::class, 'handleProviderCallback'])
+    ->whereIn('provider', ['google', 'facebook'])
+    ->name('social.callback');
 
 Route::get('/forgot-password', [AuthController::class, 'showForgot'])->name('password.request');
 Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email');

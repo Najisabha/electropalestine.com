@@ -36,12 +36,24 @@ return [
     ],
 
     'google' => [
+        // Analytics & Search Console
         'analytics_id' => env('GOOGLE_ANALYTICS_ID'),
         'search_console_verification' => env('GOOGLE_SEARCH_CONSOLE_VERIFICATION'),
+
+        // OAuth for login / registration
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', env('APP_URL') . '/auth/google/callback'),
     ],
 
     'facebook' => [
+        // Pixel
         'pixel_id' => env('FACEBOOK_PIXEL_ID'),
+
+        // OAuth for login / registration
+        'client_id' => env('FACEBOOK_CLIENT_ID'),
+        'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
+        'redirect' => env('FACEBOOK_REDIRECT_URI', env('APP_URL') . '/auth/facebook/callback'),
     ],
 
 ];
