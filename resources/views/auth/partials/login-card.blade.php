@@ -6,6 +6,25 @@
         </div>
     @endif
 
+    {{-- تسجيل الدخول بواسطة جوجل / فيسبوك --}}
+    <div class="mb-3">
+        <div class="d-flex flex-column gap-2">
+            <a href="{{ route('social.redirect', ['provider' => 'google']) }}" class="btn btn-outline-main w-100 d-flex align-items-center justify-content-center gap-2">
+                <i class="fab fa-google text-danger"></i>
+                <span class="small fw-semibold">{{ __('تسجيل الدخول بواسطة جوجل') }}</span>
+            </a>
+            <a href="{{ route('social.redirect', ['provider' => 'facebook']) }}" class="btn btn-outline-main w-100 d-flex align-items-center justify-content-center gap-2">
+                <i class="fab fa-facebook-f text-primary"></i>
+                <span class="small fw-semibold">{{ __('تسجيل الدخول بواسطة فيسبوك') }}</span>
+            </a>
+        </div>
+        <div class="d-flex align-items-center my-3">
+            <div class="flex-grow-1 border-top border-secondary opacity-50"></div>
+            <span class="px-2 small text-secondary">{{ __('أو تسجيل الدخول بالطريقة التقليدية') }}</span>
+            <div class="flex-grow-1 border-top border-secondary opacity-50"></div>
+        </div>
+    </div>
+
     <form method="POST" action="{{ route('login.attempt') }}" class="d-flex flex-column gap-4">
         @csrf
 
