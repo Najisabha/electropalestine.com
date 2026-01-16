@@ -121,6 +121,15 @@ class AuthController extends Controller
      */
     public function redirectToProvider(string $provider): RedirectResponse
     {
+        // التحقق من وجود الإعدادات
+        $config = config("services.{$provider}");
+        if (empty($config['client_id']) || empty($config['client_secret'])) {
+            Log::error("Missing OAuth credentials for provider: {$provider}");
+            return redirect()->route('login')->withErrors([
+                'login' => __('إعدادات تسجيل الدخول عبر :provider غير مكتملة. يرجى التواصل مع الإدارة.', ['provider' => ucfirst($provider)]),
+            ]);
+        }
+
         return Socialite::driver($provider)->redirect();
     }
 
