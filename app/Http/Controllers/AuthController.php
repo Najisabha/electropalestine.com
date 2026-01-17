@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\View\View;
+use Illuminate\Database\QueryException;
 use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
@@ -144,6 +145,9 @@ class AuthController extends Controller
             Log::error('Social login error', [
                 'provider' => $provider,
                 'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return redirect()->route('login')->withErrors([
@@ -152,47 +156,95 @@ class AuthController extends Controller
         }
 
         if (!$socialUser->getEmail()) {
+            Log::warning('Social login attempt without email', [
+                'provider' => $provider,
+                'user_id' => $socialUser->getId(),
+            ]);
+
             return redirect()->route('login')->withErrors([
                 'login' => __('لا يمكن استكمال تسجيل الدخول بدون بريد إلكتروني من :provider.', ['provider' => ucfirst($provider)]),
             ]);
         }
 
-        $user = User::where('email', $socialUser->getEmail())->first();
+        try {
+            $user = User::where('email', $socialUser->getEmail())->first();
 
-        if (!$user) {
-            // إنشاء مستخدم جديد من بيانات مزود الخدمة
-            $name = $socialUser->getName() ?: $socialUser->getNickname() ?: $socialUser->getEmail();
-            $nameParts = preg_split('/\s+/', $name, 2);
-            $firstName = $nameParts[0] ?? $name;
-            $lastName = $nameParts[1] ?? '';
+            if (!$user) {
+                // إنشاء مستخدم جديد من بيانات مزود الخدمة
+                $name = $socialUser->getName() ?: $socialUser->getNickname() ?: $socialUser->getEmail();
+                $nameParts = preg_split('/\s+/', $name, 2);
+                $firstName = $nameParts[0] ?? $name;
+                $lastName = $nameParts[1] ?? '';
 
-            $user = User::create([
-                'name' => $name,
-                'first_name' => $firstName,
-                'last_name' => $lastName,
-                'email' => $socialUser->getEmail(),
-                'phone' => null,
-                'whatsapp_prefix' => null,
-                'birth_year' => null,
-                'birth_month' => null,
-                'birth_day' => null,
-                'role' => 'user',
-                'id_image' => null,
-                'id_verified_status' => 'unverified',
-                'password' => Hash::make(str()->random(32)),
+                $user = User::create([
+                    'name' => $name,
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'email' => $socialUser->getEmail(),
+                    'phone' => null,
+                    'whatsapp_prefix' => null,
+                    'birth_year' => null,
+                    'birth_month' => null,
+                    'birth_day' => null,
+                    'role' => 'user',
+                    'id_image' => null,
+                    'id_verified_status' => 'unverified',
+                    'points' => 0,
+                    'balance' => 0,
+                    'preferred_currency' => 'USD',
+                    'password' => Hash::make(str()->random(32)),
+                ]);
+
+                if (!$user || !$user->id) {
+                    Log::error('Failed to create user from social login', [
+                        'provider' => $provider,
+                        'email' => $socialUser->getEmail(),
+                    ]);
+
+                    return redirect()->route('login')->withErrors([
+                        'login' => __('حدث خطأ أثناء إنشاء الحساب. يرجى المحاولة مرة أخرى.'),
+                    ]);
+                }
+            }
+
+            Auth::login($user, true);
+
+            $user->update(['last_login_at' => now()]);
+            ActivityLogger::logLogin();
+
+            if (strtolower($user->role) === 'admin') {
+                return redirect()->intended('/admin/dashboard');
+            }
+
+            return redirect()->intended('/');
+
+        } catch (\Illuminate\Database\QueryException $e) {
+            Log::error('Database error during social login', [
+                'provider' => $provider,
+                'message' => $e->getMessage(),
+                'sql' => $e->getSql(),
+                'bindings' => $e->getBindings(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return redirect()->route('login')->withErrors([
+                'login' => __('حدث خطأ في قاعدة البيانات. يرجى المحاولة مرة أخرى.'),
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Unexpected error during social login', [
+                'provider' => $provider,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->route('login')->withErrors([
+                'login' => __('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.'),
             ]);
         }
-
-        Auth::login($user, true);
-
-        $user->update(['last_login_at' => now()]);
-        ActivityLogger::logLogin();
-
-        if (strtolower($user->role) === 'admin') {
-            return redirect()->intended('/admin/dashboard');
-        }
-
-        return redirect()->intended('/');
     }
 
     public function showForgot(): View
