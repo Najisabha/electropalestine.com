@@ -7,64 +7,6 @@ use Illuminate\Support\Facades\Log;
 
 class ImageHelper
 {
-    /**
-     * الحصول على URL للصورة مع دعم CDN
-     *
-     * @param string|null $path
-     * @param string $disk
-     * @param bool $lazy
-     * @return string
-     */
-    public static function url(?string $path, string $disk = 'public', bool $lazy = false): string
-    {
-        if (empty($path)) {
-            return asset('images/placeholder.png');
-        }
-
-        // استخدام CDN إذا كان مفعلاً
-        $cdnUrl = env('CDN_URL');
-        if (!empty($cdnUrl) && $disk === 'public') {
-            // إزالة storage/ من المسار إذا كان موجوداً
-            $cleanPath = str_replace('storage/', '', $path);
-            return rtrim($cdnUrl, '/') . '/storage/' . $cleanPath;
-        }
-
-        // استخدام asset helper العادي
-        if ($disk === 'public' && str_starts_with($path, 'storage/')) {
-            return asset($path);
-        }
-
-        return Storage::disk($disk)->url($path);
-    }
-
-    /**
-     * الحصول على optimized image URL مع lazy loading attributes
-     *
-     * @param string|null $path
-     * @param string|null $alt
-     * @param array $attributes
-     * @return string
-     */
-    public static function img(?string $path, ?string $alt = null, array $attributes = []): string
-    {
-        $url = self::url($path);
-        $alt = $alt ?? 'Image';
-        
-        $defaultAttributes = [
-            'loading' => 'lazy',
-            'decoding' => 'async',
-            'alt' => $alt,
-        ];
-
-        $attributes = array_merge($defaultAttributes, $attributes);
-        
-        $attrString = '';
-        foreach ($attributes as $key => $value) {
-            $attrString .= ' ' . $key . '="' . htmlspecialchars($value) . '"';
-        }
-
-        return '<img src="' . htmlspecialchars($url) . '"' . $attrString . '>';
-    }
 
     /**
      * يتحقق من وجود الرابط الرمزي ويُنشئه إذا لزم الأمر
@@ -646,10 +588,10 @@ class ImageHelper
      * @param bool $useCdn استخدام CDN إذا كان متاحاً
      * @return string|null
      */
-    public static function url(?string $path, bool $useCdn = true): ?string
+    public static function url(?string $path, bool $useCdn = true): string
     {
         if (empty($path)) {
-            return null;
+            return asset('images/placeholder.png');
         }
 
         // تنظيف المسار من الشرطة المائلة في البداية

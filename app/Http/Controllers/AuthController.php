@@ -59,7 +59,7 @@ class AuthController extends Controller
             return redirect()->intended('/admin/dashboard');
         }
 
-        return redirect()->intended('/');
+        return redirect()->route('home');
     }
 
     public function showRegister(): View
@@ -216,7 +216,7 @@ class AuthController extends Controller
                 return redirect()->intended('/admin/dashboard');
             }
 
-            return redirect()->intended('/');
+            return redirect()->route('home');
 
         } catch (\Illuminate\Database\QueryException $e) {
             Log::error('Database error during social login', [
