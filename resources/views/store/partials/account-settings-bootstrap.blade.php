@@ -430,7 +430,7 @@
                             <div class="accordion-body p-4">
                                 {{-- بطاقات العناوين المحفوظة --}}
                                 <div class="mb-3 d-flex flex-wrap gap-3">
-                                    @forelse($user->addresses as $address)
+                                    @forelse($user->addresses ?? [] as $address)
                                         <div class="glass p-3 rounded-3" style="min-width:260px;max-width:320px;">
                                             <div class="d-flex justify-content-between align-items-center mb-2">
                                                 <strong class="text-truncate">{{ $address->city ?? '-' }}</strong>

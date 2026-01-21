@@ -10,6 +10,7 @@ use App\Models\Campaign;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\Review;
+use App\Models\UserAddress;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -712,7 +713,14 @@ class StoreController extends Controller
 
     public function accountSettings(): View
     {
-        $user = auth()->user()->load('addresses');
+        $user = auth()->user();
+        
+        // تحميل العناوين مباشرة من قاعدة البيانات
+        if ($user) {
+            // تحميل العناوين مع المستخدم
+            $user->load('addresses');
+        }
+        
         return view('store.account-settings', compact('user'));
     }
 
@@ -772,98 +780,290 @@ class StoreController extends Controller
      */
     public function saveAddress(Request $request): RedirectResponse
     {
-        $user = $request->user();
+        try {
+            $user = $request->user();
 
-        $data = $request->validate([
-            'address_id' => ['nullable', 'integer', 'exists:user_addresses,id'],
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
-            'city' => ['nullable', 'string', 'max:255'],
-            'governorate' => ['nullable', 'string', 'max:255'],
-            'zip_code' => ['nullable', 'string', 'max:20'],
-            'country_code' => ['nullable', 'string', 'max:10'],
-            'phone' => ['required', 'string', 'max:50'],
-            'street' => ['nullable', 'string', 'max:500'],
-            'is_default' => ['nullable', 'boolean'],
-        ]);
+            if (!$user) {
+                return redirect()->route('store.account-settings')
+                    ->withErrors(['error' => 'يجب تسجيل الدخول أولاً.']);
+            }
 
-        // إنشاء أو تحديث
-        if (!empty($data['address_id'])) {
-            $address = $user->addresses()->whereKey($data['address_id'])->firstOrFail();
-            $address->fill($data);
-        } else {
-            $address = $user->addresses()->create($data);
+            $data = $request->validate([
+                'address_id' => ['nullable', 'integer', 'exists:user_addresses,id'],
+                'first_name' => ['required', 'string', 'max:255'],
+                'last_name' => ['required', 'string', 'max:255'],
+                'city' => ['nullable', 'string', 'max:255'],
+                'governorate' => ['nullable', 'string', 'max:255'],
+                'zip_code' => ['nullable', 'string', 'max:20'],
+                'country_code' => ['nullable', 'string', 'max:10'],
+                'phone' => ['required', 'string', 'max:50'],
+                'street' => ['nullable', 'string', 'max:500'],
+                'is_default' => ['nullable', 'boolean'],
+            ]);
+
+            // تحويل is_default من checkbox (قد يكون "1" أو null) إلى boolean
+            $data['is_default'] = !empty($data['is_default']) && $data['is_default'] !== '0';
+
+            // التأكد من إضافة user_id للبيانات
+            $data['user_id'] = $user->id;
+            
+            // إجبار commit فوري - التأكد من عدم وجود معاملة نشطة
+            DB::statement('SET AUTOCOMMIT=1');
+            $connection = DB::connection();
+            if ($connection->transactionLevel() > 0) {
+                Log::warning('Active transaction found before save, committing', [
+                    'level' => $connection->transactionLevel()
+                ]);
+                while ($connection->transactionLevel() > 0) {
+                    $connection->commit();
+                }
+            }
+
+            // إنشاء أو تحديث
+            if (!empty($data['address_id'])) {
+                $address = $user->addresses()->whereKey($data['address_id'])->firstOrFail();
+                $address->fill($data);
+                $saved = $address->save(); // حفظ فوري بعد التحديث
+                if (!$saved) {
+                    throw new \Exception('فشل حفظ العنوان في قاعدة البيانات');
+                }
+            } else {
+                // إذا كان هذا أول عنوان للمستخدم، اجعله افتراضياً تلقائياً
+                if ($user->addresses()->count() === 0) {
+                    $data['is_default'] = true;
+                }
+                // إنشاء العنوان مع التأكد من حفظ user_id
+                $address = new UserAddress($data);
+                $address->user_id = $user->id;
+                $saved = $address->save(); // حفظ فوري بعد الإنشاء
+                if (!$saved) {
+                    throw new \Exception('فشل حفظ العنوان في قاعدة البيانات');
+                }
+                
+                // التحقق من أن العنوان تم إنشاؤه فعلاً
+                if (!$address->id) {
+                    throw new \Exception('فشل إنشاء العنوان - لا يوجد معرف');
+                }
+            }
+            
+            // إجبار commit فوري - التأكد من أن البيانات محفوظة
+            $pdo = DB::connection()->getPdo();
+            if ($pdo->inTransaction()) {
+                $pdo->commit();
+            }
+
+            // إدارة العنوان الافتراضي
+            if ($data['is_default']) {
+                $user->addresses()->where('id', '!=', $address->id)->update(['is_default' => false]);
+                $address->is_default = true;
+                $saved = $address->save(); // حفظ التحديث
+                if (!$saved) {
+                    throw new \Exception('فشل تحديث العنوان الافتراضي');
+                }
+            } else {
+                // إذا لم يتم تحديد العنوان كافتراضي وكان هذا العنوان الوحيد، اجعله افتراضياً
+                if ($user->addresses()->where('id', '!=', $address->id)->count() === 0) {
+                    $address->is_default = true;
+                    $saved = $address->save(); // حفظ التحديث
+                    if (!$saved) {
+                        throw new \Exception('فشل تحديث العنوان الافتراضي');
+                    }
+                }
+            }
+
+            // مزامنة العنوان الافتراضي مع حقول المستخدم الحالية لاستخدامها في الشحن / الفواتير
+            if ($address->is_default) {
+                $user->city = $address->city;
+                $user->governorate = $address->governorate;
+                $user->zip_code = $address->zip_code;
+                $user->country_code = $address->country_code;
+                $user->phone = $address->phone;
+                $user->address = $address->street;
+                $user->save();
+            }
+
+            // تحديث نموذج العنوان من قاعدة البيانات للتأكد من البيانات المحدثة
+            $address->refresh();
+            
+            // التحقق من أن العنوان موجود فعلاً في قاعدة البيانات
+            $verifyAddress = UserAddress::find($address->id);
+            if (!$verifyAddress) {
+                throw new \Exception('العنوان غير موجود في قاعدة البيانات بعد الحفظ');
+            }
+            
+            // إعادة تحميل المستخدم والعناوين من قاعدة البيانات للتأكد من البيانات المحدثة
+            $user->refresh();
+            $user->load('addresses');
+            
+            // التحقق من أن العنوان موجود في علاقة المستخدم
+            $addressInRelation = $user->addresses->where('id', $address->id)->first();
+            if (!$addressInRelation) {
+                Log::warning('Address saved but not found in user relation', [
+                    'user_id' => $user->id,
+                    'address_id' => $address->id
+                ]);
+            }
+
+            // تسجيل النجاح في الـ log للتأكد من الحفظ
+            Log::info('Address saved successfully', [
+                'user_id' => $user->id,
+                'address_id' => $address->id,
+                'address' => $address->toArray(),
+                'total_addresses' => $user->addresses->count(),
+                'verified_in_db' => $verifyAddress !== null,
+                'verified_in_relation' => $addressInRelation !== null
+            ]);
+
+            return redirect()->route('store.account-settings')
+                ->with('status', __('addresses.saved_successfully'));
+        } catch (\Exception $e) {
+            // تسجيل الخطأ في الـ log
+            Log::error('Error saving address', [
+                'user_id' => $request->user()?->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->route('store.account-settings')
+                ->withErrors(['error' => 'حدث خطأ أثناء حفظ العنوان: ' . $e->getMessage()]);
         }
+    }
 
-        // إدارة العنوان الافتراضي
-        if (!empty($data['is_default'])) {
-            $user->addresses()->where('id', '!=', $address->id)->update(['is_default' => false]);
+    public function setDefaultAddress(Request $request, \App\Models\UserAddress $address): RedirectResponse
+    {
+        try {
+            $user = $request->user();
+
+            abort_unless($address->user_id === $user->id, 403);
+
+            // إجبار commit فوري - التأكد من عدم وجود معاملة نشطة
+            DB::statement('SET AUTOCOMMIT=1');
+            $connection = DB::connection();
+            if ($connection->transactionLevel() > 0) {
+                Log::warning('Active transaction found before set default, committing', [
+                    'level' => $connection->transactionLevel()
+                ]);
+                while ($connection->transactionLevel() > 0) {
+                    $connection->commit();
+                }
+            }
+
+            $user->addresses()->update(['is_default' => false]);
             $address->is_default = true;
-        }
+            $saved = $address->save();
 
-        $address->save();
+            if (!$saved) {
+                throw new \Exception('فشل تحديث العنوان الافتراضي');
+            }
 
-        // مزامنة العنوان الافتراضي مع حقول المستخدم الحالية لاستخدامها في الشحن / الفواتير
-        if ($address->is_default) {
+            // مزامنة مع حقول المستخدم
             $user->city = $address->city;
-            $user->district = $address->district;
             $user->governorate = $address->governorate;
             $user->zip_code = $address->zip_code;
             $user->country_code = $address->country_code;
             $user->phone = $address->phone;
             $user->address = $address->street;
             $user->save();
+
+            // إجبار commit فوري - التأكد من أن التحديث تم
+            $pdo = DB::connection()->getPdo();
+            if ($pdo->inTransaction()) {
+                $pdo->commit();
+            }
+
+            // تحديث العنوان من قاعدة البيانات
+            $address->refresh();
+
+            Log::info('Address set as default successfully', [
+                'user_id' => $user->id,
+                'address_id' => $address->id
+            ]);
+
+            return redirect()->route('store.account-settings')
+                ->with('status', 'تم تعيين العنوان الافتراضي بنجاح.');
+        } catch (\Exception $e) {
+            Log::error('Error setting default address', [
+                'user_id' => $request->user()?->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->route('store.account-settings')
+                ->withErrors(['error' => 'حدث خطأ أثناء تعيين العنوان الافتراضي: ' . $e->getMessage()]);
         }
-
-        return redirect()->route('store.account-settings')
-            ->with('status', __('addresses.saved_successfully'));
-    }
-
-    public function setDefaultAddress(Request $request, \App\Models\UserAddress $address): RedirectResponse
-    {
-        $user = $request->user();
-
-        abort_unless($address->user_id === $user->id, 403);
-
-        $user->addresses()->update(['is_default' => false]);
-        $address->is_default = true;
-        $address->save();
-
-        // مزامنة مع حقول المستخدم
-        $user->city = $address->city;
-        $user->district = $address->district;
-        $user->governorate = $address->governorate;
-        $user->zip_code = $address->zip_code;
-        $user->country_code = $address->country_code;
-        $user->phone = $address->phone;
-        $user->address = $address->street;
-        $user->save();
-
-        return redirect()->route('store.account-settings')
-            ->with('status', 'تم تعيين العنوان الافتراضي بنجاح.');
     }
 
     public function destroyAddress(Request $request, \App\Models\UserAddress $address): RedirectResponse
     {
-        $user = $request->user();
-        abort_unless($address->user_id === $user->id, 403);
+        try {
+            $user = $request->user();
+            abort_unless($address->user_id === $user->id, 403);
 
-        $wasDefault = $address->is_default;
-        $address->delete();
+            // إجبار commit فوري - التأكد من عدم وجود معاملة نشطة
+            DB::statement('SET AUTOCOMMIT=1');
+            $connection = DB::connection();
+            if ($connection->transactionLevel() > 0) {
+                Log::warning('Active transaction found before delete, committing', [
+                    'level' => $connection->transactionLevel()
+                ]);
+                while ($connection->transactionLevel() > 0) {
+                    $connection->commit();
+                }
+            }
 
-        // إذا حُذف العنوان الافتراضي، أزل البيانات المنسوخة من المستخدم (اختياري)
-        if ($wasDefault) {
-            $user->city = null;
-            $user->district = null;
-            $user->governorate = null;
-            $user->zip_code = null;
-            $user->country_code = null;
-            $user->address = null;
-            $user->save();
+            $wasDefault = $address->is_default;
+            $addressId = $address->id;
+            $deleted = $address->delete();
+
+            if (!$deleted) {
+                throw new \Exception('فشل حذف العنوان من قاعدة البيانات');
+            }
+
+            // إجبار commit فوري - التأكد من أن الحذف تم
+            $pdo = DB::connection()->getPdo();
+            if ($pdo->inTransaction()) {
+                $pdo->commit();
+            }
+
+            // التحقق من أن العنوان تم حذفه فعلاً
+            $verifyDeleted = UserAddress::find($addressId);
+            if ($verifyDeleted) {
+                throw new \Exception('العنوان لا يزال موجوداً في قاعدة البيانات بعد الحذف');
+            }
+
+            // إذا حُذف العنوان الافتراضي، أزل البيانات المنسوخة من المستخدم (اختياري)
+            if ($wasDefault) {
+                $user->city = null;
+                $user->governorate = null;
+                $user->zip_code = null;
+                $user->country_code = null;
+                $user->address = null;
+                $user->save();
+                
+                // commit فوري
+                if ($pdo->inTransaction()) {
+                    $pdo->commit();
+                }
+            }
+
+            Log::info('Address deleted successfully', [
+                'user_id' => $user->id,
+                'address_id' => $addressId,
+                'was_default' => $wasDefault
+            ]);
+
+            return redirect()->route('store.account-settings')
+                ->with('status', 'تم حذف العنوان بنجاح.');
+        } catch (\Exception $e) {
+            Log::error('Error deleting address', [
+                'user_id' => $request->user()?->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->route('store.account-settings')
+                ->withErrors(['error' => 'حدث خطأ أثناء حذف العنوان: ' . $e->getMessage()]);
         }
-
-        return redirect()->route('store.account-settings')
-            ->with('status', 'تم حذف العنوان بنجاح.');
     }
 
     public function updateAddress(Request $request): RedirectResponse
@@ -913,12 +1113,35 @@ class StoreController extends Controller
             $user->birth_day = $data['birth_day'] ?? $user->birth_day;
         }
 
+        // إجبار commit فوري - التأكد من عدم وجود معاملة نشطة
+        DB::statement('SET AUTOCOMMIT=1');
+        $connection = DB::connection();
+        if ($connection->transactionLevel() > 0) {
+            Log::warning('Active transaction found before update address, committing', [
+                'level' => $connection->transactionLevel()
+            ]);
+            while ($connection->transactionLevel() > 0) {
+                $connection->commit();
+            }
+        }
+
         // تحديث بيانات العنوان والمعلومات الأخرى
         $user->fill($data);
         
         // تحديث حقل name الكامل ليتطابق مع الاسم الأول والأخير
         $user->name = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
-        $user->save();
+        $saved = $user->save();
+
+        if (!$saved) {
+            return redirect()->route('store.account-settings')
+                ->withErrors(['error' => 'فشل حفظ البيانات.']);
+        }
+
+        // إجبار commit فوري - التأكد من أن التحديث تم
+        $pdo = DB::connection()->getPdo();
+        if ($pdo->inTransaction()) {
+            $pdo->commit();
+        }
 
         return redirect()->route('store.account-settings')
             ->with('status', 'تم حفظ بياناتك بنجاح.');
