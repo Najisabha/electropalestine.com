@@ -635,7 +635,7 @@ class StoreController extends Controller
 
         // منع إتمام الطلب بدون عنوان
         $user = auth()->user();
-        if (empty($user->address)) {
+        if (!$user->defaultAddress) {
             return redirect()->route('store.account-settings')
                 ->withErrors(['error' => 'يجب إضافة عنوانك أولاً قبل إتمام أي طلب.'])
                 ->with('status', null);
@@ -685,7 +685,7 @@ class StoreController extends Controller
         ]);
     }
 
-    public function checkout(Request $request): View
+    public function checkout(Request $request): View|RedirectResponse
     {
         $productId = $request->input('product');
         $quantity = $request->input('quantity', 1);
@@ -698,7 +698,7 @@ class StoreController extends Controller
 
         // منع إتمام الطلب بدون عنوان
         $user = auth()->user();
-        if ($user && empty($user->address)) {
+        if ($user && !$user->defaultAddress) {
             return redirect()->route('store.account-settings')
                 ->withErrors(['error' => 'يجب إضافة عنوانك أولاً قبل إتمام أي طلب.'])
                 ->with('status', null);
@@ -1228,7 +1228,7 @@ class StoreController extends Controller
         $user = auth()->user();
 
         // منع إنشاء أي طلب بدون عنوان
-        if (empty($user->address)) {
+        if (!$user->defaultAddress) {
             return redirect()->route('store.account-settings')
                 ->withErrors(['error' => 'يجب إضافة عنوانك أولاً قبل تأكيد الطلب.'])
                 ->with('status', null);
@@ -1432,7 +1432,7 @@ class StoreController extends Controller
         $user = $request->user();
 
         // منع إنشاء أي طلب من السلة بدون عنوان
-        if (empty($user->address)) {
+        if (!$user->defaultAddress) {
             return redirect()->route('store.account-settings')
                 ->withErrors(['error' => 'يجب إضافة عنوانك أولاً قبل تأكيد الطلب من السلة.'])
                 ->with('status', null);
