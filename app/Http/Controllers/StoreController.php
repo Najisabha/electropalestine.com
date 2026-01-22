@@ -717,11 +717,62 @@ class StoreController extends Controller
         
         // تحميل العناوين مباشرة من قاعدة البيانات
         if ($user) {
-            // تحميل العناوين مع المستخدم
-            $user->load('addresses');
+            try {
+                // تحميل العناوين مع المستخدم
+                $user->load('addresses');
+            } catch (\Exception $e) {
+                // في حالة وجود خطأ في قاعدة البيانات (مثل corruption)، نستخدم مصفوفة فارغة
+                \Log::error('Error loading user addresses: ' . $e->getMessage());
+                $user->setRelation('addresses', collect([]));
+            }
         }
         
         return view('store.account-settings', compact('user'));
+    }
+
+    /**
+     * حذف حساب المستخدم.
+     */
+    public function deleteAccount(Request $request): RedirectResponse
+    {
+        $user = auth()->user();
+        
+        if (!$user) {
+            return redirect()->route('login')->withErrors(['error' => 'يجب تسجيل الدخول أولاً.']);
+        }
+
+        // التحقق من أن المستخدم يريد حذف حسابه
+        $request->validate([
+            'confirm_delete' => 'required|in:1',
+        ], [
+            'confirm_delete.required' => 'يجب تأكيد حذف الحساب.',
+            'confirm_delete.in' => 'يجب تأكيد حذف الحساب.',
+        ]);
+
+        try {
+            // حذف صورة الهوية إن وجدت
+            if ($user->id_image) {
+                try {
+                    \App\Helpers\ImageHelper::delete($user->id_image, 'public');
+                } catch (\Exception $e) {
+                    \Log::warning('Could not delete user ID image: ' . $e->getMessage());
+                }
+            }
+
+            // تسجيل الخروج قبل حذف الحساب
+            auth()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            // حذف الحساب (سيتم حذف البيانات المرتبطة تلقائياً بسبب cascade)
+            $user->delete();
+
+            return redirect()->route('home')->with('status', 'تم حذف حسابك بنجاح. نأسف لرؤيتك تغادرنا.');
+        } catch (\Exception $e) {
+            \Log::error('Error deleting user account: ' . $e->getMessage());
+            return redirect()->route('store.account-settings')
+                ->withErrors(['error' => 'حدث خطأ أثناء حذف الحساب. يرجى المحاولة مرة أخرى أو التواصل مع الدعم.']);
+        }
     }
 
     /**

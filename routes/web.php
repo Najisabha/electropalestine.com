@@ -75,6 +75,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/account-settings/id-image', [StoreController::class, 'deleteIdImage'])->name('store.id-image.delete');
     Route::post('/account-settings/id-verified', [StoreController::class, 'updateIdVerified'])->name('store.update-id-verified');
     Route::post('/account-settings/currency', [StoreController::class, 'updateCurrency'])->name('store.currency.update');
+    Route::delete('/account-settings/delete-account', [StoreController::class, 'deleteAccount'])->name('store.account.delete');
     Route::get('/points', [StoreController::class, 'points'])->name('store.points');
     Route::post('/points/redeem', [StoreController::class, 'redeemPoints'])->name('store.points.redeem');
     Route::get('/my-orders', [StoreController::class, 'myOrders'])->name('store.my-orders');

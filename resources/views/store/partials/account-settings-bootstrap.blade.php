@@ -607,6 +607,78 @@
                             <strong class="text-white">{{ $user->phone ?? 'غير محدد' }}</strong>
                         </div>
                     </div>
+                    
+                    {{-- زر حذف الحساب --}}
+                    <div class="mt-4 pt-3 border-top border-secondary-subtle">
+                        <form method="POST" action="{{ route('store.account.delete') }}" id="deleteAccountForm">
+                            @csrf
+                            @method('DELETE')
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="confirm_delete" id="confirm_delete" value="1" required>
+                                <label class="form-check-label text-danger small" for="confirm_delete">
+                                    أؤكد أنني أريد حذف حسابي بشكل نهائي. هذا الإجراء لا يمكن التراجع عنه.
+                                </label>
+                            </div>
+                            <button type="button" class="btn btn-danger w-100" id="deleteAccountBtn">
+                                <i class="bi bi-trash"></i> حذف الحساب
+                            </button>
+                        </form>
+                    </div>
+
+                    {{-- نافذة تأكيد حذف الحساب --}}
+                    <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true" data-bs-backdrop="static">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content glass border border-danger border-opacity-50 rounded-4 overflow-hidden">
+                                <div class="modal-header border-0 pb-0">
+                                    <div class="d-flex align-items-center gap-3 w-100">
+                                        <div class="rounded-circle bg-danger bg-opacity-25 p-3 d-flex align-items-center justify-content-center">
+                                            <i class="bi bi-exclamation-triangle-fill text-danger fs-2"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="modal-title text-light mb-1" id="deleteAccountModalLabel">هل أنت متأكد من حذف حسابك؟</h5>
+                                            <p class="text-secondary small mb-0">تأكد من قراءة التفاصيل أدناه قبل المتابعة</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                                </div>
+                                <div class="modal-body pt-3 text-light">
+                                    <p class="text-secondary mb-3">هذا الإجراء سيحذف بشكل نهائي:</p>
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="d-flex align-items-center gap-2 py-2 border-bottom border-secondary border-opacity-25">
+                                            <i class="bi bi-person-fill text-danger opacity-75"></i>
+                                            <span>جميع بياناتك الشخصية</span>
+                                        </li>
+                                        <li class="d-flex align-items-center gap-2 py-2 border-bottom border-secondary border-opacity-25">
+                                            <i class="bi bi-bag-fill text-danger opacity-75"></i>
+                                            <span>جميع طلباتك وسجل الشراء</span>
+                                        </li>
+                                        <li class="d-flex align-items-center gap-2 py-2 border-bottom border-secondary border-opacity-25">
+                                            <i class="bi bi-geo-alt-fill text-danger opacity-75"></i>
+                                            <span>جميع عناوينك المحفوظة</span>
+                                        </li>
+                                        <li class="d-flex align-items-center gap-2 py-2">
+                                            <i class="bi bi-currency-dollar text-danger opacity-75"></i>
+                                            <span>جميع نقاطك ورصيدك</span>
+                                        </li>
+                                    </ul>
+                                    <div class="alert alert-danger d-flex align-items-center gap-2 mt-4 mb-0 py-3" role="alert">
+                                        <i class="bi bi-shield-exclamation fs-4"></i>
+                                        <div>
+                                            <strong>تنبيه:</strong> هذا الإجراء لا يمكن التراجع عنه. لن تتمكن من استرداد أي بيانات بعد الحذف.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-0 pt-0 gap-2 flex-row-reverse">
+                                    <button type="button" class="btn btn-danger px-4" id="confirmDeleteAccountBtn">
+                                        <i class="bi bi-trash-fill"></i> نعم، احذف حسابي
+                                    </button>
+                                    <button type="button" class="btn btn-outline-light px-4" data-bs-dismiss="modal">
+                                        <i class="bi bi-x-lg"></i> إلغاء
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -860,6 +932,41 @@ document.addEventListener('DOMContentLoaded', async function() {
     // تحديث أسعار الصرف كل 5 دقائق
     setInterval(loadExchangeRates, 300000);
 });
+
+// حذف الحساب: فتح الـ modal والتأكيد
+(function() {
+    const deleteBtn = document.getElementById('deleteAccountBtn');
+    const confirmBtn = document.getElementById('confirmDeleteAccountBtn');
+    const checkbox = document.getElementById('confirm_delete');
+    const form = document.getElementById('deleteAccountForm');
+    const modalEl = document.getElementById('deleteAccountModal');
+
+    if (deleteBtn && modalEl && form) {
+        deleteBtn.addEventListener('click', function() {
+            if (!checkbox.checked) {
+                const msg = document.createElement('div');
+                msg.className = 'alert alert-warning alert-dismissible fade show small mb-0';
+                msg.innerHTML = '<i class="bi bi-exclamation-circle me-2"></i>يجب تأكيد حذف الحساب أولاً بتفعيل المربع أعلاه.<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+                const container = form.closest('.glass');
+                if (container && !container.querySelector('.alert-warning')) {
+                    form.insertAdjacentElement('beforebegin', msg);
+                    setTimeout(function() { msg.remove(); }, 5000);
+                }
+                return;
+            }
+            const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false });
+            modal.show();
+        });
+    }
+
+    if (confirmBtn && form) {
+        confirmBtn.addEventListener('click', function() {
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+            form.submit();
+        });
+    }
+})();
 </script>
 
 @endif
