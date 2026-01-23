@@ -78,13 +78,9 @@
                                         <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editUserModal{{ $user->id }}">
                                             <i class="bi bi-pencil"></i> تعديل
                                         </button>
-                                        <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف المستخدم {{ $user->first_name }} {{ $user->last_name }}؟');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger">
-                                                <i class="bi bi-trash"></i> حذف
-                                            </button>
-                                        </form>
+                                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ $user->id }}">
+                                            <i class="bi bi-trash"></i> حذف
+                                        </button>
                                     @endif
                                 </div>
                             </td>
@@ -465,6 +461,86 @@
             </div>
         </div>
         @endif
+
+        {{-- 3. Modal تأكيد حذف المستخدم --}}
+        @if(auth()->check() && strtolower(auth()->user()->role) === 'admin')
+        <div class="modal fade" id="deleteUserModal{{ $user->id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content glass border border-danger" style="border-width: 2px !important;">
+                    <div class="modal-header border-bottom border-danger">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="delete-icon-wrapper">
+                                <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 2.5rem;"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title text-light mb-0">
+                                    <i class="bi bi-trash me-2"></i>تأكيد حذف المستخدم
+                                </h5>
+                                <small class="text-secondary">عملية لا يمكن التراجع عنها</small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    
+                    <div class="modal-body text-light py-4">
+                        <div class="alert alert-danger border-danger bg-danger bg-opacity-10 mb-3">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="bi bi-info-circle-fill mt-1"></i>
+                                <div>
+                                    <strong class="d-block mb-2 text-light">تحذير مهم:</strong>
+                                    <p class="mb-0 small text-light">سيتم حذف المستخدم <strong class="text-white">{{ $user->first_name }} {{ $user->last_name }}</strong> بشكل نهائي من النظام. لا يمكن استرجاع البيانات بعد الحذف.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="user-info-card p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="user-avatar bg-danger bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                    <i class="bi bi-person-fill text-danger" style="font-size: 1.8rem;"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 text-light">{{ $user->first_name }} {{ $user->last_name }}</h6>
+                                    <small class="text-secondary d-block">
+                                        <i class="bi bi-envelope me-1"></i>{{ $user->email }}
+                                    </small>
+                                    <small class="text-secondary d-block">
+                                        <i class="bi bi-telephone me-1"></i>{{ $user->whatsapp_prefix }}{{ $user->phone }}
+                                    </small>
+                                </div>
+                                <div>
+                                    <span class="badge {{ strtolower($user->role) === 'admin' ? 'bg-danger' : 'bg-info text-dark' }}">
+                                        {{ $user->role }}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            @if($user->orders_count > 0)
+                            <div class="alert alert-warning bg-warning bg-opacity-10 border-warning mb-0 mt-3">
+                                <i class="bi bi-exclamation-circle me-2"></i>
+                                <small>هذا المستخدم لديه <strong>{{ $user->orders_count }}</strong> طلب مسجل في النظام.</small>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-top border-danger">
+                        <form method="POST" action="{{ route('admin.users.destroy', $user) }}" id="deleteUserForm{{ $user->id }}" class="w-100">
+                            @csrf
+                            @method('DELETE')
+                            <div class="d-flex gap-2 w-100">
+                                <button type="button" class="btn btn-outline-secondary flex-fill" data-bs-dismiss="modal">
+                                    <i class="bi bi-x-circle me-1"></i>إلغاء
+                                </button>
+                                <button type="submit" class="btn btn-danger flex-fill" id="confirmDeleteBtn{{ $user->id }}">
+                                    <i class="bi bi-trash-fill me-1"></i>نعم، احذف المستخدم
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
         
     @endforeach
 </section>
@@ -512,6 +588,72 @@
     .btn-sm {
         font-size: 0.8rem;
         padding: 0.25rem 0.5rem;
+    }
+
+    /* تحسين مظهر modal الحذف */
+    .modal[id^="deleteUserModal"] .modal-content {
+        animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .delete-icon-wrapper {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+    }
+
+    .user-info-card {
+        transition: all 0.3s ease;
+    }
+
+    .user-info-card:hover {
+        border-color: rgba(220, 53, 69, 0.5) !important;
+        box-shadow: 0 0 15px rgba(220, 53, 69, 0.2);
+    }
+
+    .user-avatar {
+        transition: all 0.3s ease;
+    }
+
+    .user-avatar:hover {
+        transform: scale(1.1);
+        box-shadow: 0 0 20px rgba(220, 53, 69, 0.4);
+    }
+
+    .modal[id^="deleteUserModal"] .btn-danger {
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .modal[id^="deleteUserModal"] .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+    }
+
+    .modal[id^="deleteUserModal"] .btn-danger:active {
+        transform: translateY(0);
+    }
+
+    .modal[id^="deleteUserModal"] .modal-header {
+        background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(220, 53, 69, 0.05) 100%);
     }
 </style>
 
@@ -640,6 +782,22 @@ document.addEventListener('DOMContentLoaded', function() {
             toggleRejectionReason{{ $user->id }}(select{{ $user->id }});
         }
     });
+    @endforeach
+
+    // معالجة نموذج حذف المستخدم
+    @foreach ($users as $user)
+    @if(auth()->check() && strtolower(auth()->user()->role) === 'admin')
+    const deleteForm{{ $user->id }} = document.getElementById('deleteUserForm{{ $user->id }}');
+    if (deleteForm{{ $user->id }}) {
+        deleteForm{{ $user->id }}.addEventListener('submit', function(e) {
+            const submitBtn = document.getElementById('confirmDeleteBtn{{ $user->id }}');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جاري الحذف...';
+            }
+        });
+    }
+    @endif
     @endforeach
 });
 </script>

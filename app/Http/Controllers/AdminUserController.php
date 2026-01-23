@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use App\Notifications\IdImageRejected;
 
 class AdminUserController extends Controller
@@ -167,13 +168,72 @@ class AdminUserController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
-        // حذف صورة الهوية المرتبطة بالمستخدم
-        if ($user->id_image) {
-            \App\Helpers\ImageHelper::delete($user->id_image, 'public');
+        try {
+            if ($user->id === auth()->id()) {
+                return back()->withErrors(['error' => 'لا يمكنك حذف حسابك الخاص.']);
+            }
+
+            $userId = $user->id;
+            $userEmail = $user->email;
+
+            // حذف صورة الهوية من التخزين
+            if ($user->id_image) {
+                try {
+                    \App\Helpers\ImageHelper::delete($user->id_image, 'public');
+                } catch (\Exception $e) {}
+            }
+
+            // تفعيل autocommit وبدء transaction صريح
+            DB::statement('SET autocommit=1');
+            DB::statement('SET FOREIGN_KEY_CHECKS=0');
+            DB::statement('START TRANSACTION');
+
+            try {
+                // حذف كل ما له علاقة بالمستخدم
+                $orderIds = DB::table('orders')->where('user_id', $userId)->pluck('id');
+                if ($orderIds->isNotEmpty()) {
+                    DB::table('order_items')->whereIn('order_id', $orderIds)->delete();
+                    DB::table('reviews')->whereIn('order_id', $orderIds)->delete();
+                    DB::table('orders')->where('user_id', $userId)->delete();
+                }
+                DB::table('reviews')->where('user_id', $userId)->delete();
+                DB::table('user_addresses')->where('user_id', $userId)->delete();
+                DB::table('user_activities')->where('user_id', $userId)->delete();
+                DB::table('user_favorites')->where('user_id', $userId)->delete();
+                DB::table('user_rewards')->where('user_id', $userId)->delete();
+                DB::table('sessions')->where('user_id', $userId)->delete();
+                DB::table('password_reset_tokens')->where('email', $userEmail)->delete();
+
+                // حذف المستخدم من قاعدة البيانات
+                $deleted = DB::table('users')->where('id', $userId)->delete();
+
+                // COMMIT لحفظ التغييرات
+                DB::statement('COMMIT');
+                DB::statement('SET FOREIGN_KEY_CHECKS=1');
+
+                // التحقق من أن الحذف تم فعلياً
+                if ($deleted === 0) {
+                    return back()->withErrors(['error' => 'فشل حذف المستخدم من قاعدة البيانات. لم يتم العثور على المستخدم.']);
+                }
+
+                // التحقق المزدوج: التأكد من عدم وجود المستخدم في القاعدة
+                $stillExists = DB::table('users')->where('id', $userId)->exists();
+                if ($stillExists) {
+                    return back()->withErrors(['error' => 'فشل حذف المستخدم. المستخدم ما زال موجوداً في قاعدة البيانات.']);
+                }
+
+                return back()->with('status', 'تم حذف المستخدم وجميع بياناته بنجاح.');
+            } catch (\Exception $e) {
+                DB::statement('ROLLBACK');
+                DB::statement('SET FOREIGN_KEY_CHECKS=1');
+                throw $e;
+            }
+        } catch (\Exception $e) {
+            try {
+                DB::statement('SET FOREIGN_KEY_CHECKS=1');
+            } catch (\Exception $ex) {}
+            return back()->withErrors(['error' => 'حدث خطأ أثناء حذف المستخدم: ' . $e->getMessage()]);
         }
-        
-        $user->delete();
-        return back()->with('status', 'تم حذف المستخدم بنجاح.');
     }
 }
 
