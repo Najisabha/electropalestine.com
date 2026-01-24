@@ -1536,8 +1536,10 @@ class StoreController extends Controller
                 return back()->withErrors(['error' => 'الرصيد أو النقاط غير كافية لإتمام الطلب.']);
             }
 
+            // تفعيل autocommit مؤقتاً (لحل مشكلة transaction مفتوح)
+            DB::statement('SET autocommit=1');
+            
             // خصم المبلغ من الرصيد أولاً، ثم النقاط إذا لم يكف الرصيد
-            DB::beginTransaction();
             try {
                 $remaining = $totalNeeded;
                 
@@ -1595,7 +1597,7 @@ class StoreController extends Controller
                 // إضافة النقاط المستحقة للمستخدم بناءً على هذه الطلبية
                 Order::awardPointsForOrder($order, $user);
 
-                DB::commit();
+                // DB::commit(); - لا حاجة لها لأن autocommit مفعّل
 
                 // تحميل الطلبية مع المستخدم المرتبط بها (للتأكد من الحصول على بيانات صحيحة)
                 $order->load('user');
@@ -1774,7 +1776,9 @@ class StoreController extends Controller
                 return back()->withErrors(['error' => 'الرصيد أو النقاط غير كافية لإتمام الطلب.']);
             }
 
-            DB::beginTransaction();
+            // تفعيل autocommit
+            DB::statement('SET autocommit=1');
+            
             try {
                 $remaining = $totalNeeded;
 
@@ -1820,7 +1824,7 @@ class StoreController extends Controller
                 // إضافة النقاط المستحقة للمستخدم بناءً على هذه الطلبية
                 Order::awardPointsForOrder($order, $user);
 
-                DB::commit();
+                // DB::commit(); - لا حاجة
 
                 $order->load('user');
                 $orderUser = $order->user;
@@ -1856,8 +1860,11 @@ class StoreController extends Controller
                 return redirect()->route('store.my-orders')
                     ->with('status', 'تم تأكيد طلبيتك بنجاح! تم إنشاء طلب واحد يحتوي على جميع منتجات السلة وإرسال الفاتورة إلى بريدك الإلكتروني.');
             } catch (\Exception $e) {
-                DB::rollBack();
-                Log::error('Cart checkout error: ' . $e->getMessage());
+                Log::error('Cart checkout error', [
+                    'error' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ]);
                 return back()->withErrors(['error' => 'حدث خطأ أثناء معالجة الطلب. يرجى المحاولة مرة أخرى.']);
             }
         }
@@ -1956,7 +1963,9 @@ class StoreController extends Controller
             return back()->withErrors(['error' => $message]);
         }
 
-        DB::beginTransaction();
+        // تفعيل autocommit
+        DB::statement('SET autocommit=1');
+        
         try {
             // خصم النقاط
             $user->points = $userPoints - $reward->points_required;
@@ -1990,7 +1999,7 @@ class StoreController extends Controller
             }
             // gift لا يحتاج معالجة إضافية هنا (سيتم التعامل معها لاحقاً)
 
-            DB::commit();
+            // DB::commit(); - لا حاجة
 
             if ($reward->type === 'wallet_credit') {
                 $message = 'تم استبدال النقاط بنجاح! تم إضافة ' . number_format($reward->value, 2) . '$ إلى محفظتك.';
@@ -2010,9 +2019,10 @@ class StoreController extends Controller
 
             return redirect()->route('store.points')->with('status', $message);
         } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('Points redemption error: ' . $e->getMessage());
-            \Log::error('Points redemption trace: ' . $e->getTraceAsString());
+            \Log::error('Points redemption error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             
             $errorMessage = 'حدث خطأ أثناء استبدال النقاط. يرجى المحاولة مرة أخرى.';
             if ($request->expectsJson()) {
