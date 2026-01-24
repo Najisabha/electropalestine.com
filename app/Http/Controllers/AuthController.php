@@ -3,15 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\PhoneVerification;
 use App\Helpers\ImageHelper;
 use App\Helpers\ActivityLogger;
+use App\Helpers\SMSHelper;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\View\View;
 use Illuminate\Database\QueryException;
@@ -69,43 +73,196 @@ class AuthController extends Controller
 
     public function register(Request $request): RedirectResponse
     {
-        $data = $request->validate([
-            'first_name' => ['required', 'string', 'max:100'],
-            'last_name' => ['required', 'string', 'max:100'],
-            'phone' => ['required', 'string', 'max:30'],
-            'whatsapp_prefix' => ['required', 'string', 'max:10'],
-            'password' => ['required', 'confirmed', PasswordRule::defaults()],
-            'id_image' => ['nullable', 'image', 'max:2048'],
+        try {
+            $data = $request->validate([
+                'first_name' => ['required', 'string', 'max:100'],
+                'last_name' => ['required', 'string', 'max:100'],
+                'phone' => ['required', 'string', 'max:30', 'regex:/^[0-9]+$/', 'unique:users,phone'],
+                'whatsapp_prefix' => ['required', 'string', 'max:10'],
+                'password' => ['required', 'confirmed', PasswordRule::defaults()],
+            ], [
+                'phone.regex' => 'رقم الهاتف يجب أن يحتوي على أرقام فقط',
+                'phone.unique' => 'رقم الهاتف مستخدم بالفعل',
+            ]);
+
+            Log::info('بدء عملية التسجيل', [
+                'phone' => $data['phone'],
+                'name' => $data['first_name'] . ' ' . $data['last_name']
+            ]);
+
+            // تفعيل autocommit مؤقتاً
+            DB::statement("SET autocommit=1");
+            
+            // استخدام INSERT مباشر
+            $hashedPassword = Hash::make($data['password']);
+            $name = $data['first_name'] . ' ' . $data['last_name'];
+            $now = now();
+            
+            $userId = DB::table('users')->insertGetId([
+                'name' => $name,
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
+                'email' => null,
+                'phone' => $data['phone'],
+                'whatsapp_prefix' => $data['whatsapp_prefix'],
+                'role' => 'user',
+                'id_verified_status' => 'unverified',
+                'points' => 0,
+                'balance' => 0,
+                'balance_ils' => 0,
+                'balance_usd' => 0,
+                'balance_jod' => 0,
+                'default_payment_wallet' => 'ILS',
+                'preferred_currency' => 'USD',
+                'password' => $hashedPassword,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+            if (!$userId) {
+                Log::error('فشل إنشاء المستخدم');
+                return back()->withErrors(['phone' => 'فشل إنشاء الحساب'])->withInput();
+            }
+
+            Log::info('تم إنشاء المستخدم', ['user_id' => $userId, 'phone' => $data['phone']]);
+
+            // جلب المستخدم
+            $user = User::find($userId);
+            if (!$user) {
+                Log::error('فشل جلب المستخدم بعد الإنشاء', ['user_id' => $userId]);
+                return back()->withErrors(['phone' => 'فشل جلب بيانات الحساب'])->withInput();
+            }
+
+            Log::info('تم التحقق من حفظ المستخدم', ['user_id' => $user->id]);
+
+            // إنشاء كود التحقق
+            $fullPhone = $data['whatsapp_prefix'] . $data['phone'];
+            $verification = PhoneVerification::createVerificationCode($fullPhone);
+            
+            Log::info('تم إنشاء كود التحقق', [
+                'user_id' => $user->id,
+                'phone' => $fullPhone,
+                'code' => $verification->code // في الإنتاج، احذف هذا السطر
+            ]);
+
+            // إرسال SMS
+            SMSHelper::sendVerificationCode($fullPhone, $verification->code);
+            
+            // حفظ معلومات المستخدم في الـ session للتحقق
+            Session::put('pending_verification', [
+                'user_id' => $user->id,
+                'phone' => $fullPhone,
+            ]);
+
+            // التوجيه لصفحة التحقق
+            return redirect()->route('verify.phone')->with('info', 'تم إرسال كود التحقق إلى رقم هاتفك');
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('خطأ في التحقق من البيانات', ['errors' => $e->errors()]);
+            throw $e;
+        } catch (QueryException $e) {
+            Log::error('خطأ في قاعدة البيانات', [
+                'message' => $e->getMessage(),
+                'code' => $e->getCode()
+            ]);
+            return back()->withErrors(['phone' => 'خطأ في قاعدة البيانات: ' . $e->getMessage()])->withInput();
+        } catch (\Exception $e) {
+            Log::error('خطأ غير متوقع في التسجيل', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            return back()->withErrors(['phone' => 'حدث خطأ: ' . $e->getMessage()])->withInput();
+        }
+    }
+
+    public function showVerifyPhone()
+    {
+        // التحقق من وجود معلومات التحقق في الـ session
+        if (!Session::has('pending_verification')) {
+            return redirect()->route('register')->with('error', 'الرجاء التسجيل أولاً');
+        }
+
+        $pendingData = Session::get('pending_verification');
+        $phone = $pendingData['phone'];
+
+        return view('auth.verify-phone', compact('phone'));
+    }
+
+    public function verifyPhone(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'code' => ['required', 'string', 'size:6', 'regex:/^[0-9]+$/'],
+        ], [
+            'code.size' => 'الكود يجب أن يكون 6 أرقام',
+            'code.regex' => 'الكود يجب أن يحتوي على أرقام فقط',
         ]);
 
-        $idImagePath = null;
-        if ($request->hasFile('id_image')) {
-            $idImagePath = ImageHelper::storeWithSequentialName($request->file('id_image'), 'ids', 'public');
-            if (!$idImagePath) {
-                Log::error('فشل رفع صورة الهوية عند التسجيل', ['email' => $data['email']]);
-                return back()->withErrors(['id_image' => 'فشل رفع صورة الهوية. يرجى التحقق من صلاحيات المجلدات.'])->withInput();
+        // التحقق من وجود معلومات التحقق في الـ session
+        if (!Session::has('pending_verification')) {
+            return redirect()->route('register')->with('error', 'الرجاء التسجيل أولاً');
+        }
+
+        $pendingData = Session::get('pending_verification');
+        $phone = $pendingData['phone'];
+        $userId = $pendingData['user_id'];
+
+        // جلب آخر كود صالح
+        $verification = PhoneVerification::getLatestCode($phone);
+
+        if (!$verification) {
+            return back()->withErrors(['code' => 'انتهت صلاحية الكود. الرجاء طلب كود جديد.']);
+        }
+
+        // التحقق من عدد المحاولات
+        if ($verification->attempts >= 5) {
+            return back()->withErrors(['code' => 'تم تجاوز عدد المحاولات المسموح بها. الرجاء طلب كود جديد.']);
+        }
+
+        // التحقق من الكود
+        if ($verification->verify($request->code)) {
+            // تحديث حالة المستخدم
+            $user = User::find($userId);
+            if ($user) {
+                // يمكن إضافة حقل phone_verified في جدول users لاحقاً
+                
+                // تسجيل الدخول
+                Auth::login($user);
+                
+                // حذف معلومات التحقق من الـ session
+                Session::forget('pending_verification');
+                
+                Log::info('تم التحقق من الهاتف بنجاح', ['user_id' => $user->id]);
+                
+                return redirect('/')->with('success', 'تم التحقق من رقم هاتفك بنجاح!');
             }
         }
 
-        $user = User::create([
-            'name' => $data['first_name'] . ' ' . $data['last_name'],
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
-            'email' => null,
-            'phone' => $data['phone'],
-            'whatsapp_prefix' => $data['whatsapp_prefix'],
-            'birth_year' => null,
-            'birth_month' => null,
-            'birth_day' => null,
-            'role' => 'user',
-            'id_image' => $idImagePath,
-            'id_verified_status' => $idImagePath ? 'pending' : 'unverified', // إذا تم رفع صورة، الحالة الافتراضية: قيد التنفيذ
-            'password' => Hash::make($data['password']),
+        return back()->withErrors(['code' => 'الكود غير صحيح. يرجى المحاولة مرة أخرى.']);
+    }
+
+    public function resendVerificationCode(Request $request): RedirectResponse
+    {
+        // التحقق من وجود معلومات التحقق في الـ session
+        if (!Session::has('pending_verification')) {
+            return redirect()->route('register')->with('error', 'الرجاء التسجيل أولاً');
+        }
+
+        $pendingData = Session::get('pending_verification');
+        $phone = $pendingData['phone'];
+
+        // إنشاء كود جديد
+        $verification = PhoneVerification::createVerificationCode($phone);
+        
+        Log::info('إعادة إرسال كود التحقق', [
+            'phone' => $phone,
+            'code' => $verification->code // في الإنتاج، احذف هذا السطر
         ]);
 
-        Auth::login($user);
+        // إرسال SMS
+        SMSHelper::sendVerificationCode($phone, $verification->code);
 
-        return redirect('/');
+        return back()->with('success', 'تم إرسال كود جديد إلى رقم هاتفك');
     }
 
     public function logout(Request $request): RedirectResponse

@@ -148,6 +148,9 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.attempt');
+Route::get('/verify-phone', [AuthController::class, 'showVerifyPhone'])->name('verify.phone');
+Route::post('/verify-phone', [AuthController::class, 'verifyPhone'])->name('verify.phone.submit');
+Route::post('/verify-phone/resend', [AuthController::class, 'resendVerificationCode'])->name('verify.phone.resend');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Social login (Google / Facebook)

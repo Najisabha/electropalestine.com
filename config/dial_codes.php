@@ -3,25 +3,25 @@
 return [
     'countries' => [
         // ----- Arab Countries -----
-        ['code' => '+213', 'name_en' => 'Algeria', 'name_ar' => 'الجزائر', 'flag' => '🇩🇿'],
-        ['code' => '+973', 'name_en' => 'Bahrain', 'name_ar' => 'البحرين', 'flag' => '🇧🇭'],
-        ['code' => '+20',  'name_en' => 'Egypt', 'name_ar' => 'مصر', 'flag' => '🇪🇬'],
-        ['code' => '+964', 'name_en' => 'Iraq', 'name_ar' => 'العراق', 'flag' => '🇮🇶'],
-        ['code' => '+962', 'name_en' => 'Jordan', 'name_ar' => 'الأردن', 'flag' => '🇯🇴'],
-        ['code' => '+965', 'name_en' => 'Kuwait', 'name_ar' => 'الكويت', 'flag' => '🇰🇼'],
-        ['code' => '+961', 'name_en' => 'Lebanon', 'name_ar' => 'لبنان', 'flag' => '🇱🇧'],
-        ['code' => '+218', 'name_en' => 'Libya', 'name_ar' => 'ليبيا', 'flag' => '🇱🇾'],
-        ['code' => '+212', 'name_en' => 'Morocco', 'name_ar' => 'المغرب', 'flag' => '🇲🇦'],
-        ['code' => '+968', 'name_en' => 'Oman', 'name_ar' => 'عُمان', 'flag' => '🇴🇲'],
-        ['code' => '+974', 'name_en' => 'Qatar', 'name_ar' => 'قطر', 'flag' => '🇶🇦'],
-        ['code' => '+966', 'name_en' => 'Saudi Arabia', 'name_ar' => 'السعودية', 'flag' => '🇸🇦'],
-        ['code' => '+252', 'name_en' => 'Somalia', 'name_ar' => 'الصومال', 'flag' => '🇸🇴'],
-        ['code' => '+249', 'name_en' => 'Sudan', 'name_ar' => 'السودان', 'flag' => '🇸🇩'],
-        ['code' => '+963', 'name_en' => 'Syria', 'name_ar' => 'سوريا', 'flag' => '🇸🇾'],
-        ['code' => '+216', 'name_en' => 'Tunisia', 'name_ar' => 'تونس', 'flag' => '🇹🇳'],
-        ['code' => '+971', 'name_en' => 'United Arab Emirates', 'name_ar' => 'الإمارات', 'flag' => '🇦🇪'],
-        ['code' => '+967', 'name_en' => 'Yemen', 'name_ar' => 'اليمن', 'flag' => '🇾🇪'],
-        ['code' => '+970', 'name_en' => 'Palestine', 'name_ar' => 'فلسطين', 'flag' => '🇵🇸'],
+        ['code' => '+213', 'name_en' => 'Algeria', 'name_ar' => 'الجزائر', 'flag' => '🇩🇿', 'example' => '551234567'],
+        ['code' => '+973', 'name_en' => 'Bahrain', 'name_ar' => 'البحرين', 'flag' => '🇧🇭', 'example' => '36001234'],
+        ['code' => '+20',  'name_en' => 'Egypt', 'name_ar' => 'مصر', 'flag' => '🇪🇬', 'example' => '1001234567'],
+        ['code' => '+964', 'name_en' => 'Iraq', 'name_ar' => 'العراق', 'flag' => '🇮🇶', 'example' => '7901234567'],
+        ['code' => '+962', 'name_en' => 'Jordan', 'name_ar' => 'الأردن', 'flag' => '🇯🇴', 'example' => '790123456'],
+        ['code' => '+965', 'name_en' => 'Kuwait', 'name_ar' => 'الكويت', 'flag' => '🇰🇼', 'example' => '50012345'],
+        ['code' => '+961', 'name_en' => 'Lebanon', 'name_ar' => 'لبنان', 'flag' => '🇱🇧', 'example' => '71234567'],
+        ['code' => '+218', 'name_en' => 'Libya', 'name_ar' => 'ليبيا', 'flag' => '🇱🇾', 'example' => '912345678'],
+        ['code' => '+212', 'name_en' => 'Morocco', 'name_ar' => 'المغرب', 'flag' => '🇲🇦', 'example' => '650123456'],
+        ['code' => '+968', 'name_en' => 'Oman', 'name_ar' => 'عُمان', 'flag' => '🇴🇲', 'example' => '92123456'],
+        ['code' => '+974', 'name_en' => 'Qatar', 'name_ar' => 'قطر', 'flag' => '🇶🇦', 'example' => '33123456'],
+        ['code' => '+966', 'name_en' => 'Saudi Arabia', 'name_ar' => 'السعودية', 'flag' => '🇸🇦', 'example' => '501234567'],
+        ['code' => '+252', 'name_en' => 'Somalia', 'name_ar' => 'الصومال', 'flag' => '🇸🇴', 'example' => '71234567'],
+        ['code' => '+249', 'name_en' => 'Sudan', 'name_ar' => 'السودان', 'flag' => '🇸🇩', 'example' => '912345678'],
+        ['code' => '+963', 'name_en' => 'Syria', 'name_ar' => 'سوريا', 'flag' => '🇸🇾', 'example' => '944567890'],
+        ['code' => '+216', 'name_en' => 'Tunisia', 'name_ar' => 'تونس', 'flag' => '🇹🇳', 'example' => '20123456'],
+        ['code' => '+971', 'name_en' => 'United Arab Emirates', 'name_ar' => 'الإمارات', 'flag' => '🇦🇪', 'example' => '501234567'],
+        ['code' => '+967', 'name_en' => 'Yemen', 'name_ar' => 'اليمن', 'flag' => '🇾🇪', 'example' => '712345678'],
+        ['code' => '+970', 'name_en' => 'Palestine', 'name_ar' => 'فلسطين', 'flag' => '🇵🇸', 'example' => '599123456'],
         ['code' => '+222', 'name_en' => 'Mauritania', 'name_ar' => 'موريتانيا', 'flag' => '🇲🇷'],
         ['code' => '+253', 'name_en' => 'Djibouti', 'name_ar' => 'جيبوتي', 'flag' => '🇩🇯'],
         ['code' => '+269', 'name_en' => 'Comoros', 'name_ar' => 'جزر القمر', 'flag' => '🇰🇲'],
