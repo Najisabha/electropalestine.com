@@ -2,7 +2,59 @@
     <div class="glass p-4">
         <h1 class="h4 fw-bold mb-3">إدراج التصنيفات والمنتجات</h1>
         @if (session('status'))
-            <div class="alert alert-success small">{{ session('status') }}</div>
+            <div class="alert alert-success small d-flex align-items-center justify-content-between" 
+                 style="background: linear-gradient(135deg, rgba(14, 255, 255, 0.15), rgba(10, 187, 187, 0.15)); 
+                        border: 2px solid #0ef; 
+                        border-radius: 12px; 
+                        box-shadow: 0 5px 20px rgba(14, 255, 255, 0.3);
+                        animation: slideInRight 0.5s ease-out;">
+                <div class="d-flex align-items-center gap-3">
+                    <span style="font-size: 24px;">✅</span>
+                    <span style="color: #0ef; font-weight: bold;">{{ session('status') }}</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+        @if ($errors->any())
+            <div class="alert alert-danger small" 
+                 style="background: linear-gradient(135deg, rgba(255, 68, 68, 0.15), rgba(204, 0, 0, 0.15)); 
+                        border: 2px solid #ff4444; 
+                        border-radius: 12px; 
+                        box-shadow: 0 5px 20px rgba(255, 68, 68, 0.3);
+                        animation: slideInRight 0.5s ease-out;">
+                <div class="d-flex align-items-start gap-3">
+                    <span style="font-size: 24px;">⚠️</span>
+                    <div class="flex-grow-1">
+                        <strong style="color: #ff9999; font-size: 16px; display: block; margin-bottom: 10px;">حدثت أخطاء:</strong>
+                        <ul class="mb-0" style="padding-right: 20px;">
+                            @foreach ($errors->all() as $error)
+                                <li style="color: #ffcccc; margin-bottom: 5px;">{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </div>
+            <style>
+                @keyframes slideInRight {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+                @keyframes fadeOut {
+                    from {
+                        opacity: 1;
+                    }
+                    to {
+                        opacity: 0;
+                    }
+                }
+            </style>
         @endif
 
         <ul class="nav nav-tabs mb-3" role="tablist">
@@ -504,8 +556,8 @@
                                         <form
                                             method="POST"
                                             action="{{ route('admin.catalog.product.delete', $product) }}"
-                                            class="d-inline"
-                                            onsubmit="return confirm('حذف المنتج؟');"
+                                            class="d-inline product-delete-form"
+                                            onsubmit="return confirmProductDelete(event, '{{ $product->translated_name }}', {{ $product->id }});"
                                         >
                                             @csrf
                                             @method('DELETE')
@@ -872,6 +924,52 @@
         });
     }
 
+    // تتبع إرسال نماذج الحذف
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('✅ تم تحميل صفحة إدارة الكتالوج');
+        
+        // تتبع جميع نماذج حذف المنتجات
+        const deleteForms = document.querySelectorAll('.product-delete-form');
+        console.log(`📋 عدد نماذج الحذف المتاحة: ${deleteForms.length}`);
+        
+        deleteForms.forEach((form, index) => {
+            const productId = form.action.split('/').pop();
+            console.log(`  - نموذج ${index + 1}: المنتج ID=${productId}`);
+            
+            // إضافة مستمع لحدث submit
+            form.addEventListener('submit', function(e) {
+                console.log(`🚀 محاولة إرسال نموذج حذف المنتج ID=${productId}`);
+                console.log('   الإجراء:', form.action);
+                console.log('   الطريقة:', form.method);
+                
+                // التحقق من وجود حقل _method
+                const methodField = form.querySelector('input[name="_method"]');
+                if (methodField) {
+                    console.log('   _method:', methodField.value);
+                } else {
+                    console.warn('   ⚠️ حقل _method غير موجود!');
+                }
+                
+                // التحقق من وجود CSRF token
+                const csrfField = form.querySelector('input[name="_token"]');
+                if (csrfField) {
+                    console.log('   ✅ CSRF token موجود');
+                } else {
+                    console.error('   ❌ CSRF token غير موجود!');
+                }
+            });
+        });
+        
+        // إزالة مؤشر التحميل بعد تحميل الصفحة (في حال تمت إعادة التوجيه)
+        const loadingIndicator = document.getElementById('deleteLoadingIndicator');
+        if (loadingIndicator) {
+            setTimeout(() => {
+                loadingIndicator.style.animation = 'fadeOut 0.5s ease-out';
+                setTimeout(() => loadingIndicator.remove(), 500);
+            }, 1000);
+        }
+    });
+
     // عرض مسار الصورة المحددة في إدارة التصنيفات
     document.querySelectorAll('.category-image-input').forEach(input => {
         input.addEventListener('change', function() {
@@ -890,5 +988,207 @@
             }
         });
     });
+
+    // تأكيد حذف المنتج مع نافذة جميلة مخصصة
+    function confirmProductDelete(event, productName, productId) {
+        event.preventDefault();
+        const form = event.target;
+        
+        // إنشاء نافذة تأكيد مخصصة جميلة
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            animation: fadeIn 0.2s ease-in-out;
+        `;
+        
+        modal.innerHTML = `
+            <div style="
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                border: 2px solid #0ef;
+                border-radius: 20px;
+                padding: 30px;
+                max-width: 500px;
+                width: 90%;
+                box-shadow: 0 20px 60px rgba(14, 255, 255, 0.3);
+                animation: slideIn 0.3s ease-out;
+            ">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="
+                        width: 80px;
+                        height: 80px;
+                        margin: 0 auto 15px;
+                        background: linear-gradient(135deg, #ff4444, #cc0000);
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        box-shadow: 0 10px 30px rgba(255, 68, 68, 0.4);
+                    ">
+                        <svg width="40" height="40" fill="white" viewBox="0 0 16 16">
+                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                        </svg>
+                    </div>
+                    <h3 style="color: #fff; font-size: 24px; font-weight: bold; margin-bottom: 10px;">
+                        ⚠️ تأكيد الحذف
+                    </h3>
+                </div>
+                
+                <div style="
+                    background: rgba(14, 255, 255, 0.1);
+                    border: 1px solid rgba(14, 255, 255, 0.3);
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                ">
+                    <p style="color: #fff; font-size: 16px; margin-bottom: 15px; line-height: 1.6;">
+                        هل أنت متأكد من حذف المنتج:
+                    </p>
+                    <p style="
+                        color: #0ef;
+                        font-size: 18px;
+                        font-weight: bold;
+                        margin-bottom: 20px;
+                        text-align: center;
+                        padding: 10px;
+                        background: rgba(14, 255, 255, 0.1);
+                        border-radius: 8px;
+                    ">
+                        "${productName}"
+                    </p>
+                    
+                    <div style="color: #ff9999; font-size: 14px; line-height: 1.8;">
+                        <p style="margin-bottom: 8px;"><strong>سيتم حذف:</strong></p>
+                        <ul style="margin: 0; padding-right: 20px;">
+                            <li>المنتج من قاعدة البيانات</li>
+                            <li>جميع الصور المرتبطة</li>
+                            <li>جميع العلاقات التابعة</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div style="
+                    background: rgba(255, 68, 68, 0.1);
+                    border: 1px solid rgba(255, 68, 68, 0.3);
+                    border-radius: 8px;
+                    padding: 12px;
+                    margin-bottom: 25px;
+                    text-align: center;
+                ">
+                    <p style="color: #ffcccc; font-size: 13px; margin: 0;">
+                        ⚡ هذا الإجراء لا يمكن التراجع عنه!
+                    </p>
+                </div>
+                
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <button id="confirmDeleteBtn" style="
+                        background: linear-gradient(135deg, #ff4444, #cc0000);
+                        color: white;
+                        border: none;
+                        padding: 12px 30px;
+                        border-radius: 10px;
+                        font-size: 16px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 5px 15px rgba(255, 68, 68, 0.4);
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(255, 68, 68, 0.6)'" 
+                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 5px 15px rgba(255, 68, 68, 0.4)'">
+                        🗑️ نعم، احذف المنتج
+                    </button>
+                    <button id="cancelDeleteBtn" style="
+                        background: linear-gradient(135deg, #0ef, #0ab);
+                        color: #1a1a2e;
+                        border: none;
+                        padding: 12px 30px;
+                        border-radius: 10px;
+                        font-size: 16px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 5px 15px rgba(14, 255, 255, 0.4);
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(14, 255, 255, 0.6)'" 
+                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 5px 15px rgba(14, 255, 255, 0.4)'">
+                        ❌ إلغاء
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // إضافة الأنيميشن
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideIn {
+                from { 
+                    transform: translateY(-50px);
+                    opacity: 0;
+                }
+                to { 
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        document.body.appendChild(modal);
+        
+        // معالجة الأزرار
+        document.getElementById('confirmDeleteBtn').onclick = function() {
+            console.log('✅ تأكيد حذف المنتج:', productId, productName);
+            document.body.removeChild(modal);
+            document.head.removeChild(style);
+            
+            // إظهار مؤشر التحميل
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'deleteLoadingIndicator';
+            loadingDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #0ef, #0ab);
+                color: #1a1a2e;
+                padding: 15px 25px;
+                border-radius: 10px;
+                font-weight: bold;
+                z-index: 10000;
+                box-shadow: 0 5px 20px rgba(14, 255, 255, 0.5);
+                animation: fadeIn 0.3s ease-in-out;
+            `;
+            loadingDiv.innerHTML = '🔄 جاري حذف المنتج...';
+            document.body.appendChild(loadingDiv);
+            
+            form.submit();
+        };
+        
+        document.getElementById('cancelDeleteBtn').onclick = function() {
+            console.log('❌ تم إلغاء حذف المنتج:', productId);
+            document.body.removeChild(modal);
+            document.head.removeChild(style);
+        };
+        
+        // إغلاق عند النقر على الخلفية
+        modal.onclick = function(e) {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+                document.head.removeChild(style);
+            }
+        };
+        
+        return false;
+    }
 </script>
 

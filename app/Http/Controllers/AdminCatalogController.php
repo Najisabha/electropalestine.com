@@ -559,18 +559,90 @@ class AdminCatalogController extends Controller
 
     public function destroyProduct(Product $product): RedirectResponse
     {
-        // حذف الصورة المرتبطة بالمنتج
-        if ($product->image) {
-            ImageHelper::delete($product->image, 'public');
+        try {
+            Log::info('بدء عملية حذف المنتج', [
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'has_image' => (bool) $product->image,
+                'has_thumbnail' => (bool) $product->thumbnail,
+            ]);
+
+            // التحقق من العلاقات المرتبطة بالمنتج
+            $relationsCount = [
+                'order_items' => \DB::table('order_items')->where('product_id', $product->id)->count(),
+                'favorites' => \DB::table('user_favorites')->where('product_id', $product->id)->count(),
+                'campaigns' => \DB::table('campaign_product')->where('product_id', $product->id)->count(),
+            ];
+
+            Log::info('عدد العلاقات المرتبطة بالمنتج', $relationsCount);
+
+            // حذف الصورة المرتبطة بالمنتج
+            if ($product->image) {
+                $imageDeleted = ImageHelper::delete($product->image, 'public');
+                Log::info('حذف صورة المنتج', [
+                    'image_path' => $product->image,
+                    'success' => $imageDeleted
+                ]);
+            }
+            
+            // حذف الصورة المصغرة المرتبطة بالمنتج
+            if ($product->thumbnail) {
+                $thumbnailDeleted = ImageHelper::delete($product->thumbnail, 'public');
+                Log::info('حذف الصورة المصغرة للمنتج', [
+                    'thumbnail_path' => $product->thumbnail,
+                    'success' => $thumbnailDeleted
+                ]);
+            }
+            
+            // حذف المنتج من قاعدة البيانات
+            $deleted = $product->delete();
+
+            if ($deleted) {
+                Log::info('تم حذف المنتج بنجاح', [
+                    'product_id' => $product->id,
+                    'product_name' => $product->name
+                ]);
+                return back()->with('status', '✅ تم حذف المنتج "' . $product->name . '" بنجاح!');
+            } else {
+                Log::error('فشل حذف المنتج من قاعدة البيانات', [
+                    'product_id' => $product->id,
+                    'product_name' => $product->name
+                ]);
+                return back()->withErrors(['error' => 'فشل حذف المنتج. يرجى المحاولة مرة أخرى.']);
+            }
+
+        } catch (\Illuminate\Database\QueryException $e) {
+            Log::error('خطأ في قاعدة البيانات عند حذف المنتج', [
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'error_code' => $e->getCode(),
+                'error_message' => $e->getMessage(),
+                'sql_state' => $e->errorInfo[0] ?? null,
+            ]);
+
+            // رسالة مفهومة للمستخدم بناءً على نوع الخطأ
+            if (strpos($e->getMessage(), 'foreign key constraint') !== false) {
+                return back()->withErrors([
+                    'error' => 'لا يمكن حذف المنتج لأنه مرتبط ببيانات أخرى في النظام. يرجى حذف العلاقات المرتبطة أولاً.'
+                ]);
+            }
+
+            return back()->withErrors([
+                'error' => 'حدث خطأ في قاعدة البيانات أثناء حذف المنتج. يرجى التحقق من سجلات الأخطاء.'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('خطأ غير متوقع عند حذف المنتج', [
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'error_message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->withErrors([
+                'error' => 'حدث خطأ غير متوقع أثناء حذف المنتج: ' . $e->getMessage()
+            ]);
         }
-        
-        // حذف الصورة المصغرة المرتبطة بالمنتج
-        if ($product->thumbnail) {
-            ImageHelper::delete($product->thumbnail, 'public');
-        }
-        
-        $product->delete();
-        return back()->with('status', 'تم حذف المنتج.');
     }
 }
 
