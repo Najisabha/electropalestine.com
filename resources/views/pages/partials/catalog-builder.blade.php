@@ -14,6 +14,48 @@
                 </div>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
+            @if (session('deleted_product_id'))
+                <script>
+                    // إزالة المنتج المحذوف من DOM
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const deletedProductId = {{ session('deleted_product_id') }};
+                        console.log('🗑️ إزالة المنتج المحذوف من الصفحة:', deletedProductId);
+                        
+                        // البحث عن صف المنتج وإزالته
+                        const productRows = document.querySelectorAll('tbody tr:not(.collapse)');
+                        productRows.forEach(row => {
+                            const deleteForm = row.querySelector('.product-delete-form');
+                            if (deleteForm) {
+                                const productIdFromUrl = deleteForm.action.split('/').pop();
+                                if (productIdFromUrl == deletedProductId) {
+                                    console.log('✅ تم العثور على صف المنتج، جاري الإزالة...');
+                                    
+                                    // الحصول على الصف المرتبط (collapse) أيضاً
+                                    const collapseRow = row.nextElementSibling;
+                                    
+                                    // تأثير انزلاق قبل الإزالة
+                                    row.style.transition = 'all 0.5s ease-out';
+                                    row.style.opacity = '0';
+                                    row.style.transform = 'translateX(-100%)';
+                                    
+                                    if (collapseRow && collapseRow.querySelector('.collapse')) {
+                                        collapseRow.style.transition = 'all 0.5s ease-out';
+                                        collapseRow.style.opacity = '0';
+                                    }
+                                    
+                                    setTimeout(() => {
+                                        row.remove();
+                                        if (collapseRow && collapseRow.querySelector('.collapse')) {
+                                            collapseRow.remove();
+                                        }
+                                        console.log('✅ تم إزالة المنتج من الصفحة');
+                                    }, 500);
+                                }
+                            }
+                        });
+                    });
+                </script>
+            @endif
         @endif
         @if ($errors->any())
             <div class="alert alert-danger small" 

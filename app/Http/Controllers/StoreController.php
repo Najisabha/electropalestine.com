@@ -1258,15 +1258,6 @@ class StoreController extends Controller
         return back()->withErrors(['error' => 'لا توجد صورة هوية للحذف.']);
     }
 
-    public function updateIdVerified(Request $request): \Illuminate\Http\JsonResponse
-    {
-        // هذا method لم يعد مستخدماً، يمكن حذفه لاحقاً
-        return response()->json([
-            'success' => false,
-            'message' => 'هذه الوظيفة لم تعد متاحة.',
-        ], 400);
-    }
-
     public function updateCurrency(Request $request): RedirectResponse
     {
         $user = auth()->user();

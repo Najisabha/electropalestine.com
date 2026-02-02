@@ -73,7 +73,6 @@ Route::middleware('auth')->group(function () {
     Route::delete('/account-settings/addresses/{address}', [StoreController::class, 'destroyAddress'])->name('store.addresses.destroy');
     Route::post('/account-settings/id-image', [StoreController::class, 'uploadIdImage'])->name('store.id-image.upload');
     Route::delete('/account-settings/id-image', [StoreController::class, 'deleteIdImage'])->name('store.id-image.delete');
-    Route::post('/account-settings/id-verified', [StoreController::class, 'updateIdVerified'])->name('store.update-id-verified');
     Route::post('/account-settings/currency', [StoreController::class, 'updateCurrency'])->name('store.currency.update');
     Route::delete('/account-settings/delete-account', [StoreController::class, 'deleteAccount'])->name('store.account.delete');
     Route::get('/points', [StoreController::class, 'points'])->name('store.points');
@@ -90,7 +89,7 @@ Route::middleware('auth')->group(function () {
 
 Route::redirect('/dashboard', '/admin/dashboard');
 
-Route::middleware('auth')->prefix('admin')->as('admin.')->group(function () {
+Route::middleware(['auth', 'admin'])->prefix('admin')->as('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/catalog', [AdminCatalogController::class, 'index'])->name('catalog');
         Route::get('/catalog/categories', [AdminCatalogController::class, 'categoriesPage'])->name('catalog.categories');
@@ -123,6 +122,10 @@ Route::middleware('auth')->prefix('admin')->as('admin.')->group(function () {
     Route::get('/campaigns', [AdminCampaignController::class, 'index'])->name('campaigns');
     Route::get('/add-campaign', [AdminCampaignController::class, 'create'])->name('add-campaign');
     Route::post('/add-campaign', [AdminCampaignController::class, 'store'])->name('campaign.store');
+    Route::get('/campaigns/{campaign}', [AdminCampaignController::class, 'show'])->name('campaign.show');
+    Route::get('/campaigns/{campaign}/edit', [AdminCampaignController::class, 'edit'])->name('campaign.edit');
+    Route::put('/campaigns/{campaign}', [AdminCampaignController::class, 'update'])->name('campaign.update');
+    Route::delete('/campaigns/{campaign}', [AdminCampaignController::class, 'destroy'])->name('campaign.destroy');
     Route::get('/users', [AdminUserController::class, 'index'])->name('users');
     Route::get('/customers', [AdminUserController::class, 'customers'])->name('customers');
     Route::put('/users/{user}/role', [AdminUserController::class, 'updateRole'])->name('users.role');

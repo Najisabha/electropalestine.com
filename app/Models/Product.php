@@ -204,24 +204,31 @@ class Product extends Model
     {
         parent::boot();
         
-        // Clear sitemap cache when product is saved or deleted
+        // Clear sitemap cache when product is saved
         static::saved(function (Product $product) {
-            SitemapController::clearCache();
-            // مسح cache الصفحة الرئيسية
-            \Illuminate\Support\Facades\Cache::forget('store.home.ar');
-            \Illuminate\Support\Facades\Cache::forget('store.home.en');
-            // مسح cache المنتجات المشابهة
-            \Illuminate\Support\Facades\Cache::forget('product.related.' . $product->category_id);
-            // مسح cache التقييمات للمنتج
-            \Illuminate\Support\Facades\Cache::forget('product.reviews.' . $product->id);
+            try {
+                SitemapController::clearCache();
+                \Illuminate\Support\Facades\Cache::forget('store.home.ar');
+                \Illuminate\Support\Facades\Cache::forget('store.home.en');
+                \Illuminate\Support\Facades\Cache::forget('product.related.' . $product->category_id);
+                \Illuminate\Support\Facades\Cache::forget('product.reviews.' . $product->id);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('فشل مسح الكاش بعد حفظ المنتج', ['error' => $e->getMessage()]);
+            }
         });
         
+        // Clear sitemap cache when product is deleted
+        // ملاحظة: لا نقوم بأي عمليات قاعدة بيانات هنا لتجنب مشاكل Transaction
         static::deleted(function (Product $product) {
-            SitemapController::clearCache();
-            \Illuminate\Support\Facades\Cache::forget('store.home.ar');
-            \Illuminate\Support\Facades\Cache::forget('store.home.en');
-            \Illuminate\Support\Facades\Cache::forget('product.related.' . $product->category_id);
-            \Illuminate\Support\Facades\Cache::forget('product.reviews.' . $product->id);
+            try {
+                SitemapController::clearCache();
+                \Illuminate\Support\Facades\Cache::forget('store.home.ar');
+                \Illuminate\Support\Facades\Cache::forget('store.home.en');
+                \Illuminate\Support\Facades\Cache::forget('product.related.' . $product->category_id);
+                \Illuminate\Support\Facades\Cache::forget('product.reviews.' . $product->id);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('فشل مسح الكاش بعد حذف المنتج', ['error' => $e->getMessage()]);
+            }
         });
     }
 }

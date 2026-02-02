@@ -10,16 +10,6 @@ use Illuminate\View\View;
 
 class AdminOrderController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(function ($request, $next) {
-            if (!auth()->check() || strtolower(auth()->user()->role) !== 'admin') {
-                abort(403);
-            }
-            return $next($request);
-        });
-    }
-
     public function index(Request $request): View
     {
         $query = Order::with('user')->latest();

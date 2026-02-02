@@ -18,16 +18,6 @@ use Illuminate\Support\Facades\Storage;
 
 class AdminCatalogController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(function ($request, $next) {
-            if (!auth()->check() || strtolower(auth()->user()->role) !== 'admin') {
-                abort(403);
-            }
-            return $next($request);
-        });
-    }
-
     public function index(): View
     {
         $categories = Category::with(['types', 'companies'])->orderBy('name')->get();
@@ -559,88 +549,145 @@ class AdminCatalogController extends Controller
 
     public function destroyProduct(Product $product): RedirectResponse
     {
+        $productId = $product->id;
+        $productName = $product->name;
+        $imagePath = $product->image;
+        $thumbnailPath = $product->thumbnail;
+        $categoryId = $product->category_id;
+        
         try {
-            Log::info('بدء عملية حذف المنتج', [
-                'product_id' => $product->id,
-                'product_name' => $product->name,
-                'has_image' => (bool) $product->image,
-                'has_thumbnail' => (bool) $product->thumbnail,
+            Log::info('🔴 بدء عملية حذف المنتج', [
+                'product_id' => $productId,
+                'product_name' => $productName,
             ]);
 
-            // التحقق من العلاقات المرتبطة بالمنتج
-            $relationsCount = [
-                'order_items' => \DB::table('order_items')->where('product_id', $product->id)->count(),
-                'favorites' => \DB::table('user_favorites')->where('product_id', $product->id)->count(),
-                'campaigns' => \DB::table('campaign_product')->where('product_id', $product->id)->count(),
-            ];
-
-            Log::info('عدد العلاقات المرتبطة بالمنتج', $relationsCount);
-
-            // حذف الصورة المرتبطة بالمنتج
-            if ($product->image) {
-                $imageDeleted = ImageHelper::delete($product->image, 'public');
-                Log::info('حذف صورة المنتج', [
-                    'image_path' => $product->image,
-                    'success' => $imageDeleted
+            // 1. حذف العلاقات المرتبطة أولاً
+            Log::info('🔗 حذف العلاقات المرتبطة...');
+            
+            try {
+                // تحديث order_items لتجنب مشاكل foreign key
+                $orderItemsUpdated = \DB::table('order_items')
+                    ->where('product_id', $productId)
+                    ->update(['product_id' => null]);
+                
+                // حذف favorites
+                $favoritesDeleted = \DB::table('user_favorites')
+                    ->where('product_id', $productId)
+                    ->delete();
+                
+                // حذف campaigns
+                $campaignsDeleted = \DB::table('campaign_product')
+                    ->where('product_id', $productId)
+                    ->delete();
+                
+                // تحديث rewards
+                $rewardsUpdated = \DB::table('rewards')
+                    ->where('product_id', $productId)
+                    ->update(['product_id' => null]);
+                
+                Log::info('✅ تم حذف/تحديث العلاقات', [
+                    'order_items_updated' => $orderItemsUpdated,
+                    'favorites_deleted' => $favoritesDeleted,
+                    'campaigns_deleted' => $campaignsDeleted,
+                    'rewards_updated' => $rewardsUpdated,
                 ]);
+            } catch (\Exception $e) {
+                Log::warning('⚠️ مشكلة في حذف العلاقات (سنحاول المتابعة)', [
+                    'error' => $e->getMessage()
+                ]);
+            }
+
+            // 2. حذف المنتج من قاعدة البيانات مباشرة
+            Log::info('⚡ حذف المنتج من قاعدة البيانات...');
+            
+            $rowsDeleted = \DB::table('products')->where('id', $productId)->delete();
+            
+            Log::info('📊 نتيجة الحذف', [
+                'rows_deleted' => $rowsDeleted,
+                'product_id' => $productId
+            ]);
+
+            // 3. التحقق من الحذف الفعلي
+            $existsAfter = \DB::table('products')->where('id', $productId)->exists();
+            
+            Log::info('🔍 التحقق من الحذف', [
+                'exists_after' => $existsAfter,
+                'deleted' => !$existsAfter
+            ]);
+
+            if ($rowsDeleted === 0 || $existsAfter) {
+                Log::error('❌ فشل حذف المنتج', [
+                    'rows_deleted' => $rowsDeleted,
+                    'still_exists' => $existsAfter
+                ]);
+                
+                return back()->withErrors([
+                    'error' => '❌ فشل حذف المنتج من قاعدة البيانات. عدد الصفوف المحذوفة: ' . $rowsDeleted . '. ما زال موجوداً: ' . ($existsAfter ? 'نعم' : 'لا')
+                ]);
+            }
+
+            Log::info('✅ تم التحقق من حذف المنتج من قاعدة البيانات نهائياً');
+
+            // 4. الآن نحذف الصور بعد نجاح الحذف
+            if ($imagePath) {
+                try {
+                    ImageHelper::delete($imagePath, 'public');
+                    Log::info('🖼️ تم حذف صورة المنتج', ['path' => $imagePath]);
+                } catch (\Exception $e) {
+                    Log::warning('⚠️ فشل حذف الصورة (غير حرج)', ['error' => $e->getMessage()]);
+                }
             }
             
-            // حذف الصورة المصغرة المرتبطة بالمنتج
-            if ($product->thumbnail) {
-                $thumbnailDeleted = ImageHelper::delete($product->thumbnail, 'public');
-                Log::info('حذف الصورة المصغرة للمنتج', [
-                    'thumbnail_path' => $product->thumbnail,
-                    'success' => $thumbnailDeleted
-                ]);
+            if ($thumbnailPath) {
+                try {
+                    ImageHelper::delete($thumbnailPath, 'public');
+                    Log::info('🖼️ تم حذف الصورة المصغرة', ['path' => $thumbnailPath]);
+                } catch (\Exception $e) {
+                    Log::warning('⚠️ فشل حذف الصورة المصغرة (غير حرج)', ['error' => $e->getMessage()]);
+                }
+            }
+
+            // 5. مسح الكاش
+            try {
+                \Illuminate\Support\Facades\Cache::forget('store.home.ar');
+                \Illuminate\Support\Facades\Cache::forget('store.home.en');
+                \Illuminate\Support\Facades\Cache::forget('product.related.' . $categoryId);
+                SitemapController::clearCache();
+                Log::info('🧹 تم مسح الكاش');
+            } catch (\Exception $e) {
+                Log::warning('⚠️ مشكلة في مسح الكاش (غير حرج)', ['error' => $e->getMessage()]);
             }
             
-            // حذف المنتج من قاعدة البيانات
-            $deleted = $product->delete();
-
-            if ($deleted) {
-                Log::info('تم حذف المنتج بنجاح', [
-                    'product_id' => $product->id,
-                    'product_name' => $product->name
-                ]);
-                return back()->with('status', '✅ تم حذف المنتج "' . $product->name . '" بنجاح!');
-            } else {
-                Log::error('فشل حذف المنتج من قاعدة البيانات', [
-                    'product_id' => $product->id,
-                    'product_name' => $product->name
-                ]);
-                return back()->withErrors(['error' => 'فشل حذف المنتج. يرجى المحاولة مرة أخرى.']);
-            }
+            Log::info('🎉 نجحت عملية الحذف بالكامل', [
+                'product_id' => $productId,
+                'product_name' => $productName,
+            ]);
+            
+            return redirect()->route('admin.catalog')
+                ->with('status', '✅ تم حذف المنتج "' . $productName . '" (ID: ' . $productId . ') نهائياً من قاعدة البيانات!')
+                ->with('deleted_product_id', $productId);
 
         } catch (\Illuminate\Database\QueryException $e) {
-            Log::error('خطأ في قاعدة البيانات عند حذف المنتج', [
-                'product_id' => $product->id,
-                'product_name' => $product->name,
-                'error_code' => $e->getCode(),
-                'error_message' => $e->getMessage(),
+            Log::error('❌ خطأ في قاعدة البيانات', [
+                'product_id' => $productId,
+                'error' => $e->getMessage(),
                 'sql_state' => $e->errorInfo[0] ?? null,
             ]);
 
-            // رسالة مفهومة للمستخدم بناءً على نوع الخطأ
-            if (strpos($e->getMessage(), 'foreign key constraint') !== false) {
-                return back()->withErrors([
-                    'error' => 'لا يمكن حذف المنتج لأنه مرتبط ببيانات أخرى في النظام. يرجى حذف العلاقات المرتبطة أولاً.'
-                ]);
-            }
-
             return back()->withErrors([
-                'error' => 'حدث خطأ في قاعدة البيانات أثناء حذف المنتج. يرجى التحقق من سجلات الأخطاء.'
+                'error' => '❌ خطأ في قاعدة البيانات: ' . $e->getMessage()
             ]);
 
         } catch (\Exception $e) {
-            Log::error('خطأ غير متوقع عند حذف المنتج', [
-                'product_id' => $product->id,
-                'product_name' => $product->name,
-                'error_message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+            Log::error('❌ خطأ غير متوقع', [
+                'product_id' => $productId,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
             ]);
 
             return back()->withErrors([
-                'error' => 'حدث خطأ غير متوقع أثناء حذف المنتج: ' . $e->getMessage()
+                'error' => '❌ خطأ: ' . $e->getMessage() . ' في ' . basename($e->getFile()) . ':' . $e->getLine()
             ]);
         }
     }

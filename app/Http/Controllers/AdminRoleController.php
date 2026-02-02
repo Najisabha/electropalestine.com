@@ -9,11 +9,6 @@ use Illuminate\View\View;
 
 class AdminRoleController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
     public function index(): View
     {
         $roles = Role::orderBy('id')->get();
