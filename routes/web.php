@@ -23,7 +23,7 @@ Route::get('/storage/{path}', [StorageController::class, 'show'])
     ->where('path', '.*')
     ->name('storage.show');
 
-    
+
 // Sitemap
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 Route::get('/sitemap/index.xml', [SitemapController::class, 'indexFile'])->name('sitemap.index');
