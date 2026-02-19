@@ -16,7 +16,6 @@ use App\Http\Controllers\StoreController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
 
-
 // Storage route - حل بديل لـ symlink في الاستضافة المشتركة
 // هذا الـ route يعرض الملفات من storage/app/public مباشرة بدون الحاجة لـ symlink
 // يجب أن يكون في البداية قبل أي routes أخرى
