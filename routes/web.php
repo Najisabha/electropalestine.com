@@ -2,6 +2,7 @@
 
 // Electropalestine - Palestine's Premier E-commerce Platform
 
+
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminCatalogController;
 use App\Http\Controllers\AdminCampaignController;
